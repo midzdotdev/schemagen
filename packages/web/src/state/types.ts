@@ -11,6 +11,7 @@ export interface HistoryEntry {
   label: string;
   source: HistorySource;
   appliedAt: number;
+  clientId: string;
 }
 
 export interface AppState {
