@@ -10,7 +10,6 @@ test-results
 playwright-report
 .playwright
 *.tsbuildinfo
-<<<<<<< HEAD
 .claude
-=======
->>>>>>> 76cc1ea (Phase W0: scaffold web app)
+.playwright-mcp
+samples
