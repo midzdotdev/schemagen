@@ -2,18 +2,16 @@ name: CI
 
 on:
   push:
-    branches: [main, "feat/**"]
   pull_request:
-    branches: [main]
 
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      # Version comes from package.json's `packageManager` field; pinning it here too makes
+      # pnpm/action-setup@v4 abort with ERR_PNPM_BAD_PM_VERSION ("multiple versions specified").
       - uses: pnpm/action-setup@v4
-        with:
-          version: 10
       - uses: actions/setup-node@v4
         with:
           node-version: 20
