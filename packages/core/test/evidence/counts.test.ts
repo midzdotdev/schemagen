@@ -50,6 +50,25 @@ describe("computeEvidence counts", () => {
     expect(ev.maxLength).toBe(8); // "elephant"
   });
 
+  // Spec: docs/ir-spec.md § "Evidence" — string evidence carries "top-K values, cardinality".
+  // cardinality is the distinct count (not bounded by K), and `values` must hold the most
+  // frequent values, not merely the first K distinct ones seen.
+  it("E_C8: cardinality counts all distinct values; values keeps the top-K by frequency", () => {
+    const ir: IR = { kind: "string" };
+    const samples: string[] = [];
+    for (let i = 0; i < 25; i++) samples.push(`v${i}`); // 25 one-off values
+    for (let i = 0; i < 100; i++) samples.push("hot"); // one hot value, seen last
+    const ev = computeEvidence(ir, samples);
+    expect(ev.kind).toBe("string");
+    if (ev.kind !== "string") return;
+    // 26 distinct values — cardinality is not capped at the top-K bound of 20.
+    expect(ev.cardinality).toBe(26);
+    // The most frequent value is retained even though it was first observed after the cap.
+    expect(ev.values.hot).toBe(100);
+    // `values` is trimmed to the top-K (20) entries.
+    expect(Object.keys(ev.values).length).toBe(20);
+  });
+
   // Spec: docs/ir-spec.md § "Evidence" — number
   it("E_C3: number evidence has min/max, integerCount, floatCount", () => {
     const ir: IR = { kind: "number" };

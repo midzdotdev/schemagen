@@ -15,7 +15,40 @@ export function computeEvidence(ir: IR, samples: unknown[]): EvidenceTree {
   for (const sample of samples) {
     walk(ir, sample, tree);
   }
+  finalize(tree);
   return tree;
+}
+
+// Trim every string node's `values` map to the top-K entries by frequency. Done once after
+// the walk so the retained set reflects the most frequent values across all records, not the
+// first K distinct ones encountered. `cardinality` is left as the full distinct count.
+// Ties keep first-seen order (Array.prototype.sort is stable), so the result is deterministic.
+function finalize(ev: EvidenceTree): void {
+  switch (ev.kind) {
+    case "string": {
+      const entries = Object.entries(ev.values);
+      if (entries.length <= STRING_TOP_K) return;
+      entries.sort((a, b) => b[1] - a[1]);
+      ev.values = Object.fromEntries(entries.slice(0, STRING_TOP_K));
+      return;
+    }
+    case "array":
+      finalize(ev.items);
+      return;
+    case "tuple":
+      for (const item of ev.items) finalize(item);
+      if (ev.rest !== undefined) finalize(ev.rest);
+      return;
+    case "object":
+      for (const field of Object.values(ev.fields)) finalize(field.valueEvidence);
+      return;
+    case "record":
+      finalize(ev.values);
+      return;
+    case "union":
+      for (const variant of ev.variants) finalize(variant);
+      return;
+  }
 }
 
 function makeEmpty(node: Node): EvidenceTree {
@@ -114,10 +147,11 @@ function walk(node: Node, value: unknown, ev: EvidenceTree): void {
       if (ev.kind !== "string") return;
       if (typeof value !== "string") return;
       if (ev.values[value] === undefined) {
-        if (Object.keys(ev.values).length < STRING_TOP_K) {
-          ev.values[value] = 1;
-          ev.cardinality = Object.keys(ev.values).length;
-        }
+        // Count every distinct value: cardinality is the true distinct count, and we need
+        // full frequencies to pick the genuine top-K in finalize(). The map is trimmed to
+        // STRING_TOP_K once, at the end, rather than dropping late-arriving frequent values.
+        ev.values[value] = 1;
+        ev.cardinality++;
         if (ev.sampleValues.length < STRING_FREE_SAMPLE_LIMIT) {
           ev.sampleValues.push(value);
         }
