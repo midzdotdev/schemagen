@@ -11,9 +11,8 @@ function newAjv(): Ajv2020 {
   return ajv;
 }
 
-// Build a small fixture list covering each kind. Avoid iso-date/iso-datetime
-// format strings on string nodes for compile assertions to keep AJV happy with
-// add-formats only. We use `uuid`/`email` for format coverage.
+// Build a small fixture list covering each kind. IR format names are the standard JSON Schema
+// names (date, date-time, uri, ...), so ajv-formats recognizes them directly.
 const fixtures: { label: string; ir: IR }[] = [
   { label: "unknown", ir: { kind: "unknown" } },
   { label: "null", ir: { kind: "null" } },
@@ -24,6 +23,8 @@ const fixtures: { label: string; ir: IR }[] = [
   { label: "string free", ir: { kind: "string", minLength: 1, maxLength: 10 } },
   { label: "string format uuid", ir: { kind: "string", format: "uuid" } },
   { label: "string format email", ir: { kind: "string", format: "email" } },
+  { label: "string format date", ir: { kind: "string", format: "date" } },
+  { label: "string format date-time", ir: { kind: "string", format: "date-time" } },
   { label: "string literals", ir: { kind: "string", literals: ["a", "b"] } },
   { label: "array", ir: { kind: "array", items: { kind: "string" } } },
   {

@@ -37,14 +37,14 @@ export interface NumberNode {
   literals?: number[];
 }
 
-// Known formats; the IR `format` field is open-ended (`string`).
-// See docs/ir-spec.md § "Node kinds" § "string".
+// Known formats — the standard JSON Schema format names, so emission is a direct passthrough.
+// The IR `format` field is open-ended (`string`). See docs/ir-spec.md § "Node kinds" § "string".
 export type FormatName =
-  | "iso-date"
-  | "iso-datetime"
+  | "date"
+  | "date-time"
   | "uuid"
   | "email"
-  | "url"
+  | "uri"
   | "hostname"
   | "ipv4"
   | "ipv6";

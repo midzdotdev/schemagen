@@ -54,8 +54,8 @@ object {
   id:           string  (format: uuid)
   email:        string  (format: email)
   status:       "active" | "trialing"
-  signed_up_at: string  (format: iso-datetime)
-  avatar_url?:  string  (format: url)
+  signed_up_at: string  (format: date-time)
+  avatar_url?:  string  (format: uri)
 }
 ```
 

@@ -11,8 +11,8 @@ function stringField(ir: unknown, name: string): StringNode {
 }
 
 const FORMAT_FIXTURES: Record<FormatName, string[]> = {
-  "iso-date": ["2024-01-15", "2023-12-31", "2025-06-01", "2022-03-04", "2026-11-30"],
-  "iso-datetime": [
+  date: ["2024-01-15", "2023-12-31", "2025-06-01", "2022-03-04", "2026-11-30"],
+  "date-time": [
     "2024-01-15T10:00:00Z",
     "2024-02-03T08:30:00Z",
     "2025-06-01T23:59:59Z",
@@ -33,7 +33,7 @@ const FORMAT_FIXTURES: Record<FormatName, string[]> = {
     "x@y.io",
     "alice+filter@test.dev",
   ],
-  url: [
+  uri: [
     "https://example.com/path",
     "http://api.example.com",
     "https://docs.example.io/foo/bar",
@@ -53,11 +53,11 @@ const FORMAT_FIXTURES: Record<FormatName, string[]> = {
 
 describe("format detection", () => {
   // Spec: docs/core-spec.md § "`infer`" — "format detection" + README walk-through
-  it("IF1: 200 iso-date values => format: iso-date", () => {
+  it("IF1: 200 date values => format: date", () => {
     const samples = Array.from({ length: 200 }, (_, i) => ({
       d: `2024-${String((i % 12) + 1).padStart(2, "0")}-${String((i % 28) + 1).padStart(2, "0")}`,
     }));
-    expect(stringField(infer(samples), "d").format).toBe("iso-date");
+    expect(stringField(infer(samples), "d").format).toBe("date");
   });
 
   // Spec: docs/ir-spec.md § "Node kinds" § "string" — recognized formats list

@@ -7,10 +7,10 @@ import type { FormatName } from "../ir/types";
 // run first).
 export const ALL_FORMATS: readonly FormatName[] = [
   "uuid",
-  "iso-datetime",
-  "iso-date",
+  "date-time",
+  "date",
   "email",
-  "url",
+  "uri",
   "ipv4",
   "ipv6",
   "hostname",
@@ -26,11 +26,11 @@ const IPV6 =
   /^(?:[0-9a-f]{1,4}:){7}[0-9a-f]{1,4}$|^(?:[0-9a-f]{1,4}:){1,7}:$|^:(?::[0-9a-f]{1,4}){1,7}$|^(?:[0-9a-f]{1,4}:){1,6}(?::[0-9a-f]{1,4}){1,6}$|^::$/i;
 
 export const FORMAT_MATCHERS: Record<FormatName, (v: string) => boolean> = {
-  "iso-date": (v) => ISO_DATE.test(v) && !Number.isNaN(Date.parse(v)),
-  "iso-datetime": (v) => ISO_DATETIME.test(v) && !Number.isNaN(Date.parse(v)),
+  date: (v) => ISO_DATE.test(v) && !Number.isNaN(Date.parse(v)),
+  "date-time": (v) => ISO_DATETIME.test(v) && !Number.isNaN(Date.parse(v)),
   uuid: (v) => UUID.test(v),
   email: (v) => EMAIL.test(v),
-  url: (v) => {
+  uri: (v) => {
     try {
       const u = new URL(v);
       return u.protocol === "http:" || u.protocol === "https:" || u.protocol.length > 0;

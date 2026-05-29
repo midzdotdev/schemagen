@@ -88,6 +88,17 @@ describe("emit IR -> JSON Schema mapping", () => {
     });
   });
 
+  // Spec: docs/core-spec.md § "IR → JSON Schema mapping". The IR's format vocabulary IS the
+  // standard JSON Schema vocabulary, so emit passes every recognized format through unchanged —
+  // no translation layer (which would be a place for names to drift).
+  it("EM_M5b: recognized format names are emitted unchanged", () => {
+    const formats = ["date", "date-time", "uuid", "email", "uri", "hostname", "ipv4", "ipv6"];
+    for (const format of formats) {
+      const node: StringNode = { kind: "string", format };
+      expect(stripMeta(emit(node, "json-schema"))).toEqual({ type: "string", format });
+    }
+  });
+
   // Spec: docs/core-spec.md § "IR → JSON Schema mapping" — string (literals)
   it("EM_M6: string with literals -> {type:'string', enum:[...]} or const for single", () => {
     const single: StringNode = { kind: "string", literals: ["only"] };

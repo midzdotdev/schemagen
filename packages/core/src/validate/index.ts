@@ -313,11 +313,11 @@ function validateNumber(
 }
 
 const KNOWN_FORMATS = new Set<string>([
-  "iso-date",
-  "iso-datetime",
+  "date",
+  "date-time",
   "uuid",
   "email",
-  "url",
+  "uri",
   "hostname",
   "ipv4",
   "ipv6",
