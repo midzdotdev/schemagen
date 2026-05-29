@@ -1,7 +1,8 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { cn } from "../../lib/cn";
 import { useStore } from "../../state/store";
 import { Badge } from "../ui/badge";
+import { RecordDetail } from "./RecordDetail";
 
 export interface RecordListProps {
   records: unknown[];
@@ -11,6 +12,7 @@ export function RecordList({ records }: RecordListProps) {
   const selected = useStore((s) => s.selectedRecordIndices);
   const selectedSet = new Set(selected);
   const firstSelectedRef = useRef<HTMLLIElement>(null);
+  const [detailIndex, setDetailIndex] = useState<number | null>(null);
 
   useEffect(() => {
     if (selected.length > 0) {
@@ -41,20 +43,33 @@ export function RecordList({ records }: RecordListProps) {
               ref={isSelected && firstSelectedRef.current === null ? firstSelectedRef : undefined}
               data-testid={isSelected ? "selected-record" : undefined}
               className={cn(
-                "flex items-center gap-2 rounded border border-[--color-border] px-2 py-1 text-xs",
+                "rounded border border-[--color-border] text-xs",
                 isSelected && "border-[--color-accent] bg-[--color-muted]",
               )}
             >
-              <span className="w-8 shrink-0 text-right font-mono text-[10px] text-[--color-muted-foreground]">
-                #{i + 1}
-              </span>
-              <span className="min-w-0 flex-1 truncate text-[--color-foreground]">
-                {previewFor(r)}
-              </span>
+              <button
+                type="button"
+                onClick={() => setDetailIndex(i)}
+                className="flex w-full items-center gap-2 px-2 py-1 text-left hover:bg-[--color-muted]"
+              >
+                <span className="w-8 shrink-0 text-right font-mono text-[10px] text-[--color-muted-foreground]">
+                  #{i + 1}
+                </span>
+                <span className="min-w-0 flex-1 truncate text-[--color-foreground]">
+                  {previewFor(r)}
+                </span>
+              </button>
             </li>
           );
         })}
       </ul>
+      <RecordDetail
+        open={detailIndex !== null}
+        onOpenChange={(o) => {
+          if (!o) setDetailIndex(null);
+        }}
+        index={detailIndex}
+      />
     </div>
   );
 }
