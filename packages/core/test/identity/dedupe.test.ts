@@ -178,4 +178,27 @@ describe("dedupeByIdentity", () => {
       { id: "b", v: 2 },
     ]);
   });
+
+  // Spec: docs/core-spec.md § "Identity" — records are byte-deduped by canonical-stringification
+  // ("non-optional"), and under keep-all "canonical-hash dedup still applies". Byte-identical
+  // records (equal up to object key order) collapse; records merely sharing an identity key do not.
+  it("I_D9: keep-all still removes canonically-identical records", () => {
+    const samples = [
+      { id: "a", v: 1 },
+      { id: "a", v: 1 }, // exact duplicate of the first
+      { v: 1, id: "a" }, // same value, different key order → canonical duplicate
+      { id: "a", v: 2 }, // same identity key but different content → kept under keep-all
+      { id: "b", v: 2 },
+    ];
+    const config: IdentityConfig = { fields: [["id"]], onDuplicate: "keep-all" };
+    const result = dedupeByIdentity(samples, config);
+
+    expect(result.kept).toEqual([
+      { id: "a", v: 1 },
+      { id: "a", v: 2 },
+      { id: "b", v: 2 },
+    ]);
+    expect(result.dropped).toHaveLength(2);
+    expect(result.dropped.every((d) => d.reason === "duplicate-record")).toBe(true);
+  });
 });

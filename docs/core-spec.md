@@ -44,7 +44,7 @@ emit(ir: IR, target: "json-schema", options?: EmitOptions): object
 proposeIdentityKey(samples: unknown[]): IdentityProposal | null
 dedupeByIdentity(samples: unknown[], config: IdentityConfig): {
   kept: unknown[]
-  dropped: { record: unknown; reason: "duplicate-identity" }[]
+  dropped: { record: unknown; reason: "duplicate-identity" | "duplicate-record" }[]
 }
 
 // Structural checks
