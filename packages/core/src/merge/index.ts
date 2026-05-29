@@ -27,6 +27,7 @@ const DEFAULT_RESOLUTIONS: Record<MismatchKind, "auto" | "skip"> = {
   "wrong-length": "auto",
   "null-not-allowed": "auto",
   "non-integer": "auto",
+  "duplicate-items": "auto",
 };
 
 export function merge(ir: IR, samples: unknown[], options?: MergeOptions): MergeResult {

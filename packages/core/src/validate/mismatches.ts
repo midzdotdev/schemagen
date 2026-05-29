@@ -14,7 +14,8 @@ export type MismatchKind =
   | "format-violation"
   | "wrong-length"
   | "null-not-allowed"
-  | "non-integer";
+  | "non-integer"
+  | "duplicate-items";
 
 export interface Mismatch {
   path: Path;
@@ -164,6 +165,18 @@ export function suggestForNullNotAllowed(parentPath: Path, name: string): Sugges
       label: `Mark '${name}' nullable`,
       rationale: "Allows null in addition to the declared type.",
       change: { op: "set-nullable", path: parentPath, name, value: true },
+    },
+  ];
+}
+
+export function suggestForDuplicateItems(path: Path, node: Node): Suggestion[] {
+  const { uniqueItems: _drop, ...rest } = node as Node & { uniqueItems?: boolean };
+  void _drop;
+  return [
+    {
+      label: "Allow duplicate items",
+      rationale: "Removes the uniqueItems constraint so repeated elements are accepted.",
+      change: { op: "set-node", path, node: rest as Node },
     },
   ];
 }
