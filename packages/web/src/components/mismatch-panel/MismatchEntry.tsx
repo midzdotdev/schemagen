@@ -1,4 +1,4 @@
-import type { Mismatch } from "@schemagen/core";
+import { type Mismatch, findExamples } from "@schemagen/core";
 import { useState } from "react";
 import { formatPath } from "../../state/selectors";
 import { useStore } from "../../state/store";
@@ -12,7 +12,23 @@ export interface MismatchEntryProps {
 export function MismatchEntry({ mismatch }: MismatchEntryProps) {
   const apply = useStore((s) => s.applyChange);
   const setSelectedPath = useStore((s) => s.setSelectedPath);
+  const setSelectedRecordIndices = useStore((s) => s.setSelectedRecordIndices);
+  const ir = useStore((s) => s.ir);
+  const records = useStore((s) => s.records);
   const [error, setError] = useState<string | null>(null);
+
+  function handleShowRecords(): void {
+    if (!ir) return;
+    const target = mismatch.actual.value;
+    const refs = findExamples(
+      ir,
+      records,
+      mismatch.path,
+      (v) => Object.is(v, target) || (target !== undefined && v === target),
+      20,
+    );
+    setSelectedRecordIndices(refs.map((r) => r.index));
+  }
 
   return (
     <li className="rounded border border-[--color-border] p-2 text-xs">
@@ -39,28 +55,29 @@ export function MismatchEntry({ mismatch }: MismatchEntryProps) {
           {mismatch.kind}
         </Badge>
       </div>
-      {mismatch.suggestions.length > 0 && (
-        <div className="mt-2 flex flex-wrap gap-1">
-          {mismatch.suggestions.map((s) => (
-            <Button
-              key={s.label}
-              size="sm"
-              variant="outline"
-              title={s.rationale}
-              onClick={() => {
-                try {
-                  setError(null);
-                  apply(s.change, { source: "suggestion", label: s.label });
-                } catch (e) {
-                  setError(e instanceof Error ? e.message : "could not apply");
-                }
-              }}
-            >
-              {s.label}
-            </Button>
-          ))}
-        </div>
-      )}
+      <div className="mt-2 flex flex-wrap gap-1">
+        {mismatch.suggestions.map((s) => (
+          <Button
+            key={s.label}
+            size="sm"
+            variant="outline"
+            title={s.rationale}
+            onClick={() => {
+              try {
+                setError(null);
+                apply(s.change, { source: "suggestion", label: s.label });
+              } catch (e) {
+                setError(e instanceof Error ? e.message : "could not apply");
+              }
+            }}
+          >
+            {s.label}
+          </Button>
+        ))}
+        <Button size="sm" variant="ghost" onClick={handleShowRecords}>
+          Show records
+        </Button>
+      </div>
       {error && (
         <p role="alert" className="mt-1 text-[10px] text-red-600">
           {error}
