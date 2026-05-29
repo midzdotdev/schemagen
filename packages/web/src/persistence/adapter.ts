@@ -12,7 +12,7 @@
 
 import type { IR } from "@schemagen/core";
 import type { AppState, HistoryEntry } from "../state/types";
-import type { WorkspaceRow } from "./db";
+import type { MetaRow, WorkspaceRow } from "./db";
 
 export interface WorkspaceSnapshot extends Partial<AppState> {
   workspaceId: string;
@@ -30,4 +30,7 @@ export interface WorkspaceAdapter {
   deleteChange(workspaceId: string, seq: number): Promise<void>;
   setHistoryCursor(workspaceId: string, cursor: number): Promise<void>;
   setSyncCursor(workspaceId: string, cursor: number): Promise<void>;
+  // Generic meta merge — set any subset of meta fields. Other fields are
+  // preserved. Used for identityConfig / identityProposalDismissed in X2.
+  patchMeta(workspaceId: string, partial: Partial<MetaRow>): Promise<void>;
 }

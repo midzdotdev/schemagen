@@ -1,0 +1,74 @@
+import { beforeEach, describe, expect, it } from "vitest";
+import { useStore } from "../../src/state/store";
+
+beforeEach(() => {
+  useStore.getState().resetForTests();
+});
+
+describe("identity store slices", () => {
+  // Spec: docs/frontend-spec.md § "Identity-key suggestion"
+  it("X2-S1: setIdentityProposal stores the proposal", () => {
+    useStore.getState().setIdentityProposal({
+      fields: [["id"]],
+      confidence: { uniqueness: 1, presence: 1 },
+      rationale: "id is unique in 100%",
+    });
+    expect(useStore.getState().identityProposal?.fields).toEqual([["id"]]);
+  });
+
+  // Spec: docs/frontend-spec.md § "Identity-key suggestion"
+  it("X2-S2: setIdentityConfig dedupes records under the config", () => {
+    useStore.getState().setRecords([
+      { id: 1, v: "first" },
+      { id: 1, v: "second" },
+      { id: 2, v: "x" },
+    ]);
+    const { droppedCount } = useStore.getState().setIdentityConfig({
+      fields: [["id"]],
+      onDuplicate: "replace",
+    });
+    expect(droppedCount).toBe(1);
+    expect(useStore.getState().records).toHaveLength(2);
+    expect(useStore.getState().identityConfig).toEqual({
+      fields: [["id"]],
+      onDuplicate: "replace",
+    });
+  });
+
+  // Spec: docs/frontend-spec.md § "Identity-key suggestion"
+  it("X2-S3: setIdentityConfig(null) clears config without dedup", () => {
+    useStore.getState().setIdentityConfig({ fields: [["id"]], onDuplicate: "replace" });
+    useStore.getState().setIdentityConfig(null);
+    expect(useStore.getState().identityConfig).toBeNull();
+  });
+
+  // Spec: docs/frontend-spec.md § "Identity-key suggestion" — dismissal persists per workspace
+  it("X2-S4: dismissIdentitySuggestion sets the dismissed flag", () => {
+    useStore.getState().dismissIdentitySuggestion();
+    expect(useStore.getState().identityProposalDismissed).toBe(true);
+  });
+
+  // Spec: docs/frontend-spec.md § "Identity-key suggestion"
+  it("X2-S5: dedup under 'skip' keeps the first occurrence", () => {
+    useStore.getState().setRecords([
+      { id: 1, v: "first" },
+      { id: 1, v: "second" },
+    ]);
+    useStore.getState().setIdentityConfig({ fields: [["id"]], onDuplicate: "skip" });
+    expect(useStore.getState().records).toEqual([{ id: 1, v: "first" }]);
+  });
+
+  // Spec: docs/frontend-spec.md § "Identity-key suggestion"
+  it("X2-S6: keep-all preserves both versions", () => {
+    useStore.getState().setRecords([
+      { id: 1, v: "first" },
+      { id: 1, v: "second" },
+    ]);
+    const { droppedCount } = useStore.getState().setIdentityConfig({
+      fields: [["id"]],
+      onDuplicate: "keep-all",
+    });
+    expect(droppedCount).toBe(0);
+    expect(useStore.getState().records).toHaveLength(2);
+  });
+});
