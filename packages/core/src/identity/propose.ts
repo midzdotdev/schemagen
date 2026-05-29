@@ -10,24 +10,47 @@ export function proposeIdentityKey(samples: unknown[]): IdentityProposal | null 
   if (samples.length === 0) return null;
   const fieldNames = collectTopLevelFields(samples);
 
-  // Single-field candidates first
+  // Single-field candidates first: return the BEST qualifying single field, not the first.
+  const singles: IdentityProposal[] = [];
   for (const f of fieldNames) {
     const r = evaluate([[f]], samples);
-    if (r) return r;
+    if (r) singles.push(r);
   }
+  const bestSingle = best(singles);
+  if (bestSingle) return bestSingle;
 
-  // Then pairs
+  // Then pairs — again, the best qualifying pair.
+  const pairs: IdentityProposal[] = [];
   for (let i = 0; i < fieldNames.length; i++) {
     for (let j = i + 1; j < fieldNames.length; j++) {
       const fa = fieldNames[i] as string;
       const fb = fieldNames[j] as string;
       const r = evaluate([[fa], [fb]], samples);
-      if (r) return r;
+      if (r) pairs.push(r);
     }
   }
+  const bestPair = best(pairs);
+  if (bestPair) return bestPair;
 
   // Spec is explicit: do not try triples.
   return null;
+}
+
+// Highest confidence wins: uniqueness first, then presence. Strict comparison keeps the
+// earliest (first-seen) candidate on ties, so selection is deterministic.
+function best(candidates: IdentityProposal[]): IdentityProposal | null {
+  let winner: IdentityProposal | null = null;
+  for (const c of candidates) {
+    if (winner === null || isBetter(c, winner)) winner = c;
+  }
+  return winner;
+}
+
+function isBetter(a: IdentityProposal, b: IdentityProposal): boolean {
+  if (a.confidence.uniqueness !== b.confidence.uniqueness) {
+    return a.confidence.uniqueness > b.confidence.uniqueness;
+  }
+  return a.confidence.presence > b.confidence.presence;
 }
 
 function collectTopLevelFields(samples: unknown[]): string[] {
