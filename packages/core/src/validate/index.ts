@@ -274,6 +274,18 @@ function validateNumber(
     emitTypeMismatch(node, value, path, recordIndex, mismatches);
     return;
   }
+  // NaN/Infinity are typeof "number" but not valid JSON numbers, and they pass range checks
+  // silently (NaN < min and NaN > max are both false). Reject them outright.
+  if (!Number.isFinite(value)) {
+    emit(mismatches, recordIndex, {
+      path,
+      kind: "type-mismatch",
+      expected: "finite number",
+      actual: { value, description: `number: ${String(value)}` },
+      suggestions: [],
+    });
+    return;
+  }
   if (node.integer && !Number.isInteger(value)) {
     emit(mismatches, recordIndex, {
       path,
