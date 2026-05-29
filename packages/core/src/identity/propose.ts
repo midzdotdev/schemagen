@@ -47,7 +47,7 @@ function collectTopLevelFields(samples: unknown[]): string[] {
 
 function evaluate(fields: Path[], samples: unknown[]): IdentityProposal | null {
   let presentCount = 0;
-  const values = new Set<string>();
+  const valueCounts = new Map<string, number>();
   for (const s of samples) {
     const parts: unknown[] = [];
     let allPresent = true;
@@ -61,10 +61,16 @@ function evaluate(fields: Path[], samples: unknown[]): IdentityProposal | null {
     }
     if (!allPresent) continue;
     presentCount++;
-    values.add(canonical(parts));
+    const k = canonical(parts);
+    valueCounts.set(k, (valueCounts.get(k) ?? 0) + 1);
   }
   const presence = presentCount / samples.length;
-  const uniqueness = presentCount === 0 ? 0 : values.size / presentCount;
+  // Uniqueness is the fraction of present records whose key value is unique to them
+  // (occurs exactly once), per docs/core-spec.md. This is NOT distinct/total: a value
+  // shared by N records is unique for none of them, contributing 0 — not 1.
+  let uniqueRecords = 0;
+  for (const count of valueCounts.values()) if (count === 1) uniqueRecords++;
+  const uniqueness = presentCount === 0 ? 0 : uniqueRecords / presentCount;
   if (presence >= PRESENCE_THRESHOLD && uniqueness >= UNIQUENESS_THRESHOLD) {
     return {
       fields,
