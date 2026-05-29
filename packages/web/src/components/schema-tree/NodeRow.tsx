@@ -25,11 +25,13 @@ export function NodeRow({
   evidence,
   mismatchCount,
   depth,
-  defaultExpanded = true,
+  defaultExpanded,
 }: NodeRowProps) {
   const selectedPath = useStore((s) => s.selectedPath);
   const setSelectedPath = useStore((s) => s.setSelectedPath);
-  const [expanded, setExpanded] = useState(defaultExpanded);
+  // X6: default-collapse below depth 3 — root + 2 levels visible by default.
+  const initialExpanded = defaultExpanded ?? depth < 3;
+  const [expanded, setExpanded] = useState(initialExpanded);
 
   const isSelected = pathsEqual(path, selectedPath);
   const children = childRows(node, path);
