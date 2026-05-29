@@ -41,3 +41,13 @@ export { applyChange } from "./changes";
 // Validate
 export type { Mismatch, MismatchKind, Suggestion, ValidationResult } from "./validate";
 export { validate } from "./validate";
+
+// Evidence
+export type { EvidenceTree, FieldEvidence, RecordRef } from "./evidence";
+export { computeEvidence } from "./evidence";
+export { findExamples } from "./evidence/examples";
+
+// Identity
+export type { IdentityConfig, IdentityProposal } from "./identity/types";
+export { proposeIdentityKey } from "./identity/propose";
+export { dedupeByIdentity } from "./identity/dedupe";
