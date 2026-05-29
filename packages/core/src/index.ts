@@ -51,3 +51,11 @@ export { findExamples } from "./evidence/examples";
 export type { IdentityConfig, IdentityProposal } from "./identity/types";
 export { proposeIdentityKey } from "./identity/propose";
 export { dedupeByIdentity } from "./identity/dedupe";
+
+// Merge
+export type { MergeOptions, MergeResult } from "./merge";
+export { merge } from "./merge";
+
+// Emit
+export type { EmitOptions, JsonSchemaObject, JsonSchemaValue } from "./emit/json-schema";
+export { emit } from "./emit/json-schema";
