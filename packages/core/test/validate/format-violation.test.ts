@@ -4,10 +4,10 @@ import { validate } from "../../src/validate";
 
 const BAD_VALUES: Record<FormatName, string> = {
   uuid: "not-a-uuid",
-  "iso-date": "01-15-2024",
-  "iso-datetime": "yesterday at noon",
+  date: "01-15-2024",
+  "date-time": "yesterday at noon",
   email: "no-at-sign",
-  url: "not a url",
+  uri: "not a url",
   ipv4: "999.999.999.999",
   ipv6: "g123::xyz",
   hostname: "-invalid-.host..",

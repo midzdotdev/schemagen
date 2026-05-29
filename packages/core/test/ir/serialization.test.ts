@@ -3,7 +3,7 @@ import type { Node } from "../../src/ir/types";
 
 const fixtures: Node[] = [
   { kind: "string" },
-  { kind: "string", literals: ["a", "b"], format: "iso-date" },
+  { kind: "string", literals: ["a", "b"], format: "date" },
   { kind: "number", integer: true, min: 0, max: 10 },
   { kind: "boolean", literals: [true, false] },
   {
