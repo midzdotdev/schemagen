@@ -37,6 +37,21 @@ describe("discriminator detection", () => {
     expect(ir.kind).not.toBe("union");
   });
 
+  // Spec: docs/core-spec.md § "`infer`" — discriminator detection (substantiation guard)
+  // Interpretation: every proposed variant must be substantiated by ≥2 records.
+  // Otherwise a near-unique label like an issue title that happens to be a string
+  // is treated as a tag on real-world data.
+  it("IDC2b: singleton groups disqualify the discriminator", () => {
+    const samples = [
+      { tag: "a", x: 1 },
+      { tag: "b", y: 2 },
+      { tag: "c", z: 3 },
+      { tag: "c", z: 4 }, // only one group has >=2 records; "a" and "b" are singletons
+    ];
+    const ir = infer(samples);
+    expect(ir.kind).not.toBe("union");
+  });
+
   // Spec: docs/core-spec.md § same
   it("IDC4: discriminators.enable:false => discriminator never set", () => {
     const ir = infer(partitioned, { discriminators: { enable: false } });
