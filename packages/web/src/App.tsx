@@ -4,9 +4,15 @@ import { ExportModal } from "./components/export/ExportModal";
 import { SchemaTree } from "./components/schema-tree/SchemaTree";
 import { SidePanel } from "./components/shell/SidePanel";
 import { Button } from "./components/ui/button";
+import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 
 export function App() {
   const [exportOpen, setExportOpen] = useState(false);
+
+  useKeyboardShortcuts({
+    onExportToggle: () => setExportOpen((v) => !v),
+    onEscape: () => setExportOpen(false),
+  });
 
   return (
     <div className="flex h-screen flex-col">

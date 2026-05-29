@@ -4,6 +4,7 @@ import { canonicalHash } from "../../lib/canonical-hash";
 import type { PickerCandidate } from "../../lib/root-picker";
 import { useStore } from "../../state/store";
 import { IdentitySuggestion } from "../identity/IdentitySuggestion";
+import { DropZone } from "./DropZone";
 import { ImportArea } from "./ImportArea";
 import { RecordList } from "./RecordList";
 import { RootPickerModal } from "./RootPickerModal";
@@ -72,17 +73,19 @@ export function DataPanel() {
   }
 
   return (
-    <div className="flex h-full flex-col gap-3 py-3">
-      <ImportArea onRecords={commitRecords} onNeedsPicker={handleNeedsPicker} />
-      <IdentitySuggestion />
-      <RecordList records={records} />
-      <RootPickerModal
-        open={picker.open}
-        onOpenChange={(open) => setPicker((p) => ({ ...p, open }))}
-        parsed={picker.parsed}
-        candidates={picker.candidates}
-        onPick={handlePick}
-      />
-    </div>
+    <DropZone onRecords={commitRecords} onNeedsPicker={handleNeedsPicker}>
+      <div className="flex h-full flex-col gap-3 py-3">
+        <ImportArea onRecords={commitRecords} onNeedsPicker={handleNeedsPicker} />
+        <IdentitySuggestion />
+        <RecordList records={records} />
+        <RootPickerModal
+          open={picker.open}
+          onOpenChange={(open) => setPicker((p) => ({ ...p, open }))}
+          parsed={picker.parsed}
+          candidates={picker.candidates}
+          onPick={handlePick}
+        />
+      </div>
+    </DropZone>
   );
 }
