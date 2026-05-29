@@ -5,6 +5,7 @@ coverage
 .DS_Store
 *.log
 .vitest-cache
+.vite
 .pnpm-store
 test-results
 playwright-report
