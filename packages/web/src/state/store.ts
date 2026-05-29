@@ -28,6 +28,8 @@ export interface StoreActions {
   setIdentityProposal: (proposal: IdentityProposal | null) => void;
   setIdentityConfig: (config: IdentityConfig | null) => { droppedCount: number };
   dismissIdentitySuggestion: () => void;
+  // X3: selected records (findExamples result)
+  setSelectedRecordIndices: (indices: number[]) => void;
 }
 
 export type Store = AppState & StoreActions;
@@ -44,6 +46,7 @@ export const INITIAL_STATE: AppState = {
   identityConfig: null,
   identityProposal: null,
   identityProposalDismissed: false,
+  selectedRecordIndices: [],
 };
 
 let nowFn: () => number = () => Date.now();
@@ -125,6 +128,8 @@ export const useStore = create<Store>((set, get) => ({
   },
 
   dismissIdentitySuggestion: () => set({ identityProposalDismissed: true }),
+
+  setSelectedRecordIndices: (indices) => set({ selectedRecordIndices: indices }),
 }));
 
 export function labelFor(change: Change): string {

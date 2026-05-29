@@ -2,6 +2,7 @@ import { type Change, getNodeAt } from "@schemagen/core";
 import { useState } from "react";
 import { formatPath } from "../../state/selectors";
 import { useStore } from "../../state/store";
+import { ExamplesButton } from "./ExamplesButton";
 import { NumberControls } from "./NumberControls";
 import { ObjectControls } from "./ObjectControls";
 import { StringControls } from "./StringControls";
@@ -43,12 +44,15 @@ export function Inspector() {
 
   return (
     <div className="flex flex-col gap-2 p-3">
-      <header className="flex flex-col gap-0.5">
+      <header className="flex flex-col gap-1">
         <span className="text-xs uppercase tracking-wide text-[--color-muted-foreground]">
           Inspector
         </span>
         <span className="font-mono text-sm">{formatPath(selectedPath)}</span>
-        <span className="text-xs text-[--color-muted-foreground]">{node.kind}</span>
+        <div className="flex items-center justify-between">
+          <span className="text-xs text-[--color-muted-foreground]">{node.kind}</span>
+          <ExamplesButton />
+        </div>
       </header>
       <UniversalControls node={node} path={selectedPath} applyChange={applyChange} />
       {node.kind === "string" && (
