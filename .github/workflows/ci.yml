@@ -22,6 +22,8 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
+      # Build core first so @schemagen/web's typecheck/test can resolve its declarations.
+      - run: pnpm --filter @schemagen/core build
       - run: pnpm typecheck
       - run: pnpm test
-      - run: pnpm build
+      - run: pnpm --filter @schemagen/web build
