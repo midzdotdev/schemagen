@@ -1,0 +1,27 @@
+// Store types. See docs/frontend-spec.md § "Persistence" + § "History".
+
+import type { Change, IR, Path } from "@schemagen/core";
+
+export type HistorySource = "manual" | "suggestion" | "inferred";
+
+export interface HistoryEntry {
+  seq: number;
+  change: Change;
+  inverse: Change;
+  label: string;
+  source: HistorySource;
+  appliedAt: number;
+}
+
+export interface AppState {
+  workspaceId: string;
+  ir: IR | null;
+  records: unknown[];
+  history: { entries: HistoryEntry[]; cursor: number };
+  selectedPath: Path | null;
+}
+
+export interface ApplyChangeOptions {
+  label?: string;
+  source?: HistorySource;
+}
