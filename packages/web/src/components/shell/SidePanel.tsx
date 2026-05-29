@@ -1,4 +1,5 @@
 import { Inspector } from "../inspector/Inspector";
+import { MismatchPanel } from "../mismatch-panel/MismatchPanel";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 
 export function SidePanel() {
@@ -13,9 +14,7 @@ export function SidePanel() {
         <Inspector />
       </TabsContent>
       <TabsContent value="mismatches" className="flex-1 overflow-y-auto">
-        <div className="p-4 text-sm text-[--color-muted-foreground]">
-          Mismatches will appear here (Phase W5).
-        </div>
+        <MismatchPanel />
       </TabsContent>
       <TabsContent value="history" className="flex-1 overflow-y-auto">
         <div className="p-4 text-sm text-[--color-muted-foreground]">
