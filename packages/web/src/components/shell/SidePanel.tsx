@@ -1,3 +1,4 @@
+import { HistoryPanel } from "../history/HistoryPanel";
 import { Inspector } from "../inspector/Inspector";
 import { MismatchPanel } from "../mismatch-panel/MismatchPanel";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
@@ -17,9 +18,7 @@ export function SidePanel() {
         <MismatchPanel />
       </TabsContent>
       <TabsContent value="history" className="flex-1 overflow-y-auto">
-        <div className="p-4 text-sm text-[--color-muted-foreground]">
-          History will appear here (Phase W6).
-        </div>
+        <HistoryPanel />
       </TabsContent>
     </Tabs>
   );
