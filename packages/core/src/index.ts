@@ -34,8 +34,9 @@ export { getNodeAt, setNodeAt } from "./ir/paths";
 export type { InferOptions } from "./infer";
 export { infer } from "./infer";
 
-// Changes (types only; dispatcher in Phase 4)
+// Changes
 export type { Change } from "./changes/types";
+export { applyChange } from "./changes";
 
 // Validate
 export type { Mismatch, MismatchKind, Suggestion, ValidationResult } from "./validate";
