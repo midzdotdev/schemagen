@@ -1,0 +1,18 @@
+@import "tailwindcss";
+
+@theme {
+  --color-background: oklch(0.99 0 0);
+  --color-foreground: oklch(0.18 0 0);
+  --color-muted: oklch(0.96 0 0);
+  --color-muted-foreground: oklch(0.5 0 0);
+  --color-border: oklch(0.92 0 0);
+  --color-accent: oklch(0.55 0.18 250);
+  --color-accent-foreground: oklch(0.99 0 0);
+}
+
+body {
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+  margin: 0;
+}
