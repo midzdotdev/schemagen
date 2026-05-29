@@ -8,6 +8,7 @@ import {
   type ValidationResult,
   describeValue,
   inferLeafNode,
+  suggestForDuplicateItems,
   suggestForFormatViolation,
   suggestForLiteralViolation,
   suggestForMissingRequiredField,
@@ -51,6 +52,27 @@ function emit(mismatches: Mismatch[], recordIndex: number | undefined, base: Mis
   } else {
     mismatches.push({ ...base, recordIndex });
   }
+}
+
+// uniqueItems uses structural (value) equality, so two objects with the same entries in a
+// different key order count as duplicates. canonicalize() sorts object keys recursively.
+function hasDuplicates(items: unknown[]): boolean {
+  const seen = new Set<string>();
+  for (const item of items) {
+    const key = canonicalize(item);
+    if (seen.has(key)) return true;
+    seen.add(key);
+  }
+  return false;
+}
+
+function canonicalize(value: unknown): string {
+  if (value === null || typeof value !== "object") return JSON.stringify(value) ?? "undefined";
+  if (Array.isArray(value)) return `[${value.map(canonicalize).join(",")}]`;
+  const entries = Object.entries(value as Record<string, unknown>).sort(([a], [b]) =>
+    a < b ? -1 : a > b ? 1 : 0,
+  );
+  return `{${entries.map(([k, v]) => `${JSON.stringify(k)}:${canonicalize(v)}`).join(",")}}`;
 }
 
 function walkNode(
@@ -117,6 +139,15 @@ function walkNode(
       }
       for (let i = 0; i < value.length; i++) {
         walkNode(node.items, value[i], [...path, i], recordIndex, mismatches);
+      }
+      if (node.uniqueItems && hasDuplicates(value)) {
+        emit(mismatches, recordIndex, {
+          path,
+          kind: "duplicate-items",
+          expected: "array with unique items",
+          actual: { value: value.length, description: `array of length ${value.length}` },
+          suggestions: suggestForDuplicateItems(path, node),
+        });
       }
       return;
     }

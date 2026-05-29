@@ -164,6 +164,7 @@ type MismatchKind =
   | "wrong-length"
   | "null-not-allowed"
   | "non-integer"
+  | "duplicate-items"
 ```
 
 `validate` accepts either a single record or an array. If given an array, mismatches carry `recordIndex`; if given a single record, they do not.
