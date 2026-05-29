@@ -19,12 +19,12 @@ describe("proposeIdentityKey", () => {
 
   // Spec: docs/core-spec.md § "`proposeIdentityKey`" — default thresholds uniqueness >= 0.95, presence >= 0.95
   it("I_PR2: a field unique in 95% and present in 96% is proposed", () => {
-    // 100 records: 95 with unique id values; 5 with duplicate ids; 4 missing id field
-    // Construct: 96 records have `id` present (96% presence). Of those 96, 95 are unique → uniqueness = 95/96 ≈ 0.989.
-    // Adjust to land near thresholds: make 96 present and 95 unique → presence 0.96, uniqueness 95/96 ≈ 0.989 (>=0.95).
+    // 96 records have `id` present (96% presence). Of those 96, the value `u0` occurs
+    // twice, so 94 records carry a value that is unique to them. Per spec, uniqueness is
+    // the fraction of (present) records whose key value is unique → 94/96 ≈ 0.979.
     const samples: unknown[] = [];
     for (let i = 0; i < 95; i++) samples.push({ id: `u${i}`, other: i });
-    // 1 duplicate id (so unique count = 95 out of 96 present)
+    // 1 duplicate id: now `u0` appears twice, so those 2 records are not unique.
     samples.push({ id: "u0", other: 999 });
     // 4 records missing id (presence = 96/100)
     for (let i = 0; i < 4; i++) samples.push({ other: 10_000 + i });
@@ -32,8 +32,26 @@ describe("proposeIdentityKey", () => {
     const result = proposeIdentityKey(samples);
     expect(result).not.toBeNull();
     expect(result?.fields).toEqual([["id"]]);
-    expect(result?.confidence.presence).toBeGreaterThanOrEqual(0.95);
-    expect(result?.confidence.uniqueness).toBeGreaterThanOrEqual(0.95);
+    expect(result?.confidence.presence).toBeCloseTo(0.96, 5);
+    expect(result?.confidence.uniqueness).toBeCloseTo(94 / 96, 5);
+  });
+
+  // Spec: docs/core-spec.md § "`proposeIdentityKey`" — uniqueness is "the fraction of records
+  // with a unique value", NOT the distinct/total ratio. The two diverge when a value repeats:
+  // a value occurring twice contributes 1 to the distinct count but 0 unique records.
+  it("I_PR8: uniqueness counts records with a unique value, not distinct values", () => {
+    // 100 records, `id` present in all. 98 records carry a one-off value; `dupA` occurs twice.
+    // distinct ids = 99 → distinct/total = 0.99 (would wrongly clear the bar at exactly the value).
+    // records with a unique value = 98 → spec uniqueness = 0.98.
+    const samples: unknown[] = [];
+    for (let i = 0; i < 98; i++) samples.push({ id: `u${i}`, grp: i % 4 });
+    samples.push({ id: "dupA", grp: 0 });
+    samples.push({ id: "dupA", grp: 1 });
+
+    const result = proposeIdentityKey(samples);
+    expect(result).not.toBeNull();
+    expect(result?.fields).toEqual([["id"]]);
+    expect(result?.confidence.uniqueness).toBeCloseTo(0.98, 5);
   });
 
   // Spec: docs/core-spec.md § "`proposeIdentityKey`" — uniqueness threshold 0.95
