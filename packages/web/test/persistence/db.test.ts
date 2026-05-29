@@ -56,6 +56,7 @@ describe("Dexie schema", () => {
         label: "x",
         source: "manual",
         appliedAt: 1,
+        clientId: "test-client",
       },
       {
         workspaceId: "default",
@@ -65,6 +66,7 @@ describe("Dexie schema", () => {
         label: "y",
         source: "manual",
         appliedAt: 2,
+        clientId: "test-client",
       },
     ]);
     const rows = await db.changes.where("workspaceId").equals("default").sortBy("seq");
