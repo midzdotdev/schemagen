@@ -1,3 +1,6 @@
+import { useEffect, useRef } from "react";
+import { cn } from "../../lib/cn";
+import { useStore } from "../../state/store";
 import { Badge } from "../ui/badge";
 
 export interface RecordListProps {
@@ -5,6 +8,16 @@ export interface RecordListProps {
 }
 
 export function RecordList({ records }: RecordListProps) {
+  const selected = useStore((s) => s.selectedRecordIndices);
+  const selectedSet = new Set(selected);
+  const firstSelectedRef = useRef<HTMLLIElement>(null);
+
+  useEffect(() => {
+    if (selected.length > 0) {
+      firstSelectedRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    }
+  }, [selected]);
+
   if (records.length === 0) {
     return (
       <p className="px-3 text-xs text-[--color-muted-foreground]">
@@ -19,20 +32,28 @@ export function RecordList({ records }: RecordListProps) {
         <Badge variant="outline">{records.length}</Badge>
       </div>
       <ul aria-label="Records" className="flex max-h-64 flex-col gap-0.5 overflow-y-auto">
-        {records.map((r, i) => (
-          <li
-            // biome-ignore lint/suspicious/noArrayIndexKey: records are positional, not keyed
-            key={i}
-            className="flex items-center gap-2 rounded border border-[--color-border] px-2 py-1 text-xs"
-          >
-            <span className="w-8 shrink-0 text-right font-mono text-[10px] text-[--color-muted-foreground]">
-              #{i + 1}
-            </span>
-            <span className="min-w-0 flex-1 truncate text-[--color-foreground]">
-              {previewFor(r)}
-            </span>
-          </li>
-        ))}
+        {records.map((r, i) => {
+          const isSelected = selectedSet.has(i);
+          return (
+            <li
+              // biome-ignore lint/suspicious/noArrayIndexKey: records are positional, not keyed
+              key={i}
+              ref={isSelected && firstSelectedRef.current === null ? firstSelectedRef : undefined}
+              data-testid={isSelected ? "selected-record" : undefined}
+              className={cn(
+                "flex items-center gap-2 rounded border border-[--color-border] px-2 py-1 text-xs",
+                isSelected && "border-[--color-accent] bg-[--color-muted]",
+              )}
+            >
+              <span className="w-8 shrink-0 text-right font-mono text-[10px] text-[--color-muted-foreground]">
+                #{i + 1}
+              </span>
+              <span className="min-w-0 flex-1 truncate text-[--color-foreground]">
+                {previewFor(r)}
+              </span>
+            </li>
+          );
+        })}
       </ul>
     </div>
   );
@@ -47,20 +68,16 @@ function previewFor(value: unknown): string {
     return `[${value.length} items]`;
   }
   const obj = value as Record<string, unknown>;
-
-  // Prefer well-known identifier-shaped fields.
   for (const k of IDENTIFIER_KEYS) {
     if (obj[k] !== undefined && isScalar(obj[k])) {
       return `${k}: ${formatScalar(obj[k])}`;
     }
   }
-  // Otherwise: first scalar field in insertion order.
   for (const [k, v] of Object.entries(obj)) {
     if (isScalar(v)) {
       return `${k}: ${formatScalar(v)}`;
     }
   }
-  // Last resort: field count.
   return `{ ${Object.keys(obj).length} fields }`;
 }
 

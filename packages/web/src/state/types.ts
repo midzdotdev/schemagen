@@ -24,6 +24,8 @@ export interface AppState {
   identityConfig: IdentityConfig | null;
   identityProposal: IdentityProposal | null;
   identityProposalDismissed: boolean;
+  // X3: indices of records currently highlighted by findExamples.
+  selectedRecordIndices: number[];
 }
 
 export interface ApplyChangeOptions {
