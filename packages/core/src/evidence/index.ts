@@ -148,7 +148,10 @@ function walk(node: Node, value: unknown, ev: EvidenceTree): void {
     case "tuple": {
       if (ev.kind !== "tuple") return;
       if (!Array.isArray(value)) return;
-      for (let i = 0; i < node.items.length; i++) {
+      // A short array only reaches its first `value.length` positions; iterate the lesser of
+      // declared positions and actual length so absent positions aren't counted.
+      const reached = Math.min(node.items.length, value.length);
+      for (let i = 0; i < reached; i++) {
         const subNode = node.items[i] as Node;
         const subEv = ev.items[i] as EvidenceTree;
         walk(subNode, value[i], subEv);
