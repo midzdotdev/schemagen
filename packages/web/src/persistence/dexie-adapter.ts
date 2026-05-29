@@ -60,6 +60,8 @@ export function createDexieAdapter(opts: DexieAdapterOptions = {}): WorkspaceAda
           cursor: meta?.historyCursor ?? changeRows.length,
         },
         selectedPath: null,
+        identityConfig: meta?.identityConfig ?? null,
+        identityProposalDismissed: meta?.identityProposalDismissed ?? false,
       };
       return snapshot;
     },
@@ -119,6 +121,17 @@ export function createDexieAdapter(opts: DexieAdapterOptions = {}): WorkspaceAda
         syncCursor: cursor,
       });
     },
+
+    async patchMeta(workspaceId, partial) {
+      const existing = await dbInstance.meta.get(workspaceId);
+      const merged = {
+        historyCursor: 0,
+        ...existing,
+        ...partial,
+        workspaceId, // pin — partial cannot change the primary key
+      };
+      await dbInstance.meta.put(merged);
+    },
   };
 }
 
@@ -133,6 +146,8 @@ export function attachPersistence(
   let lastEntries = useStore.getState().history.entries;
   let lastCursor = useStore.getState().history.cursor;
   let lastRecords = useStore.getState().records;
+  let lastIdentityConfig = useStore.getState().identityConfig;
+  let lastDismissed = useStore.getState().identityProposalDismissed;
   const initial = useStore.getState();
 
   // Track which entries were hydrated so we don't re-write them. Hydration
@@ -178,6 +193,21 @@ export function attachPersistence(
     if (history.cursor !== lastCursor) {
       lastCursor = history.cursor;
       void adapter.setHistoryCursor(workspaceId, history.cursor);
+    }
+
+    if (state.identityConfig !== lastIdentityConfig) {
+      lastIdentityConfig = state.identityConfig;
+      const patch: Parameters<typeof adapter.patchMeta>[1] = state.identityConfig
+        ? { identityConfig: state.identityConfig }
+        : {};
+      void adapter.patchMeta(workspaceId, patch);
+    }
+
+    if (state.identityProposalDismissed !== lastDismissed) {
+      lastDismissed = state.identityProposalDismissed;
+      void adapter.patchMeta(workspaceId, {
+        identityProposalDismissed: state.identityProposalDismissed,
+      });
     }
   });
 }

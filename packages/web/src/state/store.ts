@@ -1,7 +1,15 @@
 // Zustand store. Pure state transitions; persistence is a separate concern.
 // See docs/frontend-spec.md § "Persistence" + § "History".
 
-import { type Change, type IR, type Path, applyChange as applyChangeCore } from "@schemagen/core";
+import {
+  type Change,
+  type IR,
+  type IdentityConfig,
+  type IdentityProposal,
+  type Path,
+  applyChange as applyChangeCore,
+  dedupeByIdentity,
+} from "@schemagen/core";
 import { create } from "zustand";
 import { getClientId } from "../persistence/client-id";
 import type { AppState, ApplyChangeOptions, HistoryEntry } from "./types";
@@ -16,6 +24,10 @@ export interface StoreActions {
   setSelectedPath: (path: Path | null) => void;
   hydrate: (snapshot: Partial<AppState>) => void;
   resetForTests: () => void;
+  // X2: identity-key actions
+  setIdentityProposal: (proposal: IdentityProposal | null) => void;
+  setIdentityConfig: (config: IdentityConfig | null) => { droppedCount: number };
+  dismissIdentitySuggestion: () => void;
 }
 
 export type Store = AppState & StoreActions;
@@ -29,6 +41,9 @@ export const INITIAL_STATE: AppState = {
   records: [],
   history: { entries: [], cursor: 0 },
   selectedPath: null,
+  identityConfig: null,
+  identityProposal: null,
+  identityProposalDismissed: false,
 };
 
 let nowFn: () => number = () => Date.now();
@@ -94,6 +109,22 @@ export const useStore = create<Store>((set, get) => ({
   hydrate: (snapshot) => set({ ...INITIAL_STATE, ...snapshot }),
 
   resetForTests: () => set(INITIAL_STATE),
+
+  setIdentityProposal: (proposal) => set({ identityProposal: proposal }),
+
+  setIdentityConfig: (config) => {
+    const { records } = get();
+    if (!config) {
+      set({ identityConfig: null });
+      return { droppedCount: 0 };
+    }
+    // Re-dedupe the current record set under the new config.
+    const { kept, dropped } = dedupeByIdentity(records, config);
+    set({ identityConfig: config, records: kept });
+    return { droppedCount: dropped.length };
+  },
+
+  dismissIdentitySuggestion: () => set({ identityProposalDismissed: true }),
 }));
 
 export function labelFor(change: Change): string {
