@@ -1,8 +1,9 @@
-import { infer } from "@schemagen/core";
+import { dedupeByIdentity, infer, proposeIdentityKey } from "@schemagen/core";
 import { useState } from "react";
 import { canonicalHash } from "../../lib/canonical-hash";
 import type { PickerCandidate } from "../../lib/root-picker";
 import { useStore } from "../../state/store";
+import { IdentitySuggestion } from "../identity/IdentitySuggestion";
 import { ImportArea } from "./ImportArea";
 import { RecordList } from "./RecordList";
 import { RootPickerModal } from "./RootPickerModal";
@@ -18,6 +19,10 @@ export function DataPanel() {
   const setRecords = useStore((s) => s.setRecords);
   const setIR = useStore((s) => s.setIR);
   const ir = useStore((s) => s.ir);
+  const identityConfig = useStore((s) => s.identityConfig);
+  const identityProposal = useStore((s) => s.identityProposal);
+  const setIdentityProposal = useStore((s) => s.setIdentityProposal);
+  const dismissed = useStore((s) => s.identityProposalDismissed);
 
   const [picker, setPicker] = useState<PickerState>({
     open: false,
@@ -26,19 +31,34 @@ export function DataPanel() {
   });
 
   function commitRecords(newRecords: unknown[]): void {
-    // Whole-record byte dedup against existing + new records.
+    // Byte-dedup against existing + new records by canonical hash.
     const seen = new Set<string>();
-    const next: unknown[] = [];
+    let merged: unknown[] = [];
     for (const r of [...records, ...newRecords]) {
       const h = canonicalHash(r);
       if (seen.has(h)) continue;
       seen.add(h);
-      next.push(r);
+      merged.push(r);
     }
-    setRecords(next);
+
+    // Logical dedup if an identity config is set.
+    if (identityConfig) {
+      const { kept } = dedupeByIdentity(merged, identityConfig);
+      merged = kept;
+    }
+
+    setRecords(merged);
+
     if (!ir) {
       // First import: infer the schema.
-      setIR(infer(next));
+      setIR(infer(merged));
+    }
+
+    // Propose an identity key if we don't already have a config + the dev
+    // hasn't dismissed the prompt for this workspace.
+    if (!identityConfig && !dismissed && !identityProposal) {
+      const proposal = proposeIdentityKey(merged);
+      if (proposal) setIdentityProposal(proposal);
     }
   }
 
@@ -54,6 +74,7 @@ export function DataPanel() {
   return (
     <div className="flex h-full flex-col gap-3 py-3">
       <ImportArea onRecords={commitRecords} onNeedsPicker={handleNeedsPicker} />
+      <IdentitySuggestion />
       <RecordList records={records} />
       <RootPickerModal
         open={picker.open}

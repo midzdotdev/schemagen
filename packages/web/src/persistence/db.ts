@@ -1,6 +1,6 @@
 // Dexie schema. See docs/frontend-spec.md § "Persistence".
 
-import type { Change, IR } from "@schemagen/core";
+import type { Change, IR, IdentityConfig } from "@schemagen/core";
 import Dexie, { type Table } from "dexie";
 import { getClientId } from "./client-id";
 
@@ -41,6 +41,9 @@ export interface MetaRow {
   // Declared in v2 so we never have to migrate Dexie when sync ships. Optional
   // because it is not materialized for greenfield workspaces.
   syncCursor?: number;
+  // X2: identity-key configuration + per-workspace dismissal of the suggestion banner.
+  identityConfig?: IdentityConfig;
+  identityProposalDismissed?: boolean;
 }
 
 export interface SchemaGenDB extends Dexie {
