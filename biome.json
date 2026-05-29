@@ -1,7 +1,18 @@
 {
   "$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
   "files": {
-    "ignore": ["dist", "node_modules", "coverage", ".pnpm-store", "pnpm-lock.yaml", ".claude"]
+    "ignore": [
+      "dist",
+      "node_modules",
+      "coverage",
+      ".pnpm-store",
+      "pnpm-lock.yaml",
+      ".claude",
+      ".vite",
+      "test-results",
+      "playwright-report",
+      "samples"
+    ]
   },
   "linter": {
     "enabled": true,

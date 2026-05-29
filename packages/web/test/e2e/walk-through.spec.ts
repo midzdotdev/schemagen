@@ -64,7 +64,10 @@ test.describe("schemagen walk-through", () => {
     await expect(page.getByText(/unexpected field/i).first()).toBeVisible();
 
     // Step 7: Apply both suggestions.
-    await page.getByRole("button", { name: /add "past_due" to literals/i }).first().click();
+    await page
+      .getByRole("button", { name: /add "past_due" to literals/i })
+      .first()
+      .click();
     await expect(page.getByText(/literal violation/i)).toHaveCount(0);
 
     await page

@@ -38,16 +38,7 @@ export function RecordList({ records }: RecordListProps) {
   );
 }
 
-const IDENTIFIER_KEYS = [
-  "id",
-  "name",
-  "title",
-  "login",
-  "key",
-  "slug",
-  "email",
-  "username",
-];
+const IDENTIFIER_KEYS = ["id", "name", "title", "login", "key", "slug", "email", "username"];
 
 function previewFor(value: unknown): string {
   if (value === null || value === undefined) return "null";
@@ -74,12 +65,7 @@ function previewFor(value: unknown): string {
 }
 
 function isScalar(v: unknown): v is string | number | boolean | null {
-  return (
-    v === null ||
-    typeof v === "string" ||
-    typeof v === "number" ||
-    typeof v === "boolean"
-  );
+  return v === null || typeof v === "string" || typeof v === "number" || typeof v === "boolean";
 }
 
 function formatScalar(v: unknown): string {
