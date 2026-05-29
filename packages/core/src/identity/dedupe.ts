@@ -1,20 +1,39 @@
 // dedupeByIdentity. See docs/core-spec.md § "`dedupeByIdentity`".
 
+import stringify from "safe-stable-stringify";
 import type { Path } from "../ir/types";
 import type { IdentityConfig } from "./types";
 
+export type DropReason = "duplicate-identity" | "duplicate-record";
+
 export interface DedupeResult {
   kept: unknown[];
-  dropped: { record: unknown; reason: "duplicate-identity" }[];
+  dropped: { record: unknown; reason: DropReason }[];
 }
 
 export function dedupeByIdentity(samples: unknown[], config: IdentityConfig): DedupeResult {
   if (config.onDuplicate === "keep-all") {
-    return { kept: samples.slice(), dropped: [] };
+    // No logical (identity-key) dedup, but canonical byte-dedup still applies: records that are
+    // value-identical (equal up to object key order) collapse to their first occurrence.
+    // safe-stable-stringify is deterministic (sorts keys), giving each record a canonical hash.
+    // See docs/core-spec.md § "Identity".
+    const kept: unknown[] = [];
+    const dropped: { record: unknown; reason: DropReason }[] = [];
+    const seen = new Set<string>();
+    for (const s of samples) {
+      const hash = stringify(s) ?? "undefined";
+      if (seen.has(hash)) {
+        dropped.push({ record: s, reason: "duplicate-record" });
+        continue;
+      }
+      seen.add(hash);
+      kept.push(s);
+    }
+    return { kept, dropped };
   }
 
   const kept: unknown[] = [];
-  const dropped: { record: unknown; reason: "duplicate-identity" }[] = [];
+  const dropped: { record: unknown; reason: DropReason }[] = [];
   const seenKeyToIndex = new Map<string, number>();
 
   for (const s of samples) {
