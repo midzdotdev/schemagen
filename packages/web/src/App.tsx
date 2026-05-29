@@ -1,4 +1,5 @@
 import { DataPanel } from "./components/data-panel/DataPanel";
+import { SchemaTree } from "./components/schema-tree/SchemaTree";
 
 export function App() {
   return (
@@ -11,7 +12,7 @@ export function App() {
           <DataPanel />
         </section>
         <section aria-label="Schema" className="overflow-auto">
-          <div className="p-4 text-sm text-[--color-muted-foreground]">Schema tree</div>
+          <SchemaTree />
         </section>
         <section aria-label="Inspector" className="border-l border-[--color-border]">
           <div className="p-4 text-sm text-[--color-muted-foreground]">
