@@ -3,7 +3,7 @@
 
 import { type Change, type IR, type Path, applyChange as applyChangeCore } from "@schemagen/core";
 import { create } from "zustand";
-import { DEFAULT_WORKSPACE_ID } from "../persistence/db";
+import { getClientId } from "../persistence/client-id";
 import type { AppState, ApplyChangeOptions, HistoryEntry } from "./types";
 
 export interface StoreActions {
@@ -20,8 +20,11 @@ export interface StoreActions {
 
 export type Store = AppState & StoreActions;
 
+// The empty workspaceId is a placeholder until initWorkspace() runs and
+// hydrates the store. UI code that touches workspaceId must wait until
+// HydrationGate has resolved.
 export const INITIAL_STATE: AppState = {
-  workspaceId: DEFAULT_WORKSPACE_ID,
+  workspaceId: "",
   ir: null,
   records: [],
   history: { entries: [], cursor: 0 },
@@ -57,6 +60,7 @@ export const useStore = create<Store>((set, get) => ({
       label: options?.label ?? labelFor(change),
       source: options?.source ?? "manual",
       appliedAt: nowFn(),
+      clientId: getClientId(),
     };
     set({
       ir: nextIR,

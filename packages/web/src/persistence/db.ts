@@ -2,9 +2,10 @@
 
 import type { Change, IR } from "@schemagen/core";
 import Dexie, { type Table } from "dexie";
+import { getClientId } from "./client-id";
 
 export interface WorkspaceRow {
-  id: string;
+  id: string; // UUID — never the literal "default" in v2+
   name: string;
   createdAt: number;
   updatedAt: number;
@@ -25,6 +26,7 @@ export interface ChangeRow {
   label: string;
   source: "manual" | "suggestion" | "inferred";
   appliedAt: number;
+  clientId: string; // per-browser UUID; identifies "who edited this"
 }
 
 export interface IRRow {
@@ -35,6 +37,10 @@ export interface IRRow {
 export interface MetaRow {
   workspaceId: string;
   historyCursor: number;
+  // syncCursor marks the last `seq` considered settled for a future sync layer.
+  // Declared in v2 so we never have to migrate Dexie when sync ships. Optional
+  // because it is not materialized for greenfield workspaces.
+  syncCursor?: number;
 }
 
 export interface SchemaGenDB extends Dexie {
@@ -47,6 +53,8 @@ export interface SchemaGenDB extends Dexie {
 
 export function createDb(name = "schemagen"): SchemaGenDB {
   const db = new Dexie(name) as SchemaGenDB;
+
+  // v1: original schema.
   db.version(1).stores({
     workspaces: "id, updatedAt",
     records: "id, workspaceId",
@@ -54,7 +62,62 @@ export function createDb(name = "schemagen"): SchemaGenDB {
     irs: "workspaceId",
     meta: "workspaceId",
   });
+
+  // v2: ChangeRow gains clientId; MetaRow gains optional syncCursor.
+  // Workspace ID literal "default" gets renamed to a UUID so multiple
+  // browsers never collide. The upgrade transactionally renames the row
+  // and updates every dependent table.
+  db.version(2)
+    .stores({
+      workspaces: "id, updatedAt",
+      records: "id, workspaceId",
+      changes: "[workspaceId+seq], workspaceId, seq",
+      irs: "workspaceId",
+      meta: "workspaceId",
+    })
+    .upgrade(async (tx) => {
+      const clientId = getClientId();
+      const oldId = "default";
+      const oldWorkspace = await tx.table("workspaces").get(oldId);
+      if (oldWorkspace) {
+        const newId = generateUuid();
+        await tx.table("workspaces").delete(oldId);
+        await tx.table("workspaces").put({ ...oldWorkspace, id: newId });
+
+        // Reparent every dependent row.
+        await tx.table("records").where("workspaceId").equals(oldId).modify({ workspaceId: newId });
+        await tx
+          .table("changes")
+          .where("workspaceId")
+          .equals(oldId)
+          .modify((row) => {
+            row.workspaceId = newId;
+            // Backfill clientId for pre-v2 rows.
+            if (row.clientId === undefined) row.clientId = clientId;
+          });
+        await tx.table("irs").where("workspaceId").equals(oldId).modify({ workspaceId: newId });
+        await tx.table("meta").where("workspaceId").equals(oldId).modify({ workspaceId: newId });
+      } else {
+        // No "default" workspace — just backfill clientId on any existing
+        // changes rows (defensive; in practice they shouldn't exist without
+        // a workspace row).
+        await tx
+          .table("changes")
+          .toCollection()
+          .modify((row) => {
+            if (row.clientId === undefined) row.clientId = clientId;
+          });
+      }
+    });
+
   return db;
+}
+
+function generateUuid(): string {
+  if (typeof crypto !== "undefined" && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  return Array.from({ length: 4 }, () => Math.random().toString(36).slice(2)).join("-");
 }
 
 // Single shared instance (lazy so tests can use isolated databases).
@@ -71,5 +134,3 @@ export async function resetDb(): Promise<void> {
     _db = null;
   }
 }
-
-export const DEFAULT_WORKSPACE_ID = "default";
