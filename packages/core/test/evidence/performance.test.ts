@@ -20,21 +20,28 @@ function buildDeepIr(): ObjectNode {
   return level as ObjectNode;
 }
 
-function buildRecord(ir: ObjectNode): Record<string, unknown> {
+// Build a distinct record per index with varied string values, so the run exercises real work:
+// growing/trimming top-K value maps, varied length bounds, and 10,000 separate object graphs
+// (not one shared reference walked 10,000 times).
+function buildRecord(ir: ObjectNode, i: number, salt = 0): Record<string, unknown> {
   const out: Record<string, unknown> = {};
+  let k = 0;
   for (const [name, entry] of Object.entries(ir.fields)) {
-    if (entry.type.kind === "string") out[name] = "x";
-    else if (entry.type.kind === "object") out[name] = buildRecord(entry.type as ObjectNode);
+    if (entry.type.kind === "string") {
+      out[name] = `v${(i * 7 + k * 31 + salt) % 200}`; // ~200 distinct values per field
+      k++;
+    } else if (entry.type.kind === "object") {
+      out[name] = buildRecord(entry.type as ObjectNode, i, salt + 1);
+    }
   }
   return out;
 }
 
 describe("computeEvidence performance", () => {
   // Spec: docs/core-spec.md § "`computeEvidence`" — "Performance contract"
-  it("E_PF1: 10,000 records over a depth-5, ~50-field IR runs under 100ms (median of 5)", () => {
+  it("E_PF1: 10,000 distinct records over a depth-5, ~50-field IR runs under 100ms (median of 5)", () => {
     const ir = buildDeepIr();
-    const record = buildRecord(ir);
-    const records = Array.from({ length: 10_000 }, () => record);
+    const records = Array.from({ length: 10_000 }, (_, i) => buildRecord(ir, i));
 
     // Warmup
     computeEvidence(ir, records);
@@ -49,9 +56,9 @@ describe("computeEvidence performance", () => {
     }
     times.sort((a, b) => a - b);
     const median = times[2] as number;
-    // Spec contract is <100ms on a modern laptop. Test threshold is 200ms to
-    // tolerate CPU contention from vitest parallel pool workers — typical
-    // median in isolation is 30-50ms.
+    // Spec contract is <100ms on a modern laptop. Test threshold is 200ms to tolerate CPU
+    // contention from vitest parallel pool workers. Records are distinct and value-varied, so
+    // this measures realistic work (top-K growth, varied lengths) rather than one cached graph.
     expect(median).toBeLessThan(200);
   });
 });
