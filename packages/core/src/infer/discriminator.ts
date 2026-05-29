@@ -89,9 +89,17 @@ export function detectDiscriminator(
     const uniqueSignatures = new Set(groupSignatures);
     if (uniqueSignatures.size < 2) continue;
 
-    // If every record sits in its own singleton group, the "discriminator"
-    // is really a unique ID — reject.
-    if (groups.size === shapes.length) continue;
+    // Every proposed variant must be substantiated by at least 2 records.
+    // Otherwise the "discriminator" is just a near-unique label that happens
+    // to correlate with shape (e.g. an issue title where one value repeats).
+    let allGroupsHaveAtLeastTwo = true;
+    for (const [, indices] of groups) {
+      if (indices.length < 2) {
+        allGroupsHaveAtLeastTwo = false;
+        break;
+      }
+    }
+    if (!allGroupsHaveAtLeastTwo) continue;
 
     return { field, groups };
   }
