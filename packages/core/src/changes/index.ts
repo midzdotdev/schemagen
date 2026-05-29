@@ -261,17 +261,17 @@ function setFieldFlag(
   const obj = expectObject(ir, parentPath);
   const entry = obj.fields[name];
   if (!entry) throw new Error(`field '${name}' not found`);
-  const oldValue = entry[flag] ?? false;
   const newEntry: FieldEntry = { ...entry };
   if (value === false) delete newEntry[flag];
   else newEntry[flag] = value;
   const fields = { ...obj.fields, [name]: newEntry };
+  // Restore the whole object node. A boolean-valued set-optional/set-nullable inverse cannot
+  // distinguish "key absent" from "explicitly false", so it could not round-trip a field that
+  // carried an explicit `optional: false` / `nullable: false`. set-node restores the exact
+  // original entry by deep value equality.
   return {
     ir: setNodeAt(ir, parentPath, withFields(obj, fields)),
-    inverse:
-      flag === "optional"
-        ? { op: "set-optional", path: parentPath, name, value: oldValue }
-        : { op: "set-nullable", path: parentPath, name, value: oldValue },
+    inverse: { op: "set-node", path: parentPath, node: obj },
   };
 }
 
@@ -472,13 +472,15 @@ function setArrayLengthBound(
 function setIntegerFlag(ir: IR, path: Path, value: boolean): { ir: IR; inverse: Change } {
   const n = nodeAt(ir, path);
   if (n.kind !== "number") throw new Error("set-integer requires a number node");
-  const old = n.integer ?? false;
   const newNode: NumberNode = { ...n };
   if (value === false) delete newNode.integer;
   else newNode.integer = value;
+  // Restore the exact original node: a boolean-valued set-integer inverse cannot distinguish
+  // "integer absent" from "integer: false", so it could not round-trip an explicit
+  // `integer: false`. set-node restores the original by deep value equality.
   return {
     ir: setNodeAt(ir, path, newNode),
-    inverse: { op: "set-integer", path, value: old },
+    inverse: { op: "set-node", path, node: n },
   };
 }
 

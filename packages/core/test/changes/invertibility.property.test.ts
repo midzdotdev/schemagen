@@ -14,12 +14,20 @@ import type { IR, Node, ObjectNode, Path, UnionNode } from "../../src/ir/types";
 
 const NUM_RUNS = 500;
 
+// Number leaves sometimes carry an explicit `integer` flag — including `integer: false`, which
+// must survive a set-integer round-trip (a regression guard for the absent-vs-explicit-false bug).
+const numberLeafArb: fc.Arbitrary<Node> = fc
+  .option(fc.boolean(), { nil: undefined })
+  .map<Node>((integer) =>
+    integer === undefined ? { kind: "number" } : { kind: "number", integer },
+  );
+
 // Leaf nodes — simple, depth-0.
 const leafArb: fc.Arbitrary<Node> = fc.oneof(
   fc.constant<Node>({ kind: "unknown" }),
   fc.constant<Node>({ kind: "null" }),
   fc.constant<Node>({ kind: "boolean" }),
-  fc.constant<Node>({ kind: "number" }),
+  numberLeafArb,
   fc.constant<Node>({ kind: "string" }),
 );
 
@@ -41,16 +49,36 @@ function nodeArb(depth: number): fc.Arbitrary<Node> {
     {
       weight: 1,
       arbitrary: fc
-        .uniqueArray(fc.tuple(fieldNameArb, sub), {
-          minLength: 1,
-          maxLength: 3,
-          selector: ([k]) => k,
-        })
+        // Field entries sometimes carry explicit optional/nullable flags (incl. `false`), which
+        // must survive set-optional/set-nullable round-trips.
+        .uniqueArray(
+          fc.tuple(
+            fieldNameArb,
+            sub,
+            fc.option(fc.boolean(), { nil: undefined }),
+            fc.option(fc.boolean(), { nil: undefined }),
+          ),
+          { minLength: 1, maxLength: 3, selector: ([k]) => k },
+        )
         .map<Node>((entries) => {
-          const fields: Record<string, { type: Node }> = {};
-          for (const [k, v] of entries) fields[k] = { type: v };
+          const fields: Record<string, { type: Node; optional?: boolean; nullable?: boolean }> = {};
+          for (const [k, v, opt, nul] of entries) {
+            fields[k] = {
+              type: v,
+              ...(opt !== undefined ? { optional: opt } : {}),
+              ...(nul !== undefined ? { nullable: nul } : {}),
+            };
+          }
           return { kind: "object", fields, additional: false };
         }),
+    },
+    {
+      weight: 1,
+      arbitrary: fc
+        .tuple(fc.array(sub, { minLength: 1, maxLength: 3 }), fc.option(sub, { nil: undefined }))
+        .map<Node>(([items, rest]) =>
+          rest === undefined ? { kind: "tuple", items } : { kind: "tuple", items, rest },
+        ),
     },
     {
       weight: 1,
