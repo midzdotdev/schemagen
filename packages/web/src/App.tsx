@@ -1,5 +1,6 @@
 import { DataPanel } from "./components/data-panel/DataPanel";
 import { SchemaTree } from "./components/schema-tree/SchemaTree";
+import { SidePanel } from "./components/shell/SidePanel";
 
 export function App() {
   return (
@@ -15,9 +16,7 @@ export function App() {
           <SchemaTree />
         </section>
         <section aria-label="Inspector" className="border-l border-[--color-border]">
-          <div className="p-4 text-sm text-[--color-muted-foreground]">
-            Inspector / Mismatches / History
-          </div>
+          <SidePanel />
         </section>
       </main>
     </div>
