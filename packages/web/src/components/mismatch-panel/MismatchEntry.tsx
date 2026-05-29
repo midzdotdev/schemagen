@@ -92,5 +92,7 @@ function humanKind(kind: Mismatch["kind"]): string {
       return "Null not allowed";
     case "non-integer":
       return "Non-integer";
+    case "duplicate-items":
+      return "Duplicate items";
   }
 }

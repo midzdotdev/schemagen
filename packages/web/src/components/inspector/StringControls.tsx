@@ -4,11 +4,11 @@ import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 
 const FORMATS: FormatName[] = [
-  "iso-date",
-  "iso-datetime",
+  "date",
+  "date-time",
   "uuid",
   "email",
-  "url",
+  "uri",
   "hostname",
   "ipv4",
   "ipv6",
