@@ -1,3 +1,5 @@
+import { DataPanel } from "./components/data-panel/DataPanel";
+
 export function App() {
   return (
     <div className="flex h-screen flex-col">
@@ -5,8 +7,8 @@ export function App() {
         <h1 className="text-lg font-semibold">schemagen</h1>
       </header>
       <main className="grid flex-1 grid-cols-[20rem_1fr_24rem] overflow-hidden">
-        <section aria-label="Data" className="border-r border-[--color-border]">
-          <div className="p-4 text-sm text-[--color-muted-foreground]">Data panel</div>
+        <section aria-label="Data" className="border-r border-[--color-border] overflow-y-auto">
+          <DataPanel />
         </section>
         <section aria-label="Schema" className="overflow-auto">
           <div className="p-4 text-sm text-[--color-muted-foreground]">Schema tree</div>
