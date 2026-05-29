@@ -21,6 +21,7 @@ A schema editor that closes the loop between data and types. Paste a dataset, ge
 - **Operations are never gated on validity.** Multi-step edits can pass through states that don't match the data. The UI surfaces mismatches continuously as feedback; it never blocks an edit.
 - **Schema iteration is first-class.** New data flows in, mismatches surface in a side panel with one-click suggested resolutions, every edit is invertible, full undo/redo history is preserved.
 - **Evidence-driven decisions.** Top-K observed values, presence frequencies, and ranges are always computable from the workspace's record set so the developer can make informed choices about widening, tightening, or rejecting new data.
+- **Identity-aware dedup.** Workspaces can be configured with a logical identity key — a field or composition of fields — so repeated imports of the same entities don't pile up. schemagen auto-suggests a key based on uniqueness, and the developer chooses whether to replace older versions or preserve them for richer schema evidence.
 
 ## A walk-through
 
@@ -39,6 +40,12 @@ A developer wants a schema for user records returned by an analytics API.
 ```
 
 The root picker walks the structure and offers `.users` as the only path to an array of objects. The developer selects it; the 200 records in the response are deduped by canonical hash and stored in the workspace.
+
+A banner appears above the data panel:
+
+> Field `id` appears in 100% of records and is unique in 100% of them. Use it as the identity key? Future imports will replace records with matching `id` instead of accumulating duplicates.
+
+The developer accepts. `id` is now the workspace's identity key; subsequent imports will dedupe against it.
 
 **2. Inference.** schemagen produces a strict first cut, rendered in the schema tree roughly as:
 
@@ -61,7 +68,7 @@ The inspector shows evidence next to each node: `status` reports `active: 162, t
 
 **3. Tweak.** The developer doesn't trust that `"active" | "trialing"` covers every future case, so they widen `status` to a union of those literals OR a free string. Future unknown values will validate, but the literal set stays in the schema as documentation. The change lands in history as "Wrapped status in union with free string".
 
-**4. New data.** A week later they drag in a fresh batch of 50 records using "Add and validate". The mismatch panel populates:
+**4. New data.** A week later they drag in a fresh export of all 220 users using "Add and validate". Because `id` is the identity key, 200 records replace their earlier versions (some now in different states) and 20 are new. The workspace stays at 220 records, not 420. The mismatch panel populates:
 
 - **14× `literal-violation`** at `.status`: value `"past_due"`. Suggestion: *Add `"past_due"` to status literals*.
 - **50× `unexpected-field`** at the root: `.stripe_customer_id`. Suggestion: *Add field `stripe_customer_id` as optional string*.

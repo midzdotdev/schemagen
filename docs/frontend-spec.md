@@ -51,9 +51,30 @@ If the structure contains no array of objects at any depth, the picker explains 
 
 ### Deduplication
 
-Records are deduped on ingest by canonical-stringification (recursive key sort + stringify; use `fast-json-stable-stringify` or equivalent). The canonical string doubles as the record's stable ID inside the workspace. Re-importing the same file is silently idempotent; the import summary reports "1,247 records, 14 duplicates skipped". Dedup runs against the entire persistent record set, not just the import batch.
+Two layers of dedup run on every ingest:
 
-Dedup is whole-record only. Nested objects within a record are never deduped — that would mask repetition the schema should reflect.
+**Byte dedup** (always on). Records are canonical-stringified (recursive key sort + stringify; use `fast-json-stable-stringify` or equivalent). The canonical string is the record's stable ID inside the workspace. Re-importing the same file is silently idempotent. Whole-record only — nested objects are never deduped, because that would mask repetition the schema should reflect.
+
+**Logical dedup** (optional, per-workspace identity config). When the dev configures an identity key — a single field or a tuple of fields uniquely identifying an entity — records sharing the same identity collapse according to `onDuplicate`:
+
+- **Replace** (default when configured) — newest wins. A weekly import of "all users" stays the same size as the user base, not 52× larger.
+- **Skip** — first occurrence wins.
+- **Keep-all** — no logical dedup. Useful for time-series-y data where entities mutate and the schema should reflect every state (e.g. `reason` only appearing on `"archived"` records should be inferred as optional, which requires evidence to see both states of the same entity).
+
+The import summary reports both layers: "1,247 records, 14 byte duplicates skipped, 89 replaced by identity (`id`)".
+
+### Identity-key suggestion
+
+After every import, schemagen calls `proposeIdentityKey` on the (just-ingested) record set. If a high-confidence candidate exists and the workspace has no identity config yet, a banner surfaces above the data panel:
+
+> **Identity key suggestion.** Field `id` appears in 100% of records and is unique in 100% of them. Use it as the identity key? Future imports will replace records with matching `id` instead of accumulating duplicates.
+> [Use `id`] [Pick a different field] [Not now]
+
+"Pick a different field" opens the identity settings dialog. "Not now" dismisses for this workspace until the next import notices the dedup pile is large enough to warrant re-suggesting.
+
+If the dev later changes the config — adds, removes, or recomposes the key — the workspace re-runs `dedupeByIdentity` over the existing records. Dropped records are surfaced in a confirmable diff before the change commits, so a misconfigured key doesn't silently destroy data.
+
+The identity settings dialog also explains the `replace` vs `keep-all` trade-off in one sentence: *"Replace keeps only the latest version of each entity — fine for snapshots. Keep-all preserves every version — choose this when the schema needs to reflect how entities change over time."*
 
 ### Modes
 
@@ -160,6 +181,7 @@ The frontend uses **IndexedDB** as the primary persistence layer. A workspace is
 - The deduped record set (keyed by canonical-stringified content hash).
 - The full Change history (every applied Change with its inverse — the undo/redo stack survives reloads).
 - Inference options.
+- Identity config (optional logical-identity key — see [Deduplication](#deduplication)).
 - Ingest metadata: file names, chosen root paths, timestamps, dedup counters.
 
 Multiple workspaces coexist in IndexedDB and are selectable from a workspace list on app start. There is no server, no account; everything is local.

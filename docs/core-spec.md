@@ -40,6 +40,13 @@ merge(ir: IR, samples: unknown[], options?: MergeOptions): {
 // Emission (one-way export)
 emit(ir: IR, target: "json-schema", options?: EmitOptions): object
 
+// Identity (logical dedup of records by a configured key)
+proposeIdentityKey(samples: unknown[]): IdentityProposal | null
+dedupeByIdentity(samples: unknown[], config: IdentityConfig): {
+  kept: unknown[]
+  dropped: { record: unknown; reason: "duplicate-identity" }[]
+}
+
 // Structural checks
 checkStructure(ir: IR): StructureError[]
 isValid(ir: IR): boolean
@@ -221,6 +228,44 @@ History is a stack of Changes, not a stack of IR snapshots. This gives:
 - **Composability.** Suggestions, manual edits, and merge resolutions are all the same type. They compose, batch, and replay uniformly.
 
 The frontend is free to also snapshot the IR for performance (e.g. cache validate results per snapshot). Core does not.
+
+## Identity
+
+Records are **byte-deduped** on import by canonical-stringification — this is non-optional and prevents exact re-uploads from accumulating. Optionally, the dev configures a **logical identity key** so that semantically-equivalent records (same entity, different field values over time) also dedupe.
+
+```ts
+type IdentityConfig = {
+  fields: Path[]                          // ["id"] or [["user","id"]] or [["order","id"], ["lineId"]]
+  onDuplicate: "replace" | "skip" | "keep-all"
+}
+
+type IdentityProposal = {
+  fields: Path[]                          // the proposed key — single field or composition
+  confidence: {
+    uniqueness: number                    // fraction of records with a unique value at the key
+    presence: number                      // fraction of records where every key field is present
+  }
+  rationale: string                       // human-readable: "Field `id` is unique in 100% of records and present in 100%"
+}
+```
+
+### `proposeIdentityKey`
+
+Scans the records and looks for a key — single field or short composition — that is both highly unique and consistently present. Returns the best candidate, or `null` when nothing clears a confidence threshold (default: uniqueness ≥ 0.95, presence ≥ 0.95).
+
+Single-field candidates are tried first across every top-level field. If no single field qualifies, the function tries pairs of fields. It does not try triples — the search space gets expensive and the result is usually noise.
+
+### `dedupeByIdentity`
+
+Given a config, applies logical dedup over the records. The `onDuplicate` modes:
+
+- **`replace`** — newest occurrence wins. Earlier records with the same identity are dropped.
+- **`skip`** — first occurrence wins. Later duplicates are dropped.
+- **`keep-all`** — no logical dedup; canonical-hash dedup still applies. Useful when entities mutate over time and the dev wants evidence to see every version (e.g. for correct optional-field inference).
+
+`dedupeByIdentity` is order-sensitive (because of `replace`/`skip`); the caller controls record order. The function is otherwise pure.
+
+The frontend persists the `IdentityConfig` as workspace state and applies it on every import. The core library is stateless — it only provides the analysis and the dedup primitive.
 
 ## `merge`
 
