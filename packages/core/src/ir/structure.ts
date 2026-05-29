@@ -163,7 +163,12 @@ function checkLiterals(
     errors.push({ path: [...path, "literals"], message: "'literals' must not be empty" });
     return;
   }
-  if (!n.literals.every((v) => typeof v === expected)) {
+  const checkers = {
+    boolean: (v: unknown) => typeof v === "boolean",
+    number: (v: unknown) => typeof v === "number",
+    string: (v: unknown) => typeof v === "string",
+  } as const;
+  if (!n.literals.every(checkers[expected])) {
     errors.push({
       path: [...path, "literals"],
       message: `'literals' must contain only ${expected}s`,
