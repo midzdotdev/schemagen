@@ -1,5 +1,6 @@
 // `validate`. See docs/core-spec.md § "`validate`".
 
+import stringify from "safe-stable-stringify";
 import { FORMAT_MATCHERS } from "../infer/formats";
 import { checkStructure } from "../ir/structure";
 import type { FormatName, IR, Node, NumberNode, Path, StringNode } from "../ir/types";
@@ -55,24 +56,16 @@ function emit(mismatches: Mismatch[], recordIndex: number | undefined, base: Mis
 }
 
 // uniqueItems uses structural (value) equality, so two objects with the same entries in a
-// different key order count as duplicates. canonicalize() sorts object keys recursively.
+// different key order count as duplicates. safe-stable-stringify is deterministic (sorts keys),
+// giving each value a canonical key.
 function hasDuplicates(items: unknown[]): boolean {
   const seen = new Set<string>();
   for (const item of items) {
-    const key = canonicalize(item);
+    const key = stringify(item) ?? "undefined";
     if (seen.has(key)) return true;
     seen.add(key);
   }
   return false;
-}
-
-function canonicalize(value: unknown): string {
-  if (value === null || typeof value !== "object") return JSON.stringify(value) ?? "undefined";
-  if (Array.isArray(value)) return `[${value.map(canonicalize).join(",")}]`;
-  const entries = Object.entries(value as Record<string, unknown>).sort(([a], [b]) =>
-    a < b ? -1 : a > b ? 1 : 0,
-  );
-  return `{${entries.map(([k, v]) => `${JSON.stringify(k)}:${canonicalize(v)}`).join(",")}}`;
 }
 
 function walkNode(
