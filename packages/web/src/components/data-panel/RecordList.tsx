@@ -18,17 +18,75 @@ export function RecordList({ records }: RecordListProps) {
         <span className="text-xs font-medium text-[--color-muted-foreground]">Records</span>
         <Badge variant="outline">{records.length}</Badge>
       </div>
-      <ul aria-label="Records" className="flex max-h-64 flex-col gap-1 overflow-y-auto">
+      <ul aria-label="Records" className="flex max-h-64 flex-col gap-0.5 overflow-y-auto">
         {records.map((r, i) => (
           <li
             // biome-ignore lint/suspicious/noArrayIndexKey: records are positional, not keyed
             key={i}
-            className="rounded border border-[--color-border] px-2 py-1 text-xs font-mono truncate"
+            className="flex items-center gap-2 rounded border border-[--color-border] px-2 py-1 text-xs"
           >
-            {JSON.stringify(r).slice(0, 100)}
+            <span className="w-8 shrink-0 text-right font-mono text-[10px] text-[--color-muted-foreground]">
+              #{i + 1}
+            </span>
+            <span className="min-w-0 flex-1 truncate text-[--color-foreground]">
+              {previewFor(r)}
+            </span>
           </li>
         ))}
       </ul>
     </div>
   );
+}
+
+const IDENTIFIER_KEYS = [
+  "id",
+  "name",
+  "title",
+  "login",
+  "key",
+  "slug",
+  "email",
+  "username",
+];
+
+function previewFor(value: unknown): string {
+  if (value === null || value === undefined) return "null";
+  if (typeof value !== "object") return String(value);
+  if (Array.isArray(value)) {
+    return `[${value.length} items]`;
+  }
+  const obj = value as Record<string, unknown>;
+
+  // Prefer well-known identifier-shaped fields.
+  for (const k of IDENTIFIER_KEYS) {
+    if (obj[k] !== undefined && isScalar(obj[k])) {
+      return `${k}: ${formatScalar(obj[k])}`;
+    }
+  }
+  // Otherwise: first scalar field in insertion order.
+  for (const [k, v] of Object.entries(obj)) {
+    if (isScalar(v)) {
+      return `${k}: ${formatScalar(v)}`;
+    }
+  }
+  // Last resort: field count.
+  return `{ ${Object.keys(obj).length} fields }`;
+}
+
+function isScalar(v: unknown): v is string | number | boolean | null {
+  return (
+    v === null ||
+    typeof v === "string" ||
+    typeof v === "number" ||
+    typeof v === "boolean"
+  );
+}
+
+function formatScalar(v: unknown): string {
+  if (v === null) return "null";
+  if (typeof v === "string") {
+    const trimmed = v.length > 60 ? `${v.slice(0, 60)}…` : v;
+    return JSON.stringify(trimmed);
+  }
+  return String(v);
 }
