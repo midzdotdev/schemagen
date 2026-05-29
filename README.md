@@ -21,3 +21,51 @@ A schema editor that closes the loop between data and types. Paste a dataset, ge
 - **Operations are never gated on validity.** Multi-step edits can pass through states that don't match the data. The UI surfaces mismatches continuously as feedback; it never blocks an edit.
 - **Schema iteration is first-class.** New data flows in, mismatches surface in a side panel with one-click suggested resolutions, every edit is invertible, full undo/redo history is preserved.
 - **Evidence-driven decisions.** Top-K observed values, presence frequencies, and ranges are always computable from the workspace's record set so the developer can make informed choices about widening, tightening, or rejecting new data.
+
+## A walk-through
+
+A developer wants a schema for user records returned by an analytics API.
+
+**1. Import.** They paste a JSON response into the data panel:
+
+```json
+{
+  "page": 1,
+  "users": [
+    { "id": "a1b2c3d4-...", "email": "ada@example.com", "status": "active",   "signed_up_at": "2024-01-15T10:00:00Z", "avatar_url": "https://cdn.example.com/u/ada.png" },
+    { "id": "c3d4e5f6-...", "email": "lin@example.com", "status": "trialing", "signed_up_at": "2024-02-03T08:30:00Z" }
+  ]
+}
+```
+
+The root picker walks the structure and offers `.users` as the only path to an array of objects. The developer selects it; the 200 records in the response are deduped by canonical hash and stored in the workspace.
+
+**2. Inference.** schemagen produces a strict first cut, rendered in the schema tree roughly as:
+
+```
+object {
+  id:           string  (format: uuid)
+  email:        string  (format: email)
+  status:       "active" | "trialing"
+  signed_up_at: string  (format: iso-datetime)
+  avatar_url?:  string  (format: url)
+}
+```
+
+Two specific calls it made:
+
+- `status` had cardinality 2 across 200 records (well under the literal threshold), so it's a union of literals — not just `string`.
+- `avatar_url` was missing from 38 of 200 records, so it's marked optional.
+
+The inspector shows evidence next to each node: `status` reports `active: 162, trialing: 38`; `avatar_url` reports `present in 162/200 (81%)`.
+
+**3. Tweak.** The developer doesn't trust that `"active" | "trialing"` covers every future case, so they widen `status` to a union of those literals OR a free string. Future unknown values will validate, but the literal set stays in the schema as documentation. The change lands in history as "Wrapped status in union with free string".
+
+**4. New data.** A week later they drag in a fresh batch of 50 records using "Add and validate". The mismatch panel populates:
+
+- **14× `literal-violation`** at `.status`: value `"past_due"`. Suggestion: *Add `"past_due"` to status literals*.
+- **50× `unexpected-field`** at the root: `.stripe_customer_id`. Suggestion: *Add field `stripe_customer_id` as optional string*.
+
+The developer clicks both suggestions. Each lands in history as its own labeled entry; either can be undone individually. The mismatch panel clears.
+
+**5. Export.** From the export panel they copy the JSON Schema and commit it to the consuming service's repo. The schemagen workspace stays in IndexedDB; next month, the next batch starts at step 4.
