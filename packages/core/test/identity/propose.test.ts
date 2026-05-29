@@ -23,11 +23,13 @@ describe("proposeIdentityKey", () => {
     // twice, so 94 records carry a value that is unique to them. Per spec, uniqueness is
     // the fraction of (present) records whose key value is unique → 94/96 ≈ 0.979.
     const samples: unknown[] = [];
-    for (let i = 0; i < 95; i++) samples.push({ id: `u${i}`, other: i });
-    // 1 duplicate id: now `u0` appears twice, so those 2 records are not unique.
-    samples.push({ id: "u0", other: 999 });
+    // `other` is intentionally low-cardinality so it can't itself qualify as the key — under
+    // best-candidate selection the proposal must still come from `id`.
+    for (let i = 0; i < 95; i++) samples.push({ id: `u${i}`, other: i % 3 });
+    // 1 duplicate id: `u0` appears twice, so those 2 records are not unique.
+    samples.push({ id: "u0", other: 0 });
     // 4 records missing id (presence = 96/100)
-    for (let i = 0; i < 4; i++) samples.push({ other: 10_000 + i });
+    for (let i = 0; i < 4; i++) samples.push({ other: 1 });
 
     const result = proposeIdentityKey(samples);
     expect(result).not.toBeNull();
@@ -117,6 +119,20 @@ describe("proposeIdentityKey", () => {
     // Triple is fully unique but spec says triples are not tried.
     const result = proposeIdentityKey(samples);
     expect(result).toBeNull();
+  });
+
+  // Spec: docs/core-spec.md § "`proposeIdentityKey`" — "Returns the best candidate."
+  it("I_PR9: among multiple qualifying single fields, the highest-confidence one is returned", () => {
+    // Field `a` qualifies but has some duplicates; field `b` is fully unique. `a` is seen first.
+    const samples: unknown[] = [];
+    for (let i = 0; i < 100; i++) {
+      samples.push({ a: i < 98 ? `a${i}` : "dup", b: `b${i}` });
+    }
+    const result = proposeIdentityKey(samples);
+    expect(result).not.toBeNull();
+    // Must pick `b` (uniqueness 1.0), not merely the first qualifier `a`.
+    expect(result?.fields).toEqual([["b"]]);
+    expect(result?.confidence.uniqueness).toBe(1);
   });
 
   // Spec: docs/core-spec.md § "IdentityProposal" — `rationale`
