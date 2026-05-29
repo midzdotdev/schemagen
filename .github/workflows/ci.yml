@@ -1,7 +1,11 @@
 name: CI
 
 on:
+  # Every PR (any base branch) gets exactly one run via `pull_request`. `push` is scoped to
+  # long-lived branches only — also running it on PR head branches would fire a second,
+  # duplicate run for every PR (the push event and the pull_request event are separate).
   push:
+    branches: [main]
   pull_request:
 
 jobs:
