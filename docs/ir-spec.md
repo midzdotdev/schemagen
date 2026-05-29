@@ -57,13 +57,13 @@ Matches only the JSON `null` value.
 ### `string`
 
 ```json
-{ "kind": "string", "literals": ["active", "pending"], "format": "iso-date", "pattern": "^[a-z]+$", "minLength": 1, "maxLength": 64 }
+{ "kind": "string", "literals": ["active", "pending"], "format": "date", "pattern": "^[a-z]+$", "minLength": 1, "maxLength": 64 }
 ```
 
 
 
 - `literals?: string[]` — restricts to these values.
-- `format?: string` — recognized formats: `"iso-date"`, `"iso-datetime"`, `"uuid"`, `"email"`, `"url"`, `"hostname"`, `"ipv4"`, `"ipv6"`. Open set; emitters map known formats, ignore unknown.
+- `format?: string` — recognized formats are the standard JSON Schema format names: `"date"`, `"date-time"`, `"uuid"`, `"email"`, `"uri"`, `"hostname"`, `"ipv4"`, `"ipv6"`. Open set; emitters pass known formats through unchanged and ignore unrecognized ones.
 - `pattern?: string` — regex (ECMAScript flavor).
 - `minLength?: number`, `maxLength?: number`.
 

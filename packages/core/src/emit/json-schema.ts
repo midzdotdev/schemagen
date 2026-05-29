@@ -111,6 +111,7 @@ function stringToSchema(n: StringNode): JsonSchemaObject {
     return { type: "string", enum: n.literals };
   }
   const out: JsonSchemaObject = { type: "string" };
+  // IR format names are the standard JSON Schema names, so this is a direct passthrough.
   if (n.format !== undefined) out.format = n.format;
   if (n.pattern !== undefined) out.pattern = n.pattern;
   if (n.minLength !== undefined) out.minLength = n.minLength;

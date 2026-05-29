@@ -307,7 +307,7 @@ describe("applyChange invertibility (property)", () => {
     fc.assert(
       fc.property(
         irArb,
-        fc.option(fc.constantFrom("email", "uuid", "iso-date"), { nil: null }),
+        fc.option(fc.constantFrom("email", "uuid", "date"), { nil: null }),
         fc.integer(),
         (ir, format, seed) => {
           const strs = findNodes(ir, "string");

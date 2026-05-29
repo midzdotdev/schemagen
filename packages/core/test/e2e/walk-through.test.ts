@@ -68,7 +68,7 @@ describe("e2e walk-through", () => {
     const emailType = obj.fields.email?.type as StringNode;
     expect(emailType.format).toBe("email");
     const dtType = obj.fields.signed_up_at?.type as StringNode;
-    expect(dtType.format).toBe("iso-datetime");
+    expect(dtType.format).toBe("date-time");
   });
 
   // Spec: README walk-through "identity-key suggestion" + core-spec § "`proposeIdentityKey`"
