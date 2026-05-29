@@ -166,7 +166,47 @@ function recordToSchema(n: RecordNode): JsonSchemaObject {
 function unionToSchema(n: UnionNode): JsonSchemaObject {
   const variants = n.variants.map((v) => toJsonSchema(v));
   if (n.discriminator !== undefined) {
-    return { oneOf: variants };
+    const pinned = pinDiscriminator(n.variants, variants, n.discriminator);
+    // oneOf is only safe when every variant is pinned to a distinct discriminator const;
+    // otherwise an exclusive oneOf could reject data that validate() (anyOf-style) accepts.
+    if (pinned) return { oneOf: pinned };
   }
   return { anyOf: variants };
+}
+
+// For a discriminated union, force each variant's discriminator property to the `const` derived
+// from its single-literal field and mark it required, so the emitted oneOf is genuinely
+// exclusive. Returns null (caller falls back to anyOf) unless every variant is an object whose
+// discriminator field resolves to a distinct single literal.
+function pinDiscriminator(
+  nodes: Node[],
+  schemas: JsonSchemaValue[],
+  discriminator: string,
+): JsonSchemaObject[] | null {
+  const out: JsonSchemaObject[] = [];
+  const seen = new Set<string>();
+  for (let i = 0; i < nodes.length; i++) {
+    const node = nodes[i];
+    const schema = schemas[i];
+    if (node?.kind !== "object" || !isPlainSchemaObject(schema)) return null;
+    const entry = node.fields[discriminator];
+    if (entry === undefined) return null;
+    const literals = (entry.type as { literals?: unknown[] }).literals;
+    if (!Array.isArray(literals) || literals.length !== 1) return null;
+    const value = literals[0];
+    const key = JSON.stringify(value) ?? "undefined";
+    if (seen.has(key)) return null; // literals must be distinct across variants
+    seen.add(key);
+
+    const props = { ...((schema.properties as Record<string, JsonSchemaValue>) ?? {}) };
+    props[discriminator] = { ...(asObject(props[discriminator]) ?? {}), const: value };
+    const required = Array.isArray(schema.required) ? [...(schema.required as string[])] : [];
+    if (!required.includes(discriminator)) required.push(discriminator);
+    out.push({ ...schema, properties: props, required });
+  }
+  return out;
+}
+
+function asObject(v: unknown): JsonSchemaObject | undefined {
+  return isPlainSchemaObject(v) ? v : undefined;
 }
