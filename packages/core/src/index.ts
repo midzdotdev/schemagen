@@ -1,7 +1,5 @@
 // Public API surface for @schemagen/core.
 // See docs/core-spec.md § "Module surface".
-//
-// Exports are added as each phase of the implementation goes from red to green.
 
 // IR
 export type {
@@ -31,3 +29,7 @@ export { checkStructure, isValid } from "./ir/structure";
 
 // Paths
 export { getNodeAt, setNodeAt } from "./ir/paths";
+
+// Inference
+export type { InferOptions } from "./infer";
+export { infer } from "./infer";
