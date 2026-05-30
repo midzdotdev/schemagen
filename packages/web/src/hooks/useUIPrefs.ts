@@ -5,10 +5,11 @@
 // localStorage is the right tier here — these are display-only and shouldn't
 // survive a session import or fight a sync layer for the workspace identity.
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback } from "react";
+import { useLocalStorage } from "./useLocalStorage";
 
 export interface UIPrefs {
-  // PR I — selected mismatch kinds (empty set = all)
+  // PR I — selected mismatch kinds (empty array = all)
   mismatchActiveKinds: string[];
   // PR I — collapsed mismatch group pathKeys
   mismatchCollapsedGroups: string[];
@@ -26,54 +27,20 @@ function storageKey(workspaceId: string): string {
   return `schemagen.uiPrefs.${workspaceId}`;
 }
 
-function read(workspaceId: string): UIPrefs {
-  if (!workspaceId || typeof localStorage === "undefined") return DEFAULT_PREFS;
-  try {
-    const raw = localStorage.getItem(storageKey(workspaceId));
-    if (!raw) return DEFAULT_PREFS;
-    const parsed = JSON.parse(raw) as Partial<UIPrefs>;
-    return {
-      mismatchActiveKinds: parsed.mismatchActiveKinds ?? DEFAULT_PREFS.mismatchActiveKinds,
-      mismatchCollapsedGroups:
-        parsed.mismatchCollapsedGroups ?? DEFAULT_PREFS.mismatchCollapsedGroups,
-      schemaFilter: parsed.schemaFilter ?? DEFAULT_PREFS.schemaFilter,
-    };
-  } catch {
-    return DEFAULT_PREFS;
-  }
-}
-
-function write(workspaceId: string, prefs: UIPrefs): void {
-  if (!workspaceId || typeof localStorage === "undefined") return;
-  try {
-    localStorage.setItem(storageKey(workspaceId), JSON.stringify(prefs));
-  } catch {
-    // Quota / disabled storage — silently drop. Prefs are best-effort UX, not
-    // load-bearing state, so a write failure shouldn't bubble up.
-  }
-}
-
-// Read + persist a single pref key. Subscribers to the same workspace stay in
-// sync within the tab via the returned setter; cross-tab sync is out of scope.
+// Read + persist a single pref key. The whole pref bag is stored under one
+// key per workspace; we just slice/patch on access.
 export function useUIPref<K extends keyof UIPrefs>(
   workspaceId: string,
   key: K,
 ): [UIPrefs[K], (value: UIPrefs[K]) => void] {
-  const [value, setValue] = useState<UIPrefs[K]>(() => read(workspaceId)[key]);
+  const [bag, setBag] = useLocalStorage<UIPrefs>(storageKey(workspaceId), DEFAULT_PREFS);
 
-  // Re-read when the workspace identity changes (switcher).
-  useEffect(() => {
-    setValue(read(workspaceId)[key]);
-  }, [workspaceId, key]);
-
+  const value = bag[key] ?? DEFAULT_PREFS[key];
   const set = useCallback(
     (next: UIPrefs[K]) => {
-      setValue(next);
-      const current = read(workspaceId);
-      write(workspaceId, { ...current, [key]: next });
+      setBag({ ...bag, [key]: next });
     },
-    [workspaceId, key],
+    [bag, key, setBag],
   );
-
   return [value, set];
 }
