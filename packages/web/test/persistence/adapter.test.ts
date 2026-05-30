@@ -1,9 +1,9 @@
 import type { Change, IR } from "@schemagen/core";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import type { WorkspaceAdapter } from "../../src/persistence/adapter";
-import { type SchemaGenDB, createDb } from "../../src/persistence/db";
-import { createDexieAdapter } from "../../src/persistence/dexie-adapter";
-import type { HistoryEntry } from "../../src/state/types";
+import type { WorkspaceAdapter } from "@/persistence/adapter";
+import { createDb, type SchemaGenDB } from "@/persistence/db";
+import { createDexieAdapter } from "@/persistence/dexie-adapter";
+import type { HistoryEntry } from "@/state/types";
 
 let db: SchemaGenDB;
 let adapter: WorkspaceAdapter;

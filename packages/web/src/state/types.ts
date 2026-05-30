@@ -1,6 +1,6 @@
 // Store types. See docs/frontend-spec.md § "Persistence" + § "History".
 
-import type { Change, IR, IdentityConfig, IdentityProposal, Path } from "@schemagen/core";
+import type { Change, IdentityConfig, IdentityProposal, IR, Path } from "@schemagen/core";
 
 export type HistorySource = "manual" | "suggestion" | "inferred";
 

@@ -1,6 +1,6 @@
 import Dexie from "dexie";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { type SchemaGenDB, createDb } from "../../src/persistence/db";
+import { createDb, type SchemaGenDB } from "@/persistence/db";
 
 let dbCounter = 0;
 let dbName: string;

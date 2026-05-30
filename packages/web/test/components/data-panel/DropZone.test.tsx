@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { DropZone } from "../../../src/components/data-panel/DropZone";
+import { DropZone } from "@/components/data-panel/DropZone";
 
 // jsdom lacks a DataTransfer constructor; build a minimal stand-in.
 function dataTransferLike(file: File): unknown {

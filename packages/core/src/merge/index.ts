@@ -3,8 +3,8 @@
 import { applyChange } from "../changes";
 import type { Change } from "../changes/types";
 import type { IR } from "../ir/types";
-import { validate } from "../validate";
 import type { Mismatch, MismatchKind } from "../validate";
+import { validate } from "../validate";
 
 export interface MergeOptions {
   resolution?: Partial<Record<MismatchKind, "auto" | "skip">>;

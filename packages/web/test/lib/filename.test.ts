@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { shouldRenameWorkspace, workspaceNameFromFile } from "../../src/lib/filename";
+import { shouldRenameWorkspace, workspaceNameFromFile } from "@/lib/filename";
 
 describe("workspaceNameFromFile", () => {
   it("strips .json", () => {

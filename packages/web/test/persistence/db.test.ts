@@ -1,6 +1,6 @@
 import type { Change } from "@schemagen/core";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { type SchemaGenDB, createDb } from "../../src/persistence/db";
+import { createDb, type SchemaGenDB } from "@/persistence/db";
 
 let db: SchemaGenDB;
 let dbCounter = 0;

@@ -1,6 +1,6 @@
 // Dexie schema. See docs/frontend-spec.md § "Persistence".
 
-import type { Change, IR, IdentityConfig } from "@schemagen/core";
+import type { Change, IdentityConfig, IR } from "@schemagen/core";
 import Dexie, { type Table } from "dexie";
 import { getClientId } from "./client-id";
 

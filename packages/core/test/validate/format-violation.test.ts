@@ -28,19 +28,18 @@ describe("validate format-violation", () => {
   });
 
   // Spec: docs/ir-spec.md § "Node kinds" § "`string`" — recognized formats
-  it.each(Object.keys(BAD_VALUES) as FormatName[])(
-    "V_FV2: format %s triggers its own violation with a clearly-malformed value",
-    (fmt) => {
-      const ir: ObjectNode = {
-        kind: "object",
-        fields: { x: { type: { kind: "string", format: fmt } } },
-        additional: false,
-      };
-      const result = validate(ir, { x: BAD_VALUES[fmt] });
-      expect(result.ok).toBe(false);
-      expect(result.mismatches[0]?.kind).toBe("format-violation");
-    },
-  );
+  it.each(
+    Object.keys(BAD_VALUES) as FormatName[],
+  )("V_FV2: format %s triggers its own violation with a clearly-malformed value", (fmt) => {
+    const ir: ObjectNode = {
+      kind: "object",
+      fields: { x: { type: { kind: "string", format: fmt } } },
+      additional: false,
+    };
+    const result = validate(ir, { x: BAD_VALUES[fmt] });
+    expect(result.ok).toBe(false);
+    expect(result.mismatches[0]?.kind).toBe("format-violation");
+  });
 
   // Spec: docs/ir-spec.md § "Node kinds" § "`string`" — "Open set"
   // Interpretation: unrecognized format names are not enforced and never produce format-violation mismatches.

@@ -4,7 +4,7 @@
 // bundle and restores everything (IR with all tweaks, records, history,
 // identity config). No re-inference, no tweak loss.
 
-import type { IR, IdentityConfig } from "@schemagen/core";
+import type { IdentityConfig, IR } from "@schemagen/core";
 import type { HistoryEntry } from "../state/types";
 
 export interface SessionBundle {

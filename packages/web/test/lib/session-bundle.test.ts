@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
-  type SessionBundle,
   buildSessionBundle,
   bundleSizeBytes,
   parseSessionBundle,
-} from "../../src/lib/session-bundle";
+  type SessionBundle,
+} from "@/lib/session-bundle";
 
 const baseBundle = (over: Partial<SessionBundle> = {}): SessionBundle => ({
   version: 1,

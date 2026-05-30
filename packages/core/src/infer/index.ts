@@ -4,7 +4,7 @@
 import type { FieldEntry, IR, Node, ObjectNode, UnionNode } from "../ir/types";
 import { buildObject, observationToNode } from "./build";
 import { detectDiscriminator } from "./discriminator";
-import { type Observation, createObservation, observeInto } from "./observe";
+import { createObservation, type Observation, observeInto } from "./observe";
 import { type InferOptions, resolveOptions } from "./options";
 
 export type { InferOptions } from "./options";

@@ -2,7 +2,7 @@
 // memoized on (ir, records).
 // See docs/frontend-spec.md § "Schema tree (center)".
 
-import { type EvidenceTree, computeEvidence } from "@schemagen/core";
+import { computeEvidence, type EvidenceTree } from "@schemagen/core";
 import { useMemo } from "react";
 import { useStore } from "../state/store";
 

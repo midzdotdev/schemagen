@@ -1,8 +1,8 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
-import { RootPickerModal } from "../../../src/components/data-panel/RootPickerModal";
-import type { PickerCandidate } from "../../../src/lib/root-picker";
+import { RootPickerModal } from "@/components/data-panel/RootPickerModal";
+import type { PickerCandidate } from "@/lib/root-picker";
 
 const candidates: PickerCandidate[] = [
   { path: ["users"], recordCount: 200, preview: { id: 1 } },

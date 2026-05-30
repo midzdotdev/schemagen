@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { RecordList } from "../../../src/components/data-panel/RecordList";
+import { RecordList } from "@/components/data-panel/RecordList";
 
 describe("RecordList", () => {
   // Spec: docs/frontend-spec.md § "Per-record view"

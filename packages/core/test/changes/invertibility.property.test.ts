@@ -192,7 +192,7 @@ describe("applyChange invertibility (property)", () => {
             path: Path;
             node: ObjectNode;
           };
-          if (Object.prototype.hasOwnProperty.call(target.node.fields, name)) return;
+          if (Object.hasOwn(target.node.fields, name)) return;
           const existing = Object.keys(target.node.fields).length;
           const change: Change =
             pos === undefined
@@ -244,7 +244,7 @@ describe("applyChange invertibility (property)", () => {
         };
         const keys = Object.keys(target.node.fields);
         const from = keys[Math.abs(seedField) % keys.length] as string;
-        if (Object.prototype.hasOwnProperty.call(target.node.fields, to) && from !== to) return;
+        if (Object.hasOwn(target.node.fields, to) && from !== to) return;
         expectInvertible(ir, {
           op: "rename-field",
           path: target.path,

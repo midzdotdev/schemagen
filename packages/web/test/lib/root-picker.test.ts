@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { enumerateCandidates, formatPath, getAtPath } from "../../src/lib/root-picker";
+import { enumerateCandidates, formatPath, getAtPath } from "@/lib/root-picker";
 
 describe("enumerateCandidates", () => {
   // Spec: docs/frontend-spec.md § "Root picker"

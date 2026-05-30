@@ -1,6 +1,6 @@
 import type { Change, IR } from "@schemagen/core";
 import { beforeEach, describe, expect, it } from "vitest";
-import { useStore } from "../../src/state/store";
+import { useStore } from "@/state/store";
 
 function freshStore(): void {
   useStore.getState().resetForTests();

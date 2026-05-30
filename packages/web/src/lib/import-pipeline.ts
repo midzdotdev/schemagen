@@ -2,7 +2,7 @@
 // and a pair of callbacks for the "direct records" and "needs picker" cases.
 
 import { checkRoot, parseImport } from "./json-import";
-import { type PickerCandidate, enumerateCandidates } from "./root-picker";
+import { enumerateCandidates, type PickerCandidate } from "./root-picker";
 
 export interface IngestResult {
   ok: boolean;

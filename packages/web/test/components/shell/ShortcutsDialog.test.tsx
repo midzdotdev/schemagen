@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { ShortcutsDialog } from "../../../src/components/shell/ShortcutsDialog";
+import { ShortcutsDialog } from "@/components/shell/ShortcutsDialog";
 
 describe("ShortcutsDialog", () => {
   it("renders each shortcut with its key chord and description", () => {

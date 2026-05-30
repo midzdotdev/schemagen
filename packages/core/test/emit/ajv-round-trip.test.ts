@@ -1,5 +1,5 @@
-import addFormats from "ajv-formats";
 import Ajv2020 from "ajv/dist/2020";
+import addFormats from "ajv-formats";
 import { describe, expect, it } from "vitest";
 import { emit } from "../../src/emit/json-schema";
 import type { IR } from "../../src/ir/types";

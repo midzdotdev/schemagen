@@ -2,8 +2,8 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { act } from "react";
 import { beforeEach, describe, expect, it } from "vitest";
-import { IdentityConfigDialog } from "../../../src/components/identity/IdentityConfigDialog";
-import { useStore } from "../../../src/state/store";
+import { IdentityConfigDialog } from "@/components/identity/IdentityConfigDialog";
+import { useStore } from "@/state/store";
 
 beforeEach(() => {
   useStore.getState().resetForTests();
