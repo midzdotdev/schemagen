@@ -22,6 +22,8 @@ export interface WorkspaceAdapter {
   listWorkspaces(): Promise<WorkspaceRow[]>;
   createWorkspace(name?: string): Promise<WorkspaceRow>;
   renameWorkspace(workspaceId: string, name: string): Promise<void>;
+  // Cascade-delete the workspace + all child rows (records/changes/irs/meta).
+  deleteWorkspace(workspaceId: string): Promise<void>;
   hydrate(workspaceId: string): Promise<WorkspaceSnapshot>;
 
   // Mutations — async so a future remote adapter can await network I/O.

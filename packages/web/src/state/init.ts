@@ -55,6 +55,26 @@ export async function createAndSwitchWorkspace(name?: string): Promise<{ workspa
   return { workspaceId: row.id };
 }
 
+// Delete the given workspace. If it's the currently-loaded one, switch to
+// another workspace first — minting a fresh one if none remain — so the store
+// is never left pointing at a deleted workspaceId.
+export async function deleteWorkspace(workspaceId: string): Promise<void> {
+  if (!currentAdapter) {
+    throw new Error("deleteWorkspace: no adapter available");
+  }
+  const isCurrent = useStore.getState().workspaceId === workspaceId;
+  if (isCurrent) {
+    const all = await currentAdapter.listWorkspaces();
+    const next = all.find((w) => w.id !== workspaceId);
+    if (next) {
+      await switchWorkspace(next.id);
+    } else {
+      await createAndSwitchWorkspace();
+    }
+  }
+  await currentAdapter.deleteWorkspace(workspaceId);
+}
+
 export function getCurrentAdapter(): WorkspaceAdapter | null {
   return currentAdapter;
 }

@@ -42,6 +42,28 @@ export function createDexieAdapter(opts: DexieAdapterOptions = {}): WorkspaceAda
         .modify({ name, updatedAt: now() });
     },
 
+    async deleteWorkspace(workspaceId) {
+      // Cascade across all child tables. Wrap in a single transaction so a
+      // mid-failure leaves the workspace + its rows in a consistent state.
+      await dbInstance.transaction(
+        "rw",
+        [
+          dbInstance.workspaces,
+          dbInstance.records,
+          dbInstance.changes,
+          dbInstance.irs,
+          dbInstance.meta,
+        ],
+        async () => {
+          await dbInstance.records.where("workspaceId").equals(workspaceId).delete();
+          await dbInstance.changes.where("workspaceId").equals(workspaceId).delete();
+          await dbInstance.irs.delete(workspaceId);
+          await dbInstance.meta.delete(workspaceId);
+          await dbInstance.workspaces.delete(workspaceId);
+        },
+      );
+    },
+
     async hydrate(workspaceId) {
       const [workspace, irRow, meta, changeRows, recordRows] = await Promise.all([
         dbInstance.workspaces.get(workspaceId),
