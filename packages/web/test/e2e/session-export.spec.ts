@@ -29,7 +29,8 @@ test.describe("session export/import", () => {
     await page.getByRole("button", { name: /^import$/i }).click();
     await expect(page.getByText("10").first()).toBeVisible();
 
-    await page.getByRole("button", { name: /export json schema/i }).click();
+    // Interpretation: header button text was tightened to just "Export".
+    await page.getByRole("button", { name: /^export$/i }).click();
     await page.getByRole("tab", { name: /full session/i }).click();
     await expect(page.getByRole("button", { name: /download \.session\.json/i })).toBeEnabled();
     await expect(page.getByLabel(/session size/i)).toBeVisible();

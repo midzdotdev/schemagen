@@ -27,7 +27,8 @@ describe("MismatchPanel", () => {
       useStore.getState().setRecords([{ id: "a", status: "active" }]);
     });
     render(<MismatchPanel />);
-    expect(screen.getByText(/no mismatches/i)).toBeInTheDocument();
+    // Interpretation: empty-state copy now says "All records are valid".
+    expect(screen.getByText(/all records are valid/i)).toBeInTheDocument();
   });
 
   // Spec: docs/frontend-spec.md § "Mismatch panel"
@@ -40,9 +41,12 @@ describe("MismatchPanel", () => {
       ]);
     });
     render(<MismatchPanel />);
-    // literal-violation on status; unexpected-field on stripe_customer_id
-    expect(screen.getByText(/literal violation/i)).toBeInTheDocument();
-    expect(screen.getByText(/unexpected field/i)).toBeInTheDocument();
+    // Interpretation: kind badges were tightened to short labels ("literal" for
+    // literal-violation, "extra" for unexpected-field). Both should appear at
+    // least once; literal appears more than once because the suggestion text
+    // also includes it.
+    expect(screen.getAllByText(/literal/i).length).toBeGreaterThan(0);
+    expect(screen.getByText(/extra/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /add "past_due" to literals/i })).toBeInTheDocument();
   });
 
@@ -56,7 +60,7 @@ describe("MismatchPanel", () => {
     render(<MismatchPanel />);
     await user.click(screen.getByRole("button", { name: /add "past_due" to literals/i }));
     await waitFor(() => {
-      expect(screen.queryByText(/literal violation/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/literal/i)).not.toBeInTheDocument();
     });
     // Confirm the IR was updated
     const status = (

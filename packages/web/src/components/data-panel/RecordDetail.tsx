@@ -39,19 +39,15 @@ export function RecordDetail({ open, onOpenChange, index }: RecordDetailProps) {
         {mismatches.length > 0 && (
           <div className="flex flex-wrap gap-1">
             {mismatches.map((m) => (
-              <Badge
-                key={`${m.kind}:${m.path.join(".")}`}
-                variant="destructive"
-                className="text-[10px]"
-              >
-                {m.kind} @ {m.path.join(".") || "(root)"}
+              <Badge key={`${m.kind}:${m.path.join(".")}`} variant="destructive">
+                {m.kind} <span className="ml-1 font-mono">@ {m.path.join(".") || "(root)"}</span>
               </Badge>
             ))}
           </div>
         )}
         <pre
           aria-label="Record JSON"
-          className="max-h-96 overflow-auto rounded border border-[--color-border] bg-[--color-muted] p-3 font-mono text-xs"
+          className="max-h-96 overflow-auto rounded-md border border-border bg-muted/50 p-3 font-mono text-xs leading-relaxed"
         >
           {record !== null && record !== undefined ? JSON.stringify(record, null, 2) : "No record."}
         </pre>

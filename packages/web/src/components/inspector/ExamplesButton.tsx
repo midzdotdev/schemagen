@@ -10,13 +10,13 @@ import { Button } from "../ui/button";
 export interface ExamplesButtonProps {
   predicate?: (value: unknown) => boolean;
   label?: string;
-  size?: "default" | "sm";
+  size?: "default" | "sm" | "xs";
 }
 
 export function ExamplesButton({
   predicate,
-  label = "Show example records",
-  size = "sm",
+  label = "Show records",
+  size = "xs",
 }: ExamplesButtonProps) {
   const ir = useStore((s) => s.ir);
   const records = useStore((s) => s.records);
@@ -28,13 +28,14 @@ export function ExamplesButton({
   return (
     <Button
       size={size}
-      variant="outline"
+      variant="ghost"
+      className="text-muted-foreground"
       onClick={() => {
         const refs = findExamples(ir, records, selectedPath, predicate, 20);
         setSelectedRecordIndices(refs.map((r) => r.index));
       }}
     >
-      <Search className="mr-1 h-3 w-3" />
+      <Search className="size-3" />
       {label}
     </Button>
   );

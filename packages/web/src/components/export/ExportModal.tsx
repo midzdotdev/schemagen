@@ -78,11 +78,11 @@ export function ExportModal({ open, onOpenChange }: ExportModalProps) {
           <TabsContent value="schema">
             <pre
               aria-label="JSON Schema preview"
-              className="max-h-96 overflow-auto rounded border border-[--color-border] bg-[--color-muted] p-3 font-mono text-xs"
+              className="max-h-96 overflow-auto rounded-md border border-border bg-muted/50 p-3 font-mono text-xs"
             >
               {schemaText || "Import data to see a schema."}
             </pre>
-            <div className="mt-2 flex justify-end gap-2">
+            <div className="mt-3 flex justify-end gap-2">
               <Button
                 size="sm"
                 variant="outline"
@@ -92,23 +92,25 @@ export function ExportModal({ open, onOpenChange }: ExportModalProps) {
                 Download
               </Button>
               <Button size="sm" onClick={handleCopy} disabled={!schemaText}>
-                {copied ? "Copied!" : "Copy"}
+                {copied ? "Copied" : "Copy"}
               </Button>
             </div>
           </TabsContent>
           <TabsContent value="session">
-            <p className="text-xs text-[--color-muted-foreground]">
-              Bundles IR + records + history + identity config into one file. Import it on another
-              machine to pick up where you left off. No re-inference, no tweak loss.
-            </p>
-            <p className="mt-2 text-xs text-[--color-muted-foreground]">
-              Estimated size:{" "}
-              <span aria-label="Session size" className="font-mono">
-                {formatBytes(sessionSize)}
-              </span>{" "}
-              ({records.length} records, {history.entries.length} history entries)
-            </p>
-            <div className="mt-2 flex justify-end">
+            <div className="rounded-md border border-border bg-muted/30 p-3">
+              <p className="text-xs leading-relaxed text-muted-foreground">
+                Bundles IR + records + history + identity config into one file. Import it on another
+                machine to pick up where you left off — no re-inference, no tweak loss.
+              </p>
+              <p className="mt-2 text-xs text-muted-foreground">
+                Estimated size:{" "}
+                <span aria-label="Session size" className="font-mono text-foreground">
+                  {formatBytes(sessionSize)}
+                </span>{" "}
+                · {records.length} records · {history.entries.length} history entries
+              </p>
+            </div>
+            <div className="mt-3 flex justify-end">
               <Button size="sm" onClick={handleDownloadSession} disabled={!ir}>
                 Download .session.json
               </Button>

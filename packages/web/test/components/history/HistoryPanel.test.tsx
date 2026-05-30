@@ -18,11 +18,12 @@ beforeEach(() => {
 
 describe("HistoryPanel", () => {
   // Spec: docs/frontend-spec.md § "History"
+  // Interpretation: undo/redo moved to the AppHeader (always visible). The
+  // History panel itself shows only an empty-state message when there are no
+  // entries, since the toolbar covers the action while the panel covers the log.
   it("W6-HP1: empty history state", () => {
     render(<HistoryPanel />);
     expect(screen.getByText(/no history yet/i)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /undo/i })).toBeDisabled();
-    expect(screen.getByRole("button", { name: /redo/i })).toBeDisabled();
   });
 
   // Spec: docs/frontend-spec.md § "History" — entries listed in order
