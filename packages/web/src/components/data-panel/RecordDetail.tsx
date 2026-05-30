@@ -6,6 +6,7 @@ import { useMemo } from "react";
 import { useStore } from "../../state/store";
 import { Badge } from "../ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "../ui/dialog";
+import { JsonView } from "../ui/json-view";
 
 export interface RecordDetailProps {
   open: boolean;
@@ -45,12 +46,11 @@ export function RecordDetail({ open, onOpenChange, index }: RecordDetailProps) {
             ))}
           </div>
         )}
-        <pre
-          aria-label="Record JSON"
-          className="max-h-96 overflow-auto rounded-md border border-border bg-muted/50 p-3 font-mono text-xs leading-relaxed"
-        >
-          {record !== null && record !== undefined ? JSON.stringify(record, null, 2) : "No record."}
-        </pre>
+        {record !== null && record !== undefined ? (
+          <JsonView aria-label="Record JSON" value={record} className="max-h-96" />
+        ) : (
+          <p className="text-xs text-muted-foreground">No record.</p>
+        )}
       </DialogContent>
     </Dialog>
   );

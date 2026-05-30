@@ -5,6 +5,7 @@ import { getClientId } from "../../persistence/client-id";
 import { useStore } from "../../state/store";
 import { Button } from "../ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "../ui/dialog";
+import { JsonView } from "../ui/json-view";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 
 export interface ExportModalProps {
@@ -83,12 +84,14 @@ export function ExportModal({ open, onOpenChange }: ExportModalProps) {
             <TabsTrigger value="session">Full session</TabsTrigger>
           </TabsList>
           <TabsContent value="schema">
-            <pre
+            <JsonView
               aria-label="JSON Schema preview"
-              className="max-h-96 overflow-auto rounded-md border border-border bg-muted/50 p-3 font-mono text-xs"
-            >
-              {schemaText || "Import data to see a schema."}
-            </pre>
+              value={undefined}
+              text={schemaText || "Import data to see a schema."}
+              className="max-h-96"
+            />
+            {/* JsonView falls back to a muted-text rendering when the source
+                doesn't tokenize (the placeholder string). */}
             <div className="mt-3 flex justify-end gap-2">
               <Button
                 size="sm"
