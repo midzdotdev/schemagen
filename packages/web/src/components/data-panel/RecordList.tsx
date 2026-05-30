@@ -1,48 +1,70 @@
-import { useEffect, useRef, useState } from "react";
-import { cn } from "../../lib/cn";
-import { useStore } from "../../state/store";
+import { useVirtualizer } from "@tanstack/react-virtual";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { cn } from "@/lib/cn";
+import { useStore } from "@/state/store";
 import { RecordDetail } from "./RecordDetail";
 
 export interface RecordListProps {
   records: unknown[];
 }
 
+// Fixed row height keeps virtualization simple — each preview is a single-line
+// truncated string at the same text size. If we ever wrap, replace with
+// dynamic measurement (estimateSize + measureElement).
+const ROW_HEIGHT = 32;
+
 export function RecordList({ records }: RecordListProps) {
   const selected = useStore((s) => s.selectedRecordIndices);
-  const selectedSet = new Set(selected);
-  const firstSelectedRef = useRef<HTMLLIElement>(null);
+  const selectedSet = useMemo(() => new Set(selected), [selected]);
+  const parentRef = useRef<HTMLDivElement>(null);
   const [detailIndex, setDetailIndex] = useState<number | null>(null);
 
+  const virtualizer = useVirtualizer({
+    count: records.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => ROW_HEIGHT,
+    overscan: 8,
+  });
+
+  // When findExamples highlights a record, scroll to the first highlighted
+  // index. scrollToIndex is cheap and respects the alignment we ask for.
   useEffect(() => {
-    if (selected.length > 0) {
-      firstSelectedRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
-    }
-  }, [selected]);
+    if (selected.length === 0) return;
+    const first = selected[0];
+    if (first === undefined) return;
+    virtualizer.scrollToIndex(first, { align: "auto", behavior: "smooth" });
+  }, [selected, virtualizer]);
 
   if (records.length === 0) return null;
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
-      <ul aria-label="Records" className="flex flex-col">
-        {records.map((r, i) => {
+    <div ref={parentRef} className="h-full overflow-auto">
+      <ul
+        aria-label="Records"
+        className="relative w-full"
+        style={{ height: virtualizer.getTotalSize() }}
+      >
+        {virtualizer.getVirtualItems().map((vRow) => {
+          const i = vRow.index;
+          const r = records[i];
           const isSelected = selectedSet.has(i);
           const preview = previewFor(r);
           return (
             <li
               // biome-ignore lint/suspicious/noArrayIndexKey: records are positional, not keyed
               key={i}
-              ref={isSelected && firstSelectedRef.current === null ? firstSelectedRef : undefined}
               data-testid={isSelected ? "selected-record" : undefined}
               className={cn(
-                "border-b border-border/60 transition-colors last:border-b-0",
+                "absolute left-0 top-0 w-full border-b border-border/60 transition-colors",
                 isSelected && "bg-info/10",
               )}
+              style={{ height: ROW_HEIGHT, transform: `translateY(${vRow.start}px)` }}
             >
               <button
                 type="button"
                 onClick={() => setDetailIndex(i)}
                 className={cn(
-                  "flex w-full items-baseline gap-2 px-3 py-2 text-left text-xs transition-colors",
+                  "flex h-full w-full items-baseline gap-2 px-3 py-2 text-left text-xs transition-colors",
                   "hover:bg-accent/50",
                   isSelected && "hover:bg-info/15",
                 )}
