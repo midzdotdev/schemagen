@@ -1,6 +1,6 @@
 import { CircleAlert, History, Settings2 } from "lucide-react";
-import { useValidation } from "../../hooks/useValidation";
-import { useStore } from "../../state/store";
+import { useValidation } from "@/hooks/useValidation";
+import { useStore } from "@/state/store";
 import { HistoryPanel } from "../history/HistoryPanel";
 import { Inspector } from "../inspector/Inspector";
 import { MismatchPanel } from "../mismatch-panel/MismatchPanel";

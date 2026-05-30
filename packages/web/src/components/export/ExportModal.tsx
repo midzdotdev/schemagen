@@ -1,8 +1,8 @@
 import { emit } from "@schemagen/core";
 import { useState } from "react";
-import { buildSessionBundle, bundleSizeBytes } from "../../lib/session-bundle";
-import { getClientId } from "../../persistence/client-id";
-import { useStore } from "../../state/store";
+import { buildSessionBundle, bundleSizeBytes } from "@/lib/session-bundle";
+import { getClientId } from "@/persistence/client-id";
+import { useStore } from "@/state/store";
 import { Button } from "../ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "../ui/dialog";
 import { JsonView } from "../ui/json-view";

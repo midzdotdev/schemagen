@@ -1,6 +1,6 @@
 import { KeyRound, X } from "lucide-react";
 import { useState } from "react";
-import { useStore } from "../../state/store";
+import { useStore } from "@/state/store";
 import { Button } from "../ui/button";
 import { IdentityConfigDialog } from "./IdentityConfigDialog";
 

@@ -1,9 +1,9 @@
 import type { EvidenceTree, FieldEntry, Node, Path } from "@schemagen/core";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { useState } from "react";
-import { cn } from "../../lib/cn";
-import { evidenceAtPath, pathsEqual } from "../../state/selectors";
-import { useStore } from "../../state/store";
+import { cn } from "@/lib/cn";
+import { evidenceAtPath, pathsEqual } from "@/state/selectors";
+import { useStore } from "@/state/store";
 import { Badge } from "../ui/badge";
 import { KindBadge } from "../ui/kind-badge";
 import type { FilterResult } from "./filter";

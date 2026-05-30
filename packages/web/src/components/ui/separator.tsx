@@ -1,5 +1,5 @@
 import { forwardRef } from "react";
-import { cn } from "../../lib/cn";
+import { cn } from "@/lib/cn";
 
 export interface SeparatorProps extends React.HTMLAttributes<HTMLDivElement> {
   orientation?: "horizontal" | "vertical";

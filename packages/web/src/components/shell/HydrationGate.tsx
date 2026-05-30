@@ -2,7 +2,7 @@
 // See docs/frontend-spec.md § "Persistence".
 
 import { type ReactNode, useEffect, useState } from "react";
-import { initWorkspace } from "../../state/init";
+import { initWorkspace } from "@/state/init";
 
 export interface HydrationGateProps {
   children: ReactNode;

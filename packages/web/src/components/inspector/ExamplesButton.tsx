@@ -4,7 +4,7 @@
 
 import { findExamples } from "@schemagen/core";
 import { Search } from "lucide-react";
-import { useStore } from "../../state/store";
+import { useStore } from "@/state/store";
 import { Button } from "../ui/button";
 
 export interface ExamplesButtonProps {

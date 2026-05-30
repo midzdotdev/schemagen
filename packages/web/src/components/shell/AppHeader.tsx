@@ -9,7 +9,7 @@ import {
   Undo2,
 } from "lucide-react";
 import { useState } from "react";
-import { useStore } from "../../state/store";
+import { useStore } from "@/state/store";
 import { IdentityConfigDialog } from "../identity/IdentityConfigDialog";
 import { Button } from "../ui/button";
 import { Separator } from "../ui/separator";

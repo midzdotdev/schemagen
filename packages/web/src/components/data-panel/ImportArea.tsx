@@ -1,12 +1,12 @@
 import { FileUp, Plus, Upload } from "lucide-react";
 import { type ChangeEvent, useState } from "react";
-import { shouldRenameWorkspace, workspaceNameFromFile } from "../../lib/filename";
-import { checkRoot, parseImport } from "../../lib/json-import";
-import type { PickerCandidate } from "../../lib/root-picker";
-import { enumerateCandidates } from "../../lib/root-picker";
-import { parseSessionBundle } from "../../lib/session-bundle";
-import { loadSessionBundle } from "../../state/init";
-import { useStore } from "../../state/store";
+import { shouldRenameWorkspace, workspaceNameFromFile } from "@/lib/filename";
+import { checkRoot, parseImport } from "@/lib/json-import";
+import type { PickerCandidate } from "@/lib/root-picker";
+import { enumerateCandidates } from "@/lib/root-picker";
+import { parseSessionBundle } from "@/lib/session-bundle";
+import { loadSessionBundle } from "@/state/init";
+import { useStore } from "@/state/store";
 import { Button } from "../ui/button";
 import { Textarea } from "../ui/textarea";
 
