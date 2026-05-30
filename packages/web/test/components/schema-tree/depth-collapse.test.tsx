@@ -2,8 +2,8 @@ import type { IR } from "@schemagen/core";
 import { render, screen } from "@testing-library/react";
 import { act } from "react";
 import { beforeEach, describe, expect, it } from "vitest";
-import { SchemaTree } from "../../../src/components/schema-tree/SchemaTree";
-import { useStore } from "../../../src/state/store";
+import { SchemaTree } from "@/components/schema-tree/SchemaTree";
+import { useStore } from "@/state/store";
 
 // Deeply nested IR: root.a.b.c.d (4 levels deep)
 const deepIR: IR = {

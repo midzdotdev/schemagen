@@ -1,4 +1,4 @@
-import { type PickerCandidate, formatPath, getAtPath } from "../../lib/root-picker";
+import { formatPath, getAtPath, type PickerCandidate } from "../../lib/root-picker";
 import { Button } from "../ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "../ui/dialog";
 

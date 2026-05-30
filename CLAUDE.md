@@ -10,3 +10,9 @@ The README is the entry point for anyone reviewing schemagen and is the only doc
 - When new export targets ship (Zod, TypeScript, others), promote them from "later" to listed alongside JSON Schema.
 
 Don't let the README drift behind reality. If a change makes any part of the README wrong, fix it in the same commit.
+
+## Import conventions
+
+- **Intra-package** (within `@schemagen/web` or `@schemagen/core`): use the `@/` alias for anything that would otherwise need to climb two or more parent directories. `@/` is configured in `tsconfig.json`, `vite.config.ts`, and `vitest.config.ts`. Sibling and one-level-up relative imports are still fine.
+- **Cross-package**: import via the package name (e.g. `import { applyChange } from "@schemagen/core"`). Never reach into a sibling package's `src/` via relative path.
+- Biome enforces this via `lint/style/noRestrictedImports` — anything that starts with three or more `../` is rejected.

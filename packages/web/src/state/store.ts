@@ -2,17 +2,17 @@
 // See docs/frontend-spec.md § "Persistence" + § "History".
 
 import {
+  applyChange as applyChangeCore,
   type Change,
-  type IR,
+  dedupeByIdentity,
   type IdentityConfig,
   type IdentityProposal,
+  type IR,
   type Path,
-  applyChange as applyChangeCore,
-  dedupeByIdentity,
 } from "@schemagen/core";
 import { create } from "zustand";
 import { getClientId } from "../persistence/client-id";
-import type { AppState, ApplyChangeOptions, HistoryEntry } from "./types";
+import type { ApplyChangeOptions, AppState, HistoryEntry } from "./types";
 
 export interface StoreActions {
   setIR: (ir: IR | null) => void;

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { checkRoot, parseImport } from "../../src/lib/json-import";
+import { checkRoot, parseImport } from "@/lib/json-import";
 
 describe("parseImport", () => {
   // Spec: docs/frontend-spec.md § "Importing records"

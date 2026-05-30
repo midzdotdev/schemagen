@@ -34,7 +34,7 @@ function navigate(value: unknown, path: Path): unknown {
     }
     if (typeof current !== "object" || Array.isArray(current)) return undefined;
     const obj = current as Record<string, unknown>;
-    if (!Object.prototype.hasOwnProperty.call(obj, segment)) return undefined;
+    if (!Object.hasOwn(obj, segment)) return undefined;
     current = obj[segment];
   }
   return current;

@@ -1,7 +1,7 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it } from "vitest";
-import { HydrationGate } from "../../../src/components/shell/HydrationGate";
-import { useStore } from "../../../src/state/store";
+import { HydrationGate } from "@/components/shell/HydrationGate";
+import { useStore } from "@/state/store";
 
 beforeEach(() => {
   useStore.getState().resetForTests();

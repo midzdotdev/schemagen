@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { JsonView } from "../../../src/components/ui/json-view";
+import { JsonView } from "@/components/ui/json-view";
 
 describe("JsonView", () => {
   it("renders the JSON text verbatim", () => {

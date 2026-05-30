@@ -61,14 +61,13 @@ describe("format detection", () => {
   });
 
   // Spec: docs/ir-spec.md § "Node kinds" § "string" — recognized formats list
-  it.each(Object.keys(FORMAT_FIXTURES) as FormatName[])(
-    "IF2: format %s is detected when all values match",
-    (format) => {
-      const values = FORMAT_FIXTURES[format];
-      const samples = values.map((v) => ({ x: v }));
-      expect(stringField(infer(samples), "x").format).toBe(format);
-    },
-  );
+  it.each(
+    Object.keys(FORMAT_FIXTURES) as FormatName[],
+  )("IF2: format %s is detected when all values match", (format) => {
+    const values = FORMAT_FIXTURES[format];
+    const samples = values.map((v) => ({ x: v }));
+    expect(stringField(infer(samples), "x").format).toBe(format);
+  });
 
   // Spec: docs/ir-spec.md § "Node kinds" § "string" — "All constraints are AND'd"
   it("IF3: a single non-matching value => no format", () => {

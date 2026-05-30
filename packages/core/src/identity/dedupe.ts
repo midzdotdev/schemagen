@@ -85,7 +85,7 @@ function navigate(value: unknown, path: Path): unknown {
     }
     if (typeof current !== "object" || Array.isArray(current)) return undefined;
     const obj = current as Record<string, unknown>;
-    if (!Object.prototype.hasOwnProperty.call(obj, seg)) return undefined;
+    if (!Object.hasOwn(obj, seg)) return undefined;
     current = obj[seg];
   }
   return current;

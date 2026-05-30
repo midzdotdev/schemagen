@@ -2,8 +2,8 @@ import type { IR } from "@schemagen/core";
 import { fireEvent, renderHook } from "@testing-library/react";
 import { act } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { useKeyboardShortcuts } from "../../src/hooks/useKeyboardShortcuts";
-import { useStore } from "../../src/state/store";
+import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
+import { useStore } from "@/state/store";
 
 beforeEach(() => {
   useStore.getState().resetForTests();

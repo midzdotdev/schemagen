@@ -194,7 +194,7 @@ const WALKERS: Walkers = {
     if (value === null || typeof value !== "object" || Array.isArray(value)) return;
     const obj = value as Record<string, unknown>;
     for (const [name, entry] of Object.entries(node.fields)) {
-      const hasKey = Object.prototype.hasOwnProperty.call(obj, name);
+      const hasKey = Object.hasOwn(obj, name);
       if (!hasKey) continue;
       const fieldEv = ev.fields[name];
       if (!fieldEv) continue;

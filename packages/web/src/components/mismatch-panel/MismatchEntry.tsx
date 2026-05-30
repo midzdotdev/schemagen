@@ -1,4 +1,4 @@
-import { type Mismatch, findExamples } from "@schemagen/core";
+import { findExamples, type Mismatch } from "@schemagen/core";
 import { Search } from "lucide-react";
 import { useState } from "react";
 import { cn } from "../../lib/cn";

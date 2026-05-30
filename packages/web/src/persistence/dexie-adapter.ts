@@ -6,7 +6,7 @@ import type { IR } from "@schemagen/core";
 import type { Store } from "../state/store";
 import type { WorkspaceAdapter, WorkspaceSnapshot } from "./adapter";
 import { getClientId } from "./client-id";
-import { type SchemaGenDB, db as defaultDb } from "./db";
+import { db as defaultDb, type SchemaGenDB } from "./db";
 
 export interface DexieAdapterOptions {
   db?: SchemaGenDB;

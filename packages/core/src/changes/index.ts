@@ -174,7 +174,7 @@ function addField(
   position?: number,
 ): { ir: IR; inverse: Change } {
   const obj = expectObject(ir, parentPath);
-  if (Object.prototype.hasOwnProperty.call(obj.fields, name)) {
+  if (Object.hasOwn(obj.fields, name)) {
     throw new Error(`field '${name}' already exists`);
   }
   const entries = Object.entries(obj.fields);
@@ -213,13 +213,13 @@ function renameField(
   to: string,
 ): { ir: IR; inverse: Change } {
   const obj = expectObject(ir, parentPath);
-  if (!Object.prototype.hasOwnProperty.call(obj.fields, from)) {
+  if (!Object.hasOwn(obj.fields, from)) {
     throw new Error(`field '${from}' not found`);
   }
   if (from === to) {
     return { ir, inverse: { op: "rename-field", path: parentPath, from: to, to: from } };
   }
-  if (Object.prototype.hasOwnProperty.call(obj.fields, to)) {
+  if (Object.hasOwn(obj.fields, to)) {
     throw new Error(`field '${to}' already exists`);
   }
   const fields: Record<string, FieldEntry> = {};

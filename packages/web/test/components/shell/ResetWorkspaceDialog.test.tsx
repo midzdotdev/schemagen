@@ -2,8 +2,8 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { act } from "react";
 import { beforeEach, describe, expect, it } from "vitest";
-import { ResetWorkspaceDialog } from "../../../src/components/shell/ResetWorkspaceDialog";
-import { useStore } from "../../../src/state/store";
+import { ResetWorkspaceDialog } from "@/components/shell/ResetWorkspaceDialog";
+import { useStore } from "@/state/store";
 
 beforeEach(() => {
   useStore.getState().resetForTests();

@@ -46,12 +46,11 @@ function walk(value: unknown, fn: (v: object) => void): void {
 
 describe("serialization", () => {
   // Spec: docs/ir-spec.md § "Design properties" #1 + § "Serialization"
-  it.each(fixtures.map((ir, idx) => ({ idx, ir })))(
-    "SE1: fixture $idx round-trips through JSON",
-    ({ ir }) => {
-      expect(JSON.parse(JSON.stringify(ir))).toEqual(ir);
-    },
-  );
+  it.each(fixtures.map((ir, idx) => ({ idx, ir })))("SE1: fixture $idx round-trips through JSON", ({
+    ir,
+  }) => {
+    expect(JSON.parse(JSON.stringify(ir))).toEqual(ir);
+  });
 
   // Spec: docs/ir-spec.md § "Design properties" #3 + § "Serialization"
   // — "object keys preserved in insertion order"

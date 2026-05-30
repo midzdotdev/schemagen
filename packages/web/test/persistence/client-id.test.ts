@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { getClientId, resetClientIdForTests } from "../../src/persistence/client-id";
+import { getClientId, resetClientIdForTests } from "@/persistence/client-id";
 
 beforeEach(() => {
   resetClientIdForTests();

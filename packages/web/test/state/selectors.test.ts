@@ -6,7 +6,7 @@ import {
   isPathPrefix,
   mismatchCountAtPath,
   pathsEqual,
-} from "../../src/state/selectors";
+} from "@/state/selectors";
 
 describe("path helpers", () => {
   // Spec: docs/frontend-spec.md § "Schema tree"

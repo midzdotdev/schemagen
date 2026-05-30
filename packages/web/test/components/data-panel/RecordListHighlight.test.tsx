@@ -1,8 +1,8 @@
 import { render, screen } from "@testing-library/react";
 import { act } from "react";
 import { beforeEach, describe, expect, it } from "vitest";
-import { RecordList } from "../../../src/components/data-panel/RecordList";
-import { useStore } from "../../../src/state/store";
+import { RecordList } from "@/components/data-panel/RecordList";
+import { useStore } from "@/state/store";
 
 beforeEach(() => {
   useStore.getState().resetForTests();

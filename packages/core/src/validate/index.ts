@@ -5,10 +5,9 @@ import { FORMAT_MATCHERS } from "../infer/formats";
 import { checkStructure } from "../ir/structure";
 import type { FormatName, IR, Node, NumberNode, Path, StringNode } from "../ir/types";
 import {
-  type Mismatch,
-  type ValidationResult,
   describeValue,
   inferLeafNode,
+  type Mismatch,
   suggestForDuplicateItems,
   suggestForFormatViolation,
   suggestForLiteralViolation,
@@ -20,6 +19,7 @@ import {
   suggestForTypeMismatch,
   suggestForUnexpectedField,
   suggestForWrongLength,
+  type ValidationResult,
 } from "./mismatches";
 
 export type { Mismatch, MismatchKind, Suggestion, ValidationResult } from "./mismatches";
@@ -177,7 +177,7 @@ function walkNode(
       }
       const obj = value as Record<string, unknown>;
       for (const [name, entry] of Object.entries(node.fields)) {
-        const hasKey = Object.prototype.hasOwnProperty.call(obj, name);
+        const hasKey = Object.hasOwn(obj, name);
         if (!hasKey) {
           if (!(entry.optional ?? false)) {
             emit(mismatches, recordIndex, {

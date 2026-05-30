@@ -3,8 +3,8 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { act } from "react";
 import { beforeEach, describe, expect, it } from "vitest";
-import { ExamplesButton } from "../../../src/components/inspector/ExamplesButton";
-import { useStore } from "../../../src/state/store";
+import { ExamplesButton } from "@/components/inspector/ExamplesButton";
+import { useStore } from "@/state/store";
 
 const ir: IR = {
   kind: "object",

@@ -1,17 +1,19 @@
 {
-  "$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.4.16/schema.json",
   "files": {
-    "ignore": [
-      "dist",
-      "node_modules",
-      "coverage",
-      ".pnpm-store",
-      "pnpm-lock.yaml",
-      ".claude",
-      ".vite",
-      "test-results",
-      "playwright-report",
-      "samples"
+    "includes": [
+      "**",
+      "!**/dist",
+      "!**/node_modules",
+      "!**/coverage",
+      "!**/.pnpm-store",
+      "!**/pnpm-lock.yaml",
+      "!**/.claude",
+      "!**/.vite",
+      "!**/test-results",
+      "!**/playwright-report",
+      "!**/samples",
+      "!**/styles.css"
     ]
   },
   "linter": {
@@ -20,6 +22,25 @@
       "recommended": true,
       "performance": {
         "noDelete": "off"
+      },
+      "a11y": {
+        "useAriaPropsSupportedByRole": "off",
+        "useFocusableInteractive": "off",
+        "useSemanticElements": "off",
+        "noStaticElementInteractions": "off"
+      },
+      "style": {
+        "noRestrictedImports": {
+          "level": "error",
+          "options": {
+            "patterns": [
+              {
+                "group": ["../../../**"],
+                "message": "Use the @/ alias for intra-package imports (configured in tsconfig.json + vite.config.ts + vitest.config.ts). Reaching 3+ directories up means crossing a boundary that should be either same-package via @/ or cross-package via the package name (e.g. @schemagen/core)."
+              }
+            ]
+          }
+        }
       }
     }
   },
@@ -36,7 +57,5 @@
       "trailingCommas": "all"
     }
   },
-  "organizeImports": {
-    "enabled": true
-  }
+  "assist": { "actions": { "source": { "organizeImports": "on" } } }
 }

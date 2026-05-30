@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { App } from "../../src/App";
+import { App } from "@/App";
 
 describe("App", () => {
   // Spec: docs/frontend-spec.md § "Top-level layout"

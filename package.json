@@ -11,7 +11,7 @@
     "build": "pnpm -r build"
   },
   "devDependencies": {
-    "@biomejs/biome": "^1.9.4",
+    "@biomejs/biome": "^2.4.16",
     "typescript": "^5.6.3"
   },
   "packageManager": "pnpm@10.29.2",
@@ -19,6 +19,10 @@
     "node": ">=20"
   },
   "pnpm": {
-    "onlyBuiltDependencies": ["@biomejs/biome", "@tailwindcss/oxide", "esbuild"]
+    "onlyBuiltDependencies": [
+      "@biomejs/biome",
+      "@tailwindcss/oxide",
+      "esbuild"
+    ]
   }
 }

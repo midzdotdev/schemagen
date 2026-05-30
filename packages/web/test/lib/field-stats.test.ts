@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { compositeUniqueness, computeFieldStats } from "../../src/lib/field-stats";
+import { compositeUniqueness, computeFieldStats } from "@/lib/field-stats";
 
 describe("computeFieldStats", () => {
   it("returns empty for empty input", () => {

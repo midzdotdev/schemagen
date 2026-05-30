@@ -2,8 +2,8 @@ import type { IR } from "@schemagen/core";
 import { render, screen } from "@testing-library/react";
 import { act } from "react";
 import { beforeEach, describe, expect, it } from "vitest";
-import { RecordDetail } from "../../../src/components/data-panel/RecordDetail";
-import { useStore } from "../../../src/state/store";
+import { RecordDetail } from "@/components/data-panel/RecordDetail";
+import { useStore } from "@/state/store";
 
 const ir: IR = {
   kind: "object",

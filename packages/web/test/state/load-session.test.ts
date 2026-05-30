@@ -1,9 +1,9 @@
 import type { IR } from "@schemagen/core";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { type SchemaGenDB, createDb } from "../../src/persistence/db";
-import { createDexieAdapter } from "../../src/persistence/dexie-adapter";
-import { initWorkspace, loadSessionBundle } from "../../src/state/init";
-import { useStore } from "../../src/state/store";
+import { createDb, type SchemaGenDB } from "@/persistence/db";
+import { createDexieAdapter } from "@/persistence/dexie-adapter";
+import { initWorkspace, loadSessionBundle } from "@/state/init";
+import { useStore } from "@/state/store";
 
 let db: SchemaGenDB;
 let dbCounter = 0;

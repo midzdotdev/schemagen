@@ -67,7 +67,9 @@ function walk(node: unknown, path: Path, errors: StructureError[]): void {
       } else if (n.items.length === 0) {
         errors.push({ path, message: "tuple 'items' must be non-empty" });
       } else {
-        n.items.forEach((item, i) => walk(item, [...path, "items", i], errors));
+        n.items.forEach((item, i) => {
+          walk(item, [...path, "items", i], errors);
+        });
       }
       if ("rest" in n && n.rest !== undefined) {
         walk(n.rest, [...path, "rest"], errors);
@@ -135,7 +137,9 @@ function walk(node: unknown, path: Path, errors: StructureError[]): void {
       } else if (n.variants.length < 2) {
         errors.push({ path, message: "union 'variants' must have at least 2 entries" });
       } else {
-        n.variants.forEach((v, i) => walk(v, [...path, "variants", i], errors));
+        n.variants.forEach((v, i) => {
+          walk(v, [...path, "variants", i], errors);
+        });
       }
       if (n.discriminator !== undefined && typeof n.discriminator !== "string") {
         errors.push({

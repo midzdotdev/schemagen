@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { canonicalHash } from "../../src/lib/canonical-hash";
+import { canonicalHash } from "@/lib/canonical-hash";
 
 describe("canonicalHash", () => {
   // Spec: docs/frontend-spec.md § "Deduplication" — same record => same hash

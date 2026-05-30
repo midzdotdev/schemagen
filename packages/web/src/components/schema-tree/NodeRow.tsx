@@ -59,7 +59,6 @@ export function NodeRow({
             setSelectedPath(path);
           }
         }}
-        // biome-ignore lint/a11y/useSemanticElements: row is a tree-item; using div for layout
         role="button"
         tabIndex={0}
       >
@@ -143,7 +142,6 @@ export function NodeRow({
         </div>
       </div>
       {expanded && hasChildren && (
-        // biome-ignore lint/a11y/useSemanticElements: <fieldset> would force a default border; this is a virtualizable tree row container
         <div role="group">
           {children.map((child) => {
             const childEvidence = evidenceAtPath(evidence, child.path.slice(path.length));
