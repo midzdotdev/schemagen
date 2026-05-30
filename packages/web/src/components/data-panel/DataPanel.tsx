@@ -26,7 +26,6 @@ export function DataPanel() {
   const setIR = useStore((s) => s.setIR);
   const ir = useStore((s) => s.ir);
   const identityConfig = useStore((s) => s.identityConfig);
-  const identityProposal = useStore((s) => s.identityProposal);
   const setIdentityProposal = useStore((s) => s.setIdentityProposal);
   const dismissed = useStore((s) => s.identityProposalDismissed);
 
@@ -56,9 +55,14 @@ export function DataPanel() {
 
     if (!ir) setIR(infer(merged));
 
-    if (!identityConfig && !dismissed && !identityProposal) {
+    // Re-evaluate the identity proposal on every commit when there's no
+    // active config and the user hasn't dismissed. Earlier code only ran
+    // proposeIdentityKey on the first import; subsequent imports could
+    // invalidate the stored proposal or surface a stronger candidate, and
+    // neither was being reflected.
+    if (!identityConfig && !dismissed) {
       const proposal = proposeIdentityKey(merged);
-      if (proposal) setIdentityProposal(proposal);
+      setIdentityProposal(proposal);
     }
   }
 
