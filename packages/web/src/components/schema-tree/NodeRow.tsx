@@ -54,11 +54,18 @@ export function NodeRow({
   const indent = depth * 14;
 
   return (
+    // The outer treeitem div carries the tree role + aria state. The inner
+    // clickable row uses a plain div with role="button" because we have nested
+    // interactive controls (chevron, kind badge, etc.) and nested <button>s
+    // aren't allowed in HTML. Both useFocusableInteractive and useSemanticElements
+    // expect a native interactive element which doesn't fit the tree pattern.
+    // biome-ignore lint/a11y/useFocusableInteractive: tabIndex is on the inner row
     <div
       role="treeitem"
       aria-selected={isSelected}
       aria-expanded={hasChildren ? expanded : undefined}
     >
+      {/* biome-ignore lint/a11y/useSemanticElements: nested controls preclude <button> */}
       <div
         className={cn(
           "group/row relative flex items-center gap-2 py-1 pr-3 text-sm transition-colors",
@@ -160,6 +167,7 @@ export function NodeRow({
         </div>
       </div>
       {actuallyExpanded && hasChildren && (
+        // biome-ignore lint/a11y/useSemanticElements: <fieldset> would force an outline; this is a tree group wrapper
         <div role="group">
           {children.map((child) => {
             const childEvidence = evidenceAtPath(evidence, child.path.slice(path.length));

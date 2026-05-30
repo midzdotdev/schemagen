@@ -25,8 +25,8 @@ if (typeof File !== "undefined" && File.prototype.text === undefined) {
 //   - getBoundingClientRect / clientHeight returns a generous viewport
 //   - ResizeObserver is a no-op shim (the virtualizer only needs it to exist)
 if (typeof Element !== "undefined") {
-  Element.prototype.getBoundingClientRect = function () {
-    return {
+  Element.prototype.getBoundingClientRect = () =>
+    ({
       width: 800,
       height: 600,
       top: 0,
@@ -36,8 +36,7 @@ if (typeof Element !== "undefined") {
       x: 0,
       y: 0,
       toJSON: () => ({}),
-    } as DOMRect;
-  };
+    }) as DOMRect;
   Object.defineProperty(HTMLElement.prototype, "clientHeight", {
     configurable: true,
     get: () => 600,

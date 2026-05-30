@@ -52,6 +52,7 @@ export function DropZone({ children, onRecords, onNeedsPicker, onError }: DropZo
   }
 
   return (
+    // biome-ignore lint/a11y/noStaticElementInteractions: drag-drop file import is keyboard-accessible via the explicit file input above
     <div
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}

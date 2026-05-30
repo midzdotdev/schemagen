@@ -114,7 +114,8 @@ export function ExportModal({ open, onOpenChange }: ExportModalProps) {
               </p>
               <p className="mt-2 text-xs text-muted-foreground">
                 Estimated size:{" "}
-                <span aria-label="Session size" className="font-mono text-foreground">
+                {/* data-testid for tests; aria-label on a span without a role isn't useful. */}
+                <span data-testid="session-size" className="font-mono text-foreground">
                   {formatBytes(sessionSize)}
                 </span>{" "}
                 · {records.length} records · {history.entries.length} history entries

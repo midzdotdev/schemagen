@@ -23,12 +23,6 @@
       "performance": {
         "noDelete": "off"
       },
-      "a11y": {
-        "useAriaPropsSupportedByRole": "off",
-        "useFocusableInteractive": "off",
-        "useSemanticElements": "off",
-        "noStaticElementInteractions": "off"
-      },
       "style": {
         "noRestrictedImports": {
           "level": "error",
