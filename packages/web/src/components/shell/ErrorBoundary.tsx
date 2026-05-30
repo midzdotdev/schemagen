@@ -16,16 +16,15 @@ interface Props {
 // lifecycle hook. Event handler errors don't reach here — they're caught
 // inline (see Inspector.applyChange).
 export class ErrorBoundary extends Component<Props, State> {
-  state: State = { error: null };
+  override state: State = { error: null };
 
   static getDerivedStateFromError(error: Error): State {
     return { error };
   }
 
-  componentDidCatch(error: Error, info: ErrorInfo): void {
+  override componentDidCatch(error: Error, info: ErrorInfo): void {
     // Surface to the console so the dev tools stack trace is still there.
     // We don't pipe this anywhere else — there's no telemetry layer yet.
-    // eslint-disable-next-line no-console
     console.error("ErrorBoundary caught:", error, info);
     this.setState({ error, componentStack: info.componentStack ?? undefined });
   }
@@ -34,7 +33,7 @@ export class ErrorBoundary extends Component<Props, State> {
     this.setState({ error: null, componentStack: undefined });
   };
 
-  render(): ReactNode {
+  override render(): ReactNode {
     if (!this.state.error) return this.props.children;
     return (
       <ErrorPanel
