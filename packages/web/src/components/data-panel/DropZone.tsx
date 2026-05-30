@@ -2,11 +2,11 @@
 // Spec: docs/frontend-spec.md § "Importing records" — drag-and-drop.
 
 import { type DragEvent, type ReactNode, useState } from "react";
-import { cn } from "../../lib/cn";
-import { shouldRenameWorkspace, workspaceNameFromFile } from "../../lib/filename";
-import { ingestText } from "../../lib/import-pipeline";
-import type { PickerCandidate } from "../../lib/root-picker";
-import { useStore } from "../../state/store";
+import { cn } from "@/lib/cn";
+import { shouldRenameWorkspace, workspaceNameFromFile } from "@/lib/filename";
+import { ingestText } from "@/lib/import-pipeline";
+import type { PickerCandidate } from "@/lib/root-picker";
+import { useStore } from "@/state/store";
 
 export interface DropZoneProps {
   children: ReactNode;

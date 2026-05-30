@@ -1,9 +1,9 @@
 import { dedupeByIdentity, infer, proposeIdentityKey } from "@schemagen/core";
 import { Database, FileText, Inbox } from "lucide-react";
 import { useState } from "react";
-import { canonicalHash } from "../../lib/canonical-hash";
-import type { PickerCandidate } from "../../lib/root-picker";
-import { useStore } from "../../state/store";
+import { canonicalHash } from "@/lib/canonical-hash";
+import type { PickerCandidate } from "@/lib/root-picker";
+import { useStore } from "@/state/store";
 import { IdentitySuggestion } from "../identity/IdentitySuggestion";
 import { EmptyState } from "../shell/EmptyState";
 import { PaneHeader } from "../shell/PaneHeader";

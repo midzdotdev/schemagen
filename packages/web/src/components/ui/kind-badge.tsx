@@ -1,4 +1,4 @@
-import { cn } from "../../lib/cn";
+import { cn } from "@/lib/cn";
 
 // Each IR kind gets a distinct hue so a glance across the schema tree is enough
 // to tell shapes apart without reading every label.

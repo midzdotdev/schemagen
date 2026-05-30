@@ -1,4 +1,4 @@
-import { useStore } from "../../state/store";
+import { useStore } from "@/state/store";
 import { Button } from "../ui/button";
 import {
   Dialog,

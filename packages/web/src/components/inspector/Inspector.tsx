@@ -1,8 +1,8 @@
 import { type Change, getNodeAt } from "@schemagen/core";
 import { MousePointer2, Wand2 } from "lucide-react";
 import { useState } from "react";
-import { formatPath } from "../../state/selectors";
-import { useStore } from "../../state/store";
+import { formatPath } from "@/state/selectors";
+import { useStore } from "@/state/store";
 import { EmptyState } from "../shell/EmptyState";
 import { KindBadge } from "../ui/kind-badge";
 import { ArrayControls } from "./ArrayControls";

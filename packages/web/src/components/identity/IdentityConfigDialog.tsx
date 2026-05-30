@@ -2,9 +2,9 @@
 
 import type { IdentityConfig } from "@schemagen/core";
 import { useEffect, useMemo, useState } from "react";
-import { cn } from "../../lib/cn";
-import { compositeUniqueness, computeFieldStats } from "../../lib/field-stats";
-import { useStore } from "../../state/store";
+import { cn } from "@/lib/cn";
+import { compositeUniqueness, computeFieldStats } from "@/lib/field-stats";
+import { useStore } from "@/state/store";
 import { Button } from "../ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "../ui/dialog";
 

@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, useState } from "react";
-import { cn } from "../../lib/cn";
-import { useStore } from "../../state/store";
+import { cn } from "@/lib/cn";
+import { useStore } from "@/state/store";
 
 // Click-to-edit workspace name. Reads/writes useStore.workspaceName.
 // Submits on Enter or blur; Escape reverts.

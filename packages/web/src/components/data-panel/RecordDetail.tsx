@@ -3,7 +3,7 @@
 
 import { validate } from "@schemagen/core";
 import { useMemo } from "react";
-import { useStore } from "../../state/store";
+import { useStore } from "@/state/store";
 import { Badge } from "../ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "../ui/dialog";
 import { JsonView } from "../ui/json-view";

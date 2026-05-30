@@ -1,9 +1,9 @@
 import { findExamples, type Mismatch } from "@schemagen/core";
 import { Search } from "lucide-react";
 import { useState } from "react";
-import { cn } from "../../lib/cn";
-import { formatPath } from "../../state/selectors";
-import { useStore } from "../../state/store";
+import { cn } from "@/lib/cn";
+import { formatPath } from "@/state/selectors";
+import { useStore } from "@/state/store";
 import { Badge, type badgeVariants } from "../ui/badge";
 import { Button } from "../ui/button";
 
