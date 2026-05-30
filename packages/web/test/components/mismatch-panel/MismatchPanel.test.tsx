@@ -42,11 +42,10 @@ describe("MismatchPanel", () => {
     });
     render(<MismatchPanel />);
     // Interpretation: kind badges were tightened to short labels ("literal" for
-    // literal-violation, "extra" for unexpected-field). Both should appear at
-    // least once; literal appears more than once because the suggestion text
-    // also includes it.
+    // literal-violation, "extra" for unexpected-field). Both badges + the
+    // matching filter chips appear; assert each is present at least once.
     expect(screen.getAllByText(/literal/i).length).toBeGreaterThan(0);
-    expect(screen.getByText(/extra/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/extra/i).length).toBeGreaterThan(0);
     expect(screen.getByRole("button", { name: /add "past_due" to literals/i })).toBeInTheDocument();
   });
 
@@ -69,5 +68,48 @@ describe("MismatchPanel", () => {
       }
     ).fields.status;
     expect(status?.type.literals).toContain("past_due");
+  });
+
+  // PR I — filtering by kind
+  it("W5-MP4: clicking a kind chip filters entries to that kind", async () => {
+    const user = userEvent.setup();
+    act(() => {
+      useStore.getState().setIR(ir);
+      useStore.getState().setRecords([
+        { id: "a", status: "past_due" }, // literal-violation
+        { id: "b", status: "active", x: 1 }, // unexpected-field
+      ]);
+    });
+    render(<MismatchPanel />);
+    // Pre-filter: both literal and extra badges present.
+    expect(screen.getAllByText(/^literal$/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/^extra$/i).length).toBeGreaterThan(0);
+    // Click the EXTRA chip.
+    await user.click(screen.getByRole("button", { name: /^extra 1$/i }));
+    await waitFor(() => {
+      // After filter, the suggestion button for the literal-violation is gone.
+      expect(
+        screen.queryByRole("button", { name: /add "past_due" to literals/i }),
+      ).not.toBeInTheDocument();
+    });
+    expect(screen.getByText(/1 of 2/i)).toBeInTheDocument();
+    // 'clear filter' restores everything.
+    await user.click(screen.getByRole("button", { name: /clear filter/i }));
+    expect(screen.queryByText(/clear filter/i)).not.toBeInTheDocument();
+  });
+
+  // PR I — collapsing a group hides its entries but keeps the header
+  it("W5-MP5: clicking the group header toggles its entries", async () => {
+    const user = userEvent.setup();
+    act(() => {
+      useStore.getState().setIR(ir);
+      useStore.getState().setRecords([{ id: "a", status: "past_due" }]);
+    });
+    render(<MismatchPanel />);
+    expect(screen.getByRole("button", { name: /add "past_due" to literals/i })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /status/i, expanded: true }));
+    expect(
+      screen.queryByRole("button", { name: /add "past_due" to literals/i }),
+    ).not.toBeInTheDocument();
   });
 });
