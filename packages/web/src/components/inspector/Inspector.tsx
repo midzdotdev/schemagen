@@ -1,6 +1,18 @@
-import { type Change, getNodeAt } from "@schemagen/core";
+import {
+  type ArrayNode,
+  type Change,
+  getNodeAt,
+  type Node,
+  type NumberNode,
+  type ObjectNode,
+  type Path,
+  type RecordNode,
+  type StringNode,
+  type TupleNode,
+  type UnionNode,
+} from "@schemagen/core";
 import { MousePointer2, Wand2 } from "lucide-react";
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import { formatPath } from "@/state/selectors";
 import { useStore } from "@/state/store";
 import { EmptyState } from "../shell/EmptyState";
@@ -15,6 +27,47 @@ import { StringControls } from "./StringControls";
 import { TupleControls } from "./TupleControls";
 import { UnionControls } from "./UnionControls";
 import { UniversalControls } from "./UniversalControls";
+
+// Per-kind controls. A kind without a row here means the universal controls
+// alone apply (unknown / null / boolean today). Adding a new kind to the IR
+// makes this a TypeScript error via NarrowedControl below, surfacing the gap.
+type ControlComponent<N extends Node> = (props: {
+  node: N;
+  path: Path;
+  applyChange: (change: Change) => void;
+}) => ReactNode;
+
+interface KindControl<K extends Node["kind"], N extends Extract<Node, { kind: K }>> {
+  title: string;
+  Component: ControlComponent<N>;
+}
+
+const CONTROLS = {
+  string: { title: "String", Component: StringControls } satisfies KindControl<
+    "string",
+    StringNode
+  >,
+  number: { title: "Number", Component: NumberControls } satisfies KindControl<
+    "number",
+    NumberNode
+  >,
+  object: { title: "Object", Component: ObjectControls } satisfies KindControl<
+    "object",
+    ObjectNode
+  >,
+  array: { title: "Array", Component: ArrayControls } satisfies KindControl<"array", ArrayNode>,
+  tuple: { title: "Tuple", Component: TupleControls } satisfies KindControl<"tuple", TupleNode>,
+  union: { title: "Union", Component: UnionControls } satisfies KindControl<"union", UnionNode>,
+  record: { title: "Record", Component: RecordControls } satisfies KindControl<
+    "record",
+    RecordNode
+  >,
+} as const;
+
+type KindWithControls = keyof typeof CONTROLS;
+function hasControls(kind: Node["kind"]): kind is KindWithControls {
+  return kind in CONTROLS;
+}
 
 export function Inspector() {
   const ir = useStore((s) => s.ir);
@@ -76,41 +129,7 @@ export function Inspector() {
         <InspectorSection title="Common">
           <UniversalControls node={node} path={selectedPath} applyChange={applyChange} />
         </InspectorSection>
-        {node.kind === "string" && (
-          <InspectorSection title="String">
-            <StringControls node={node} path={selectedPath} applyChange={applyChange} />
-          </InspectorSection>
-        )}
-        {node.kind === "number" && (
-          <InspectorSection title="Number">
-            <NumberControls node={node} path={selectedPath} applyChange={applyChange} />
-          </InspectorSection>
-        )}
-        {node.kind === "object" && (
-          <InspectorSection title="Object">
-            <ObjectControls node={node} path={selectedPath} applyChange={applyChange} />
-          </InspectorSection>
-        )}
-        {node.kind === "array" && (
-          <InspectorSection title="Array">
-            <ArrayControls node={node} path={selectedPath} applyChange={applyChange} />
-          </InspectorSection>
-        )}
-        {node.kind === "tuple" && (
-          <InspectorSection title="Tuple">
-            <TupleControls node={node} path={selectedPath} applyChange={applyChange} />
-          </InspectorSection>
-        )}
-        {node.kind === "union" && (
-          <InspectorSection title="Union">
-            <UnionControls node={node} path={selectedPath} applyChange={applyChange} />
-          </InspectorSection>
-        )}
-        {node.kind === "record" && (
-          <InspectorSection title="Record">
-            <RecordControls node={node} path={selectedPath} applyChange={applyChange} />
-          </InspectorSection>
-        )}
+        <KindSection node={node} path={selectedPath} applyChange={applyChange} />
         {error && (
           <div className="px-3 py-2">
             <p
@@ -123,5 +142,30 @@ export function Inspector() {
         )}
       </div>
     </div>
+  );
+}
+
+// Renders the kind-specific section for `node`, or nothing if the kind has no
+// specific controls (unknown / null / boolean). The `as` assertions are safe
+// because we narrowed on node.kind right above each call site — but TypeScript
+// can't prove that across the indexed lookup.
+function KindSection({
+  node,
+  path,
+  applyChange,
+}: {
+  node: Node;
+  path: Path;
+  applyChange: (change: Change) => void;
+}): ReactNode {
+  if (!hasControls(node.kind)) return null;
+  const { title, Component } = CONTROLS[node.kind];
+  // The cast bridges the indexed-lookup boundary; verified by KindControl<K,N>
+  // pairings in the CONTROLS table.
+  const Specific = Component as ControlComponent<Node>;
+  return (
+    <InspectorSection title={title}>
+      <Specific node={node} path={path} applyChange={applyChange} />
+    </InspectorSection>
   );
 }
