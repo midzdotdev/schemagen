@@ -1,5 +1,5 @@
 import { FileSearch, GitBranch, Search, X } from "lucide-react";
-import { useState } from "react";
+import { useUIPref } from "@/hooks/useUIPrefs";
 import { useValidation } from "@/hooks/useValidation";
 import { useStore } from "@/state/store";
 import { EmptyState } from "../shell/EmptyState";
@@ -10,8 +10,10 @@ import { SchemaTree } from "./SchemaTree";
 export function SchemaPanel() {
   const ir = useStore((s) => s.ir);
   const records = useStore((s) => s.records);
+  const workspaceId = useStore((s) => s.workspaceId);
   const { mismatches } = useValidation();
-  const [query, setQuery] = useState("");
+  // Persist the filter query per workspace so it survives reload.
+  const [query, setQuery] = useUIPref(workspaceId, "schemaFilter");
 
   if (!ir) {
     return (

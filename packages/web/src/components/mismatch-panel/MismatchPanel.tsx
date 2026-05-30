@@ -1,6 +1,7 @@
 import type { Mismatch } from "@schemagen/core";
 import { CheckCircle2, ChevronDown, ChevronRight, CircleAlert } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
+import { useUIPref } from "@/hooks/useUIPrefs";
 import { useValidation } from "@/hooks/useValidation";
 import { cn } from "@/lib/cn";
 import { formatPath } from "@/state/selectors";
@@ -29,9 +30,13 @@ export function MismatchPanel() {
   const { ok, mismatches } = useValidation();
   const ir = useStore((s) => s.ir);
   const records = useStore((s) => s.records);
+  const workspaceId = useStore((s) => s.workspaceId);
 
-  const [active, setActive] = useState<Set<Kind>>(new Set());
-  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+  // Persist active filter chips + collapsed groups per workspace.
+  const [activeKinds, setActiveKinds] = useUIPref(workspaceId, "mismatchActiveKinds");
+  const [collapsedGroups, setCollapsedGroups] = useUIPref(workspaceId, "mismatchCollapsedGroups");
+  const active = useMemo(() => new Set(activeKinds) as Set<Kind>, [activeKinds]);
+  const collapsed = useMemo(() => new Set(collapsedGroups), [collapsedGroups]);
 
   // Visible counts per kind drive both the chip labels and the filter UI;
   // recomputed when the upstream set changes.
@@ -69,21 +74,17 @@ export function MismatchPanel() {
   }
 
   function toggleKind(kind: Kind): void {
-    setActive((prev) => {
-      const next = new Set(prev);
-      if (next.has(kind)) next.delete(kind);
-      else next.add(kind);
-      return next;
-    });
+    const next = new Set(active);
+    if (next.has(kind)) next.delete(kind);
+    else next.add(kind);
+    setActiveKinds(Array.from(next));
   }
 
   function toggleGroup(key: string): void {
-    setCollapsed((prev) => {
-      const next = new Set(prev);
-      if (next.has(key)) next.delete(key);
-      else next.add(key);
-      return next;
-    });
+    const next = new Set(collapsed);
+    if (next.has(key)) next.delete(key);
+    else next.add(key);
+    setCollapsedGroups(Array.from(next));
   }
 
   return (
@@ -101,7 +102,7 @@ export function MismatchPanel() {
               <button
                 type="button"
                 className="text-foreground underline-offset-2 hover:underline"
-                onClick={() => setActive(new Set())}
+                onClick={() => setActiveKinds([])}
               >
                 clear filter
               </button>
