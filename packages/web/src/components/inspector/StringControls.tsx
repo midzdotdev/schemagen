@@ -98,6 +98,130 @@ export function StringControls({ node, path, applyChange }: StringControlsProps)
           ))}
         </div>
       </Subsection>
+      <PatternControl pattern={node.pattern} path={path} applyChange={applyChange} />
+      <Subsection title="Length">
+        <div className="grid grid-cols-2 gap-2">
+          <BoundField
+            label="Min"
+            which="minLength"
+            value={node.minLength}
+            path={path}
+            applyChange={applyChange}
+          />
+          <BoundField
+            label="Max"
+            which="maxLength"
+            value={node.maxLength}
+            path={path}
+            applyChange={applyChange}
+          />
+        </div>
+      </Subsection>
+    </div>
+  );
+}
+
+function PatternControl({
+  pattern,
+  path,
+  applyChange,
+}: {
+  pattern: string | undefined;
+  path: Path;
+  applyChange: (change: Change) => void;
+}) {
+  const [draft, setDraft] = useState(pattern ?? "");
+  const [error, setError] = useState<string | null>(null);
+
+  function commit(): void {
+    setError(null);
+    const next = draft.trim();
+    if (!next) {
+      if (pattern) applyChange({ op: "set-pattern", path, pattern: null });
+      return;
+    }
+    try {
+      new RegExp(next);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "invalid pattern");
+      return;
+    }
+    if (next !== pattern) applyChange({ op: "set-pattern", path, pattern: next });
+  }
+
+  return (
+    <Subsection title="Pattern">
+      <form
+        className="flex items-center gap-1.5"
+        onSubmit={(e) => {
+          e.preventDefault();
+          commit();
+        }}
+      >
+        <Input
+          aria-label="Regex pattern"
+          placeholder="^[A-Z0-9]+$"
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onBlur={commit}
+          className="h-7 text-xs font-mono"
+        />
+        {pattern && (
+          <Button
+            size="xs"
+            variant="ghost"
+            type="button"
+            aria-label="Clear pattern"
+            onClick={() => {
+              setDraft("");
+              applyChange({ op: "set-pattern", path, pattern: null });
+            }}
+          >
+            <X className="size-3" />
+          </Button>
+        )}
+      </form>
+      {error && <p className="text-[11px] text-destructive">{error}</p>}
+    </Subsection>
+  );
+}
+
+function BoundField({
+  label,
+  which,
+  value,
+  path,
+  applyChange,
+}: {
+  label: string;
+  which: "minLength" | "maxLength";
+  value: number | undefined;
+  path: Path;
+  applyChange: (change: Change) => void;
+}) {
+  const id = `string-${which}`;
+  return (
+    <div className="flex flex-col gap-1">
+      <label htmlFor={id} className="text-[11px] text-muted-foreground">
+        {label}
+      </label>
+      <Input
+        id={id}
+        type="number"
+        min={0}
+        value={value ?? ""}
+        placeholder="unset"
+        className="h-7 text-xs"
+        onChange={(e) => {
+          const v = e.target.value === "" ? null : Number(e.target.value);
+          if (v === null || !Number.isFinite(v)) {
+            applyChange({ op: "set-bound", path, which, value: null });
+          } else {
+            applyChange({ op: "set-bound", path, which, value: v });
+          }
+        }}
+        aria-label={`${which} bound`}
+      />
     </div>
   );
 }

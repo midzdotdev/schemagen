@@ -5,10 +5,14 @@ import { formatPath } from "../../state/selectors";
 import { useStore } from "../../state/store";
 import { EmptyState } from "../shell/EmptyState";
 import { KindBadge } from "../ui/kind-badge";
+import { ArrayControls } from "./ArrayControls";
 import { ExamplesButton } from "./ExamplesButton";
 import { NumberControls } from "./NumberControls";
 import { ObjectControls } from "./ObjectControls";
+import { RecordControls } from "./RecordControls";
 import { StringControls } from "./StringControls";
+import { TupleControls } from "./TupleControls";
+import { UnionControls } from "./UnionControls";
 import { UniversalControls } from "./UniversalControls";
 
 export function Inspector() {
@@ -84,6 +88,26 @@ export function Inspector() {
         {node.kind === "object" && (
           <Section title="Object">
             <ObjectControls node={node} path={selectedPath} applyChange={applyChange} />
+          </Section>
+        )}
+        {node.kind === "array" && (
+          <Section title="Array">
+            <ArrayControls node={node} path={selectedPath} applyChange={applyChange} />
+          </Section>
+        )}
+        {node.kind === "tuple" && (
+          <Section title="Tuple">
+            <TupleControls node={node} path={selectedPath} applyChange={applyChange} />
+          </Section>
+        )}
+        {node.kind === "union" && (
+          <Section title="Union">
+            <UnionControls node={node} path={selectedPath} applyChange={applyChange} />
+          </Section>
+        )}
+        {node.kind === "record" && (
+          <Section title="Record">
+            <RecordControls node={node} path={selectedPath} applyChange={applyChange} />
           </Section>
         )}
         {error && (
