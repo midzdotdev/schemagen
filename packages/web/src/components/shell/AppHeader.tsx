@@ -16,6 +16,7 @@ import { Separator } from "../ui/separator";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 import { ResetWorkspaceDialog } from "./ResetWorkspaceDialog";
 import { ShortcutsDialog } from "./ShortcutsDialog";
+import { ThemeToggle } from "./ThemeToggle";
 import { WorkspaceNameField } from "./WorkspaceNameField";
 import { WorkspaceSwitcher } from "./WorkspaceSwitcher";
 
@@ -155,6 +156,7 @@ export function AppHeader({ onExportClick, shortcutsOpen, onShortcutsChange }: A
 
         <Separator orientation="vertical" className="mx-1 h-5" />
 
+        <ThemeToggle />
         <Button variant="ghost" size="sm" asChild className="text-muted-foreground">
           <a href="https://github.com/midzdotdev/schemagen" target="_blank" rel="noreferrer">
             <Github className="size-3.5" />
