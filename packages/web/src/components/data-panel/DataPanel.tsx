@@ -12,6 +12,7 @@ import { DropZone } from "./DropZone";
 import { ImportArea } from "./ImportArea";
 import { RecordList } from "./RecordList";
 import { RootPickerModal } from "./RootPickerModal";
+import { SampleLoader } from "./SampleLoader";
 
 interface PickerState {
   open: boolean;
@@ -86,6 +87,9 @@ export function DataPanel() {
         />
         <IdentitySuggestion />
         <ImportArea onRecords={commitRecords} onNeedsPicker={handleNeedsPicker} />
+        {records.length === 0 && (
+          <SampleLoader onRecords={commitRecords} onNeedsPicker={handleNeedsPicker} />
+        )}
         <div className="flex min-h-0 flex-1 flex-col border-t border-border">
           <div className="flex h-8 shrink-0 items-center gap-1.5 border-b border-border bg-muted/20 px-3 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
             <FileText className="size-3" />

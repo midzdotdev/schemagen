@@ -13,4 +13,4 @@ playwright-report
 *.tsbuildinfo
 .claude
 .playwright-mcp
-samples
+/samples
