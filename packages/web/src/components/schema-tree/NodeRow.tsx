@@ -6,6 +6,7 @@ import { evidenceAtPath, pathsEqual } from "../../state/selectors";
 import { useStore } from "../../state/store";
 import { Badge } from "../ui/badge";
 import { KindBadge } from "../ui/kind-badge";
+import type { FilterResult } from "./filter";
 
 export interface NodeRowProps {
   node: Node;
@@ -16,6 +17,9 @@ export interface NodeRowProps {
   mismatchCount: number;
   depth: number;
   defaultExpanded?: boolean;
+  // When non-null, only render rows whose pathKey is in visible. Auto-expand
+  // matching ancestors via `expand`. Null disables filtering.
+  filter?: FilterResult | null;
 }
 
 export function NodeRow({
@@ -27,12 +31,22 @@ export function NodeRow({
   mismatchCount,
   depth,
   defaultExpanded,
+  filter = null,
 }: NodeRowProps) {
   const selectedPath = useStore((s) => s.selectedPath);
   const setSelectedPath = useStore((s) => s.setSelectedPath);
+  const pathKey = path.map(String).join(".");
+
   // X6: default-collapse below depth 3 — root + 2 levels visible by default.
+  // When a filter is active, force-expand any node on a matching ancestor chain.
+  const filterExpand = filter?.expand.has(pathKey) ?? false;
   const initialExpanded = defaultExpanded ?? depth < 3;
   const [expanded, setExpanded] = useState(initialExpanded);
+  const actuallyExpanded = filter ? filterExpand || expanded : expanded;
+
+  // Hide rows the filter doesn't include. Root is always rendered so the
+  // tree element keeps its label / aria role.
+  if (filter && path.length > 0 && !filter.visible.has(pathKey)) return null;
 
   const isSelected = pathsEqual(path, selectedPath);
   const children = childRows(node, path);
@@ -81,7 +95,7 @@ export function NodeRow({
 
         <button
           type="button"
-          aria-label={expanded ? "Collapse" : "Expand"}
+          aria-label={actuallyExpanded ? "Collapse" : "Expand"}
           className={cn(
             "z-10 flex size-4 shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground",
             !hasChildren && "invisible",
@@ -91,7 +105,11 @@ export function NodeRow({
             setExpanded((v) => !v);
           }}
         >
-          {expanded ? <ChevronDown className="size-3" /> : <ChevronRight className="size-3" />}
+          {actuallyExpanded ? (
+            <ChevronDown className="size-3" />
+          ) : (
+            <ChevronRight className="size-3" />
+          )}
         </button>
 
         {name !== undefined && (
@@ -141,7 +159,7 @@ export function NodeRow({
           <EvidenceSummary node={node} evidence={evidence} isSelected={isSelected} />
         </div>
       </div>
-      {expanded && hasChildren && (
+      {actuallyExpanded && hasChildren && (
         <div role="group">
           {children.map((child) => {
             const childEvidence = evidenceAtPath(evidence, child.path.slice(path.length));
@@ -153,6 +171,7 @@ export function NodeRow({
                 evidence={childEvidence}
                 mismatchCount={child.mismatchCount}
                 depth={depth + 1}
+                filter={filter}
                 {...(child.name !== undefined ? { name: child.name } : {})}
                 {...(child.fieldEntry !== undefined ? { fieldEntry: child.fieldEntry } : {})}
               />
