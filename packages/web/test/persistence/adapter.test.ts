@@ -106,4 +106,16 @@ describe("WorkspaceAdapter (Dexie impl)", () => {
     expect(row?.historyCursor).toBe(5);
     expect(row?.syncCursor).toBe(3);
   });
+
+  // Workspace name — editable; default supplied at create; hydrated from row.
+  it("X1-A10: hydrate includes workspaceName from the workspace row", async () => {
+    const snap = await adapter.hydrate(workspaceId);
+    expect(snap.workspaceName).toBe("test");
+  });
+
+  it("X1-A11: renameWorkspace updates the row and surfaces on hydrate", async () => {
+    await adapter.renameWorkspace(workspaceId, "github issues");
+    const snap = await adapter.hydrate(workspaceId);
+    expect(snap.workspaceName).toBe("github issues");
+  });
 });

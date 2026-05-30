@@ -21,6 +21,7 @@ export interface WorkspaceSnapshot extends Partial<AppState> {
 export interface WorkspaceAdapter {
   listWorkspaces(): Promise<WorkspaceRow[]>;
   createWorkspace(name?: string): Promise<WorkspaceRow>;
+  renameWorkspace(workspaceId: string, name: string): Promise<void>;
   hydrate(workspaceId: string): Promise<WorkspaceSnapshot>;
 
   // Mutations — async so a future remote adapter can await network I/O.

@@ -1,9 +1,9 @@
 import { Download, FileJson, Github, Redo2, Undo2 } from "lucide-react";
 import { useStore } from "../../state/store";
-import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { Separator } from "../ui/separator";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
+import { WorkspaceNameField } from "./WorkspaceNameField";
 
 export interface AppHeaderProps {
   onExportClick: () => void;
@@ -23,15 +23,14 @@ export function AppHeader({ onExportClick }: AppHeaderProps) {
 
   return (
     <header className="flex h-12 shrink-0 items-center gap-3 border-b border-border bg-background px-4">
-      <div className="flex items-center gap-2">
-        <FileJson className="size-4 text-foreground" aria-hidden />
-        <h1 className="text-sm font-semibold tracking-tight">schemagen</h1>
-        <Badge variant="outline" className="font-mono normal-case">
-          v1
-        </Badge>
+      <div className="flex items-center gap-1.5">
+        <FileJson className="size-4 text-muted-foreground" aria-hidden />
+        <h1 className="text-sm font-semibold tracking-tight text-muted-foreground">schemagen</h1>
       </div>
 
-      <Separator orientation="vertical" className="mx-1 h-5" />
+      <Separator orientation="vertical" className="mx-0.5 h-5" />
+
+      <WorkspaceNameField />
 
       <div className="flex min-w-0 items-center gap-2 text-xs text-muted-foreground">
         {ir ? (
@@ -41,7 +40,7 @@ export function AppHeader({ onExportClick }: AppHeaderProps) {
             <span className="text-foreground font-medium">{describeIR(ir)}</span>
           </span>
         ) : (
-          <span>Empty workspace · Import data to begin</span>
+          <span>Empty · Import data to begin</span>
         )}
       </div>
 
