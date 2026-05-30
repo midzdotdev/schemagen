@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { cn } from "../../lib/cn";
 import { useStore } from "../../state/store";
-import { Badge } from "../ui/badge";
 import { RecordDetail } from "./RecordDetail";
 
 export interface RecordListProps {
@@ -20,22 +19,14 @@ export function RecordList({ records }: RecordListProps) {
     }
   }, [selected]);
 
-  if (records.length === 0) {
-    return (
-      <p className="px-3 text-xs text-[--color-muted-foreground]">
-        No records yet. Import some JSON to begin.
-      </p>
-    );
-  }
+  if (records.length === 0) return null;
+
   return (
-    <div className="flex flex-col gap-1 px-3">
-      <div className="flex items-center justify-between">
-        <span className="text-xs font-medium text-[--color-muted-foreground]">Records</span>
-        <Badge variant="outline">{records.length}</Badge>
-      </div>
-      <ul aria-label="Records" className="flex max-h-64 flex-col gap-0.5 overflow-y-auto">
+    <div className="flex min-h-0 flex-1 flex-col">
+      <ul aria-label="Records" className="flex flex-col">
         {records.map((r, i) => {
           const isSelected = selectedSet.has(i);
+          const preview = previewFor(r);
           return (
             <li
               // biome-ignore lint/suspicious/noArrayIndexKey: records are positional, not keyed
@@ -43,20 +34,27 @@ export function RecordList({ records }: RecordListProps) {
               ref={isSelected && firstSelectedRef.current === null ? firstSelectedRef : undefined}
               data-testid={isSelected ? "selected-record" : undefined}
               className={cn(
-                "rounded border border-[--color-border] text-xs",
-                isSelected && "border-[--color-accent] bg-[--color-muted]",
+                "border-b border-border/60 transition-colors last:border-b-0",
+                isSelected && "bg-info/10",
               )}
             >
               <button
                 type="button"
                 onClick={() => setDetailIndex(i)}
-                className="flex w-full items-center gap-2 px-2 py-1 text-left hover:bg-[--color-muted]"
+                className={cn(
+                  "flex w-full items-baseline gap-2 px-3 py-2 text-left text-xs transition-colors",
+                  "hover:bg-accent/50",
+                  isSelected && "hover:bg-info/15",
+                )}
               >
-                <span className="w-8 shrink-0 text-right font-mono text-[10px] text-[--color-muted-foreground]">
-                  #{i + 1}
+                <span className="w-6 shrink-0 text-right font-mono text-[10px] text-muted-foreground">
+                  {i + 1}
                 </span>
-                <span className="min-w-0 flex-1 truncate text-[--color-foreground]">
-                  {previewFor(r)}
+                <span className="min-w-0 flex-1 truncate">
+                  {preview.label && (
+                    <span className="font-medium text-muted-foreground">{preview.label}: </span>
+                  )}
+                  <span className="font-mono text-foreground">{preview.value}</span>
                 </span>
               </button>
             </li>
@@ -76,24 +74,25 @@ export function RecordList({ records }: RecordListProps) {
 
 const IDENTIFIER_KEYS = ["id", "name", "title", "login", "key", "slug", "email", "username"];
 
-function previewFor(value: unknown): string {
-  if (value === null || value === undefined) return "null";
-  if (typeof value !== "object") return String(value);
-  if (Array.isArray(value)) {
-    return `[${value.length} items]`;
-  }
+interface Preview {
+  label: string | null;
+  value: string;
+}
+
+function previewFor(value: unknown): Preview {
+  if (value === null || value === undefined) return { label: null, value: "null" };
+  if (typeof value !== "object") return { label: null, value: String(value) };
+  if (Array.isArray(value)) return { label: null, value: `[${value.length} items]` };
   const obj = value as Record<string, unknown>;
   for (const k of IDENTIFIER_KEYS) {
     if (obj[k] !== undefined && isScalar(obj[k])) {
-      return `${k}: ${formatScalar(obj[k])}`;
+      return { label: k, value: formatScalar(obj[k]) };
     }
   }
   for (const [k, v] of Object.entries(obj)) {
-    if (isScalar(v)) {
-      return `${k}: ${formatScalar(v)}`;
-    }
+    if (isScalar(v)) return { label: k, value: formatScalar(v) };
   }
-  return `{ ${Object.keys(obj).length} fields }`;
+  return { label: null, value: `{ ${Object.keys(obj).length} fields }` };
 }
 
 function isScalar(v: unknown): v is string | number | boolean | null {

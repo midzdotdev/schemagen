@@ -9,16 +9,16 @@ export interface UniversalControlsProps {
 
 export function UniversalControls({ node, path, applyChange }: UniversalControlsProps) {
   return (
-    <div className="flex flex-wrap gap-2 border-b border-[--color-border] pb-3">
+    <div className="flex flex-wrap gap-1.5">
       <Button
-        size="sm"
+        size="xs"
         variant="outline"
         onClick={() => applyChange({ op: "wrap-in-union", path, with: { kind: "unknown" } })}
       >
         Wrap in union
       </Button>
       <Button
-        size="sm"
+        size="xs"
         variant="outline"
         onClick={() => applyChange({ op: "wrap-in-array", path })}
       >
@@ -26,7 +26,7 @@ export function UniversalControls({ node, path, applyChange }: UniversalControls
       </Button>
       {node.kind === "array" && (
         <Button
-          size="sm"
+          size="xs"
           variant="outline"
           onClick={() => applyChange({ op: "unwrap-array", path })}
         >

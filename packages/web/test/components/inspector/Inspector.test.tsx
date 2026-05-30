@@ -21,9 +21,11 @@ beforeEach(() => {
 
 describe("Inspector", () => {
   // Spec: docs/frontend-spec.md § "Inspector"
+  // Interpretation: empty-state copy now reads "Nothing to inspect" + a
+  // hint about importing data and selecting a node.
   it("W4-IN1: empty state when no IR is set", () => {
     render(<Inspector />);
-    expect(screen.getByText(/import data/i)).toBeInTheDocument();
+    expect(screen.getByText(/nothing to inspect/i)).toBeInTheDocument();
   });
 
   // Spec: docs/frontend-spec.md § "Inspector"
@@ -60,7 +62,9 @@ describe("Inspector", () => {
     });
     render(<Inspector />);
     await user.type(screen.getByLabelText(/new literal/i), "past_due");
-    await user.click(screen.getByRole("button", { name: /add literal/i }));
+    // Interpretation: the literal-add button was tightened to just "Add"
+    // since it sits inline with the "Literals" subsection header.
+    await user.click(screen.getByRole("button", { name: /^add$/i }));
     const newIR = useStore.getState().ir;
     const status = (
       newIR as {
@@ -96,7 +100,9 @@ describe("Inspector", () => {
       useStore.getState().setSelectedPath(["age"]);
     });
     render(<Inspector />);
-    await user.click(screen.getByRole("button", { name: /^integer$/i }));
+    // Interpretation: integer toggle now displays "Off" (default) / "Required"
+    // (when on). The button starts as "Off" — clicking flips it on.
+    await user.click(screen.getByRole("button", { name: /^off$/i }));
     const newIR = useStore.getState().ir;
     const age = (newIR as { fields: Record<string, { type: { integer?: boolean } }> }).fields.age;
     expect(age?.type.integer).toBe(true);

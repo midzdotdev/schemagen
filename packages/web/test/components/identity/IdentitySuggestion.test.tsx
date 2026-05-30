@@ -45,11 +45,14 @@ describe("IdentitySuggestion", () => {
   });
 
   // Spec: docs/frontend-spec.md § "Identity-key suggestion"
-  it("X2-B4: 'Not now' dismisses the banner", async () => {
+  // Interpretation: the explicit "Not now" button was replaced with an X
+  // dismiss control (consistent with toast/banner conventions). Still wired
+  // to dismissIdentitySuggestion; tested via its aria-label.
+  it("X2-B4: dismiss control hides the banner", async () => {
     const user = userEvent.setup();
     act(() => seedProposal());
     render(<IdentitySuggestion />);
-    await user.click(screen.getByRole("button", { name: /not now/i }));
+    await user.click(screen.getByRole("button", { name: /dismiss suggestion/i }));
     expect(useStore.getState().identityProposalDismissed).toBe(true);
     expect(screen.queryByLabelText(/identity-key suggestion/i)).not.toBeInTheDocument();
   });

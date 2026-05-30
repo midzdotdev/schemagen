@@ -35,7 +35,7 @@ export function HydrationGate({ children }: HydrationGateProps) {
 
   if (error) {
     return (
-      <div className="flex h-screen items-center justify-center text-sm text-red-600">
+      <div className="flex h-screen items-center justify-center bg-background text-sm text-destructive">
         Failed to load workspace: {error}
       </div>
     );
@@ -44,7 +44,7 @@ export function HydrationGate({ children }: HydrationGateProps) {
   if (!hydrated) {
     return (
       <div
-        className="flex h-screen items-center justify-center text-sm text-[--color-muted-foreground]"
+        className="flex h-screen items-center justify-center bg-background text-sm text-muted-foreground"
         aria-busy="true"
       >
         Loading workspace…

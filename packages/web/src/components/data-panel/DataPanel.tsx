@@ -1,9 +1,13 @@
 import { dedupeByIdentity, infer, proposeIdentityKey } from "@schemagen/core";
+import { Database, FileText, Inbox } from "lucide-react";
 import { useState } from "react";
 import { canonicalHash } from "../../lib/canonical-hash";
 import type { PickerCandidate } from "../../lib/root-picker";
 import { useStore } from "../../state/store";
 import { IdentitySuggestion } from "../identity/IdentitySuggestion";
+import { EmptyState } from "../shell/EmptyState";
+import { PaneHeader } from "../shell/PaneHeader";
+import { Badge } from "../ui/badge";
 import { DropZone } from "./DropZone";
 import { ImportArea } from "./ImportArea";
 import { RecordList } from "./RecordList";
@@ -42,7 +46,6 @@ export function DataPanel() {
       merged.push(r);
     }
 
-    // Logical dedup if an identity config is set.
     if (identityConfig) {
       const { kept } = dedupeByIdentity(merged, identityConfig);
       merged = kept;
@@ -50,13 +53,8 @@ export function DataPanel() {
 
     setRecords(merged);
 
-    if (!ir) {
-      // First import: infer the schema.
-      setIR(infer(merged));
-    }
+    if (!ir) setIR(infer(merged));
 
-    // Propose an identity key if we don't already have a config + the dev
-    // hasn't dismissed the prompt for this workspace.
     if (!identityConfig && !dismissed && !identityProposal) {
       const proposal = proposeIdentityKey(merged);
       if (proposal) setIdentityProposal(proposal);
@@ -74,10 +72,38 @@ export function DataPanel() {
 
   return (
     <DropZone onRecords={commitRecords} onNeedsPicker={handleNeedsPicker}>
-      <div className="flex h-full flex-col gap-3 py-3">
-        <ImportArea onRecords={commitRecords} onNeedsPicker={handleNeedsPicker} />
+      <div className="flex h-full min-h-0 flex-col">
+        <PaneHeader
+          title="Data"
+          icon={<Database className="size-3.5" />}
+          actions={
+            records.length > 0 ? (
+              <Badge variant="outline" className="font-mono normal-case">
+                {records.length.toLocaleString()}
+              </Badge>
+            ) : null
+          }
+        />
         <IdentitySuggestion />
-        <RecordList records={records} />
+        <ImportArea onRecords={commitRecords} onNeedsPicker={handleNeedsPicker} />
+        <div className="flex min-h-0 flex-1 flex-col border-t border-border">
+          <div className="flex h-8 shrink-0 items-center gap-1.5 border-b border-border bg-muted/20 px-3 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+            <FileText className="size-3" />
+            Records
+            {records.length > 0 && <span className="text-foreground/60">· {records.length}</span>}
+          </div>
+          <div className="min-h-0 flex-1 overflow-y-auto">
+            {records.length === 0 ? (
+              <EmptyState
+                icon={<Inbox className="size-5" />}
+                title="No records"
+                description="Paste JSON above, drag a file here, or import a session bundle."
+              />
+            ) : (
+              <RecordList records={records} />
+            )}
+          </div>
+        </div>
         <RootPickerModal
           open={picker.open}
           onOpenChange={(open) => setPicker((p) => ({ ...p, open }))}

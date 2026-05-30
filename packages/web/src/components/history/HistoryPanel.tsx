@@ -1,5 +1,6 @@
-import { Redo, Undo } from "lucide-react";
+import { History, Redo2, Undo2 } from "lucide-react";
 import { useStore } from "../../state/store";
+import { EmptyState } from "../shell/EmptyState";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 
@@ -12,43 +13,64 @@ export function HistoryPanel() {
   const canUndo = cursor > 0;
   const canRedo = cursor < entries.length;
 
+  if (entries.length === 0) {
+    return (
+      <EmptyState
+        icon={<History className="size-5" />}
+        title="No history yet"
+        description="Every edit you make to the schema lands here and can be undone."
+      />
+    );
+  }
+
   return (
-    <div className="flex flex-col gap-2 p-3">
-      <div className="flex items-center gap-2">
-        <Button size="sm" variant="outline" disabled={!canUndo} onClick={() => undo()}>
-          <Undo className="mr-1 h-3 w-3" />
+    <div className="flex flex-col gap-3 p-3">
+      <div className="flex items-center gap-1">
+        <Button size="xs" variant="outline" disabled={!canUndo} onClick={() => undo()}>
+          <Undo2 className="size-3" />
           Undo
         </Button>
-        <Button size="sm" variant="outline" disabled={!canRedo} onClick={() => redo()}>
-          <Redo className="mr-1 h-3 w-3" />
+        <Button size="xs" variant="outline" disabled={!canRedo} onClick={() => redo()}>
+          <Redo2 className="size-3" />
           Redo
         </Button>
+        <span className="ml-auto text-[10px] text-muted-foreground">
+          {cursor} / {entries.length}
+        </span>
       </div>
-      {entries.length === 0 ? (
-        <p className="text-xs text-[--color-muted-foreground]">No history yet.</p>
-      ) : (
-        <ol aria-label="History" className="flex flex-col gap-1">
-          {entries.map((entry, idx) => {
-            const isApplied = idx < cursor;
-            return (
-              <li
-                key={entry.seq}
-                className="flex items-center gap-2 rounded border border-[--color-border] p-2 text-xs"
+      <ol aria-label="History" className="flex flex-col gap-1">
+        {entries.map((entry, idx) => {
+          const isApplied = idx < cursor;
+          const isCurrent = idx === cursor - 1;
+          return (
+            <li
+              key={entry.seq}
+              className={`flex items-center gap-2 rounded-md border px-2 py-1.5 text-xs transition-colors ${
+                isCurrent
+                  ? "border-info/40 bg-info/8"
+                  : isApplied
+                    ? "border-border bg-card"
+                    : "border-dashed border-border/50 bg-transparent opacity-60"
+              }`}
+            >
+              <span className="w-6 shrink-0 text-right font-mono text-[10px] text-muted-foreground">
+                {entry.seq}
+              </span>
+              <span
+                className={`min-w-0 flex-1 truncate ${
+                  isApplied ? "text-foreground" : "text-muted-foreground line-through"
+                }`}
+                title={entry.label}
               >
-                <span className="font-mono text-[10px] text-[--color-muted-foreground]">
-                  {entry.seq}
-                </span>
-                <span className={isApplied ? "" : "text-[--color-muted-foreground] line-through"}>
-                  {entry.label}
-                </span>
-                <Badge variant="outline" className="ml-auto text-[10px]">
-                  {entry.source}
-                </Badge>
-              </li>
-            );
-          })}
-        </ol>
-      )}
+                {entry.label}
+              </span>
+              <Badge variant="muted" className="shrink-0">
+                {entry.source}
+              </Badge>
+            </li>
+          );
+        })}
+      </ol>
     </div>
   );
 }

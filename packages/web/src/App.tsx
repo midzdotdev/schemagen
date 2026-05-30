@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { DataPanel } from "./components/data-panel/DataPanel";
 import { ExportModal } from "./components/export/ExportModal";
-import { SchemaTree } from "./components/schema-tree/SchemaTree";
-import { SidePanel } from "./components/shell/SidePanel";
-import { Button } from "./components/ui/button";
+import { SchemaPanel } from "./components/schema-tree/SchemaPanel";
+import { AppHeader } from "./components/shell/AppHeader";
+import { InspectorPane } from "./components/shell/InspectorPane";
+import { TooltipProvider } from "./components/ui/tooltip";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 
 export function App() {
@@ -15,25 +16,28 @@ export function App() {
   });
 
   return (
-    <div className="flex h-screen flex-col">
-      <header className="flex items-center justify-between border-b border-[--color-border] px-4 py-3">
-        <h1 className="text-lg font-semibold">schemagen</h1>
-        <Button size="sm" variant="outline" onClick={() => setExportOpen(true)}>
-          Export JSON Schema
-        </Button>
-      </header>
-      <main className="grid flex-1 grid-cols-[20rem_1fr_24rem] overflow-hidden">
-        <section aria-label="Data" className="overflow-y-auto border-r border-[--color-border]">
-          <DataPanel />
-        </section>
-        <section aria-label="Schema" className="overflow-auto">
-          <SchemaTree />
-        </section>
-        <section aria-label="Inspector" className="border-l border-[--color-border]">
-          <SidePanel />
-        </section>
-      </main>
-      <ExportModal open={exportOpen} onOpenChange={setExportOpen} />
-    </div>
+    <TooltipProvider delayDuration={300}>
+      <div className="flex h-screen flex-col bg-background text-foreground">
+        <AppHeader onExportClick={() => setExportOpen(true)} />
+        <main className="grid min-h-0 flex-1 grid-cols-[20rem_minmax(0,1fr)_24rem]">
+          <section
+            aria-label="Data"
+            className="flex min-h-0 flex-col border-r border-border bg-card/30"
+          >
+            <DataPanel />
+          </section>
+          <section aria-label="Schema" className="flex min-h-0 flex-col bg-background">
+            <SchemaPanel />
+          </section>
+          <section
+            aria-label="Inspector"
+            className="flex min-h-0 flex-col border-l border-border bg-card/30"
+          >
+            <InspectorPane />
+          </section>
+        </main>
+        <ExportModal open={exportOpen} onOpenChange={setExportOpen} />
+      </div>
+    </TooltipProvider>
   );
 }

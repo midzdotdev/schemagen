@@ -1,8 +1,10 @@
 import { type Mismatch, findExamples } from "@schemagen/core";
+import { Search } from "lucide-react";
 import { useState } from "react";
+import { cn } from "../../lib/cn";
 import { formatPath } from "../../state/selectors";
 import { useStore } from "../../state/store";
-import { Badge } from "../ui/badge";
+import { Badge, type badgeVariants } from "../ui/badge";
 import { Button } from "../ui/button";
 
 export interface MismatchEntryProps {
@@ -30,86 +32,142 @@ export function MismatchEntry({ mismatch }: MismatchEntryProps) {
     setSelectedRecordIndices(refs.map((r) => r.index));
   }
 
+  const severity = severityFor(mismatch.kind);
+
   return (
-    <li className="rounded border border-[--color-border] p-2 text-xs">
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex flex-col gap-0.5">
-          <button
-            type="button"
-            className="text-left font-mono hover:underline"
-            onClick={() => setSelectedPath(mismatch.path)}
-          >
-            {formatPath(mismatch.path)}
-          </button>
-          <span className="text-[--color-muted-foreground]">
-            {humanKind(mismatch.kind)} — expected {mismatch.expected}; got{" "}
-            {mismatch.actual.description}
-          </span>
-          {mismatch.recordIndex !== undefined && (
-            <span className="text-[10px] text-[--color-muted-foreground]">
-              record #{mismatch.recordIndex}
-            </span>
+    <li className="rounded-lg border border-border bg-card p-2.5 shadow-sm transition-colors hover:border-border/80">
+      <div className="flex items-start gap-2">
+        <span
+          aria-hidden
+          className={cn("mt-1 size-1.5 shrink-0 rounded-full", severityDotClasses(severity))}
+        />
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center justify-between gap-2">
+            <button
+              type="button"
+              className="truncate text-left font-mono text-xs text-foreground hover:underline"
+              onClick={() => setSelectedPath(mismatch.path)}
+              title={formatPath(mismatch.path) || "(root)"}
+            >
+              {formatPath(mismatch.path) || "(root)"}
+            </button>
+            <Badge variant={severity} className="shrink-0">
+              {humanKind(mismatch.kind)}
+            </Badge>
+          </div>
+          <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">
+            Expected <span className="font-mono text-foreground/80">{mismatch.expected}</span>; got{" "}
+            <span className="font-mono text-foreground/80">{mismatch.actual.description}</span>
+            {mismatch.recordIndex !== undefined && (
+              <span className="ml-1 text-muted-foreground/70">
+                · record #{mismatch.recordIndex + 1}
+              </span>
+            )}
+          </p>
+          <div className="mt-2 flex flex-wrap gap-1">
+            {mismatch.suggestions.map((s) => (
+              <Button
+                key={s.label}
+                size="xs"
+                variant="outline"
+                title={s.rationale}
+                onClick={() => {
+                  try {
+                    setError(null);
+                    apply(s.change, { source: "suggestion", label: s.label });
+                  } catch (e) {
+                    setError(e instanceof Error ? e.message : "could not apply");
+                  }
+                }}
+              >
+                {s.label}
+              </Button>
+            ))}
+            <Button
+              size="xs"
+              variant="ghost"
+              className="text-muted-foreground"
+              onClick={handleShowRecords}
+            >
+              <Search className="size-3" />
+              Show records
+            </Button>
+          </div>
+          {error && (
+            <p
+              role="alert"
+              className="mt-1.5 rounded bg-destructive/10 px-1.5 py-1 text-[10px] text-destructive"
+            >
+              {error}
+            </p>
           )}
         </div>
-        <Badge variant="destructive" className="text-[10px]">
-          {mismatch.kind}
-        </Badge>
       </div>
-      <div className="mt-2 flex flex-wrap gap-1">
-        {mismatch.suggestions.map((s) => (
-          <Button
-            key={s.label}
-            size="sm"
-            variant="outline"
-            title={s.rationale}
-            onClick={() => {
-              try {
-                setError(null);
-                apply(s.change, { source: "suggestion", label: s.label });
-              } catch (e) {
-                setError(e instanceof Error ? e.message : "could not apply");
-              }
-            }}
-          >
-            {s.label}
-          </Button>
-        ))}
-        <Button size="sm" variant="ghost" onClick={handleShowRecords}>
-          Show records
-        </Button>
-      </div>
-      {error && (
-        <p role="alert" className="mt-1 text-[10px] text-red-600">
-          {error}
-        </p>
-      )}
     </li>
   );
+}
+
+type Severity = NonNullable<Parameters<typeof badgeVariants>[0]>["variant"];
+
+function severityFor(kind: Mismatch["kind"]): Severity {
+  switch (kind) {
+    case "type-mismatch":
+    case "null-not-allowed":
+    case "missing-required-field":
+      return "destructive";
+    case "literal-violation":
+    case "out-of-range":
+    case "non-integer":
+    case "wrong-length":
+    case "duplicate-items":
+      return "warning";
+    case "unexpected-field":
+    case "pattern-violation":
+    case "format-violation":
+      return "info";
+    default:
+      return "muted";
+  }
+}
+
+function severityDotClasses(severity: Severity): string {
+  switch (severity) {
+    case "destructive":
+      return "bg-destructive";
+    case "warning":
+      return "bg-warning";
+    case "info":
+      return "bg-info";
+    case "success":
+      return "bg-success";
+    default:
+      return "bg-muted-foreground";
+  }
 }
 
 function humanKind(kind: Mismatch["kind"]): string {
   switch (kind) {
     case "type-mismatch":
-      return "Type mismatch";
+      return "type";
     case "literal-violation":
-      return "Literal violation";
+      return "literal";
     case "missing-required-field":
-      return "Missing required field";
+      return "missing";
     case "unexpected-field":
-      return "Unexpected field";
+      return "extra";
     case "out-of-range":
-      return "Out of range";
+      return "range";
     case "pattern-violation":
-      return "Pattern violation";
+      return "pattern";
     case "format-violation":
-      return "Format violation";
+      return "format";
     case "wrong-length":
-      return "Wrong length";
+      return "length";
     case "null-not-allowed":
-      return "Null not allowed";
+      return "null";
     case "non-integer":
-      return "Non-integer";
+      return "non-int";
     case "duplicate-items":
-      return "Duplicate items";
+      return "dupes";
   }
 }

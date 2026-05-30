@@ -5,6 +5,7 @@ import { cn } from "../../lib/cn";
 import { evidenceAtPath, pathsEqual } from "../../state/selectors";
 import { useStore } from "../../state/store";
 import { Badge } from "../ui/badge";
+import { KindBadge } from "../ui/kind-badge";
 
 export interface NodeRowProps {
   node: Node;
@@ -36,6 +37,7 @@ export function NodeRow({
   const isSelected = pathsEqual(path, selectedPath);
   const children = childRows(node, path);
   const hasChildren = children.length > 0;
+  const indent = depth * 14;
 
   return (
     <div
@@ -45,10 +47,11 @@ export function NodeRow({
     >
       <div
         className={cn(
-          "flex items-center gap-1.5 rounded px-1.5 py-0.5 text-sm hover:bg-[--color-muted] cursor-pointer",
-          isSelected && "bg-[--color-muted]",
+          "group/row relative flex items-center gap-2 py-1 pr-3 text-sm transition-colors",
+          "hover:bg-accent/40",
+          isSelected && "bg-accent text-accent-foreground",
         )}
-        style={{ paddingLeft: `${depth * 0.75 + 0.375}rem` }}
+        style={{ paddingLeft: `${indent + 8}px` }}
         onClick={() => setSelectedPath(path)}
         onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === " ") {
@@ -60,39 +63,84 @@ export function NodeRow({
         role="button"
         tabIndex={0}
       >
+        {/* Indent guides — make depth feel intentional, not arbitrary. */}
+        {depth > 0 && (
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-y-0 left-0 flex"
+            style={{ width: `${indent + 8}px` }}
+          >
+            {Array.from({ length: depth }).map((_, i) => (
+              <div
+                // biome-ignore lint/suspicious/noArrayIndexKey: positional guide rails
+                key={i}
+                className="w-[14px] border-r border-border/50"
+              />
+            ))}
+          </div>
+        )}
+
         <button
           type="button"
           aria-label={expanded ? "Collapse" : "Expand"}
-          className={cn("flex h-4 w-4 items-center justify-center", !hasChildren && "invisible")}
+          className={cn(
+            "z-10 flex size-4 shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground",
+            !hasChildren && "invisible",
+          )}
           onClick={(e) => {
             e.stopPropagation();
             setExpanded((v) => !v);
           }}
         >
-          {expanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+          {expanded ? <ChevronDown className="size-3" /> : <ChevronRight className="size-3" />}
         </button>
-        {name && <span className="font-medium">{name}</span>}
-        <span className="text-[--color-muted-foreground]">{describe(node)}</span>
-        {fieldEntry?.optional && (
-          <Badge variant="outline" className="text-[10px]">
-            optional
-          </Badge>
-        )}
-        {fieldEntry?.nullable && (
-          <Badge variant="outline" className="text-[10px]">
-            nullable
-          </Badge>
-        )}
-        {mismatchCount > 0 && (
-          <Badge
-            variant="destructive"
-            className="text-[10px]"
-            aria-label={`${mismatchCount} mismatches`}
+
+        {name !== undefined && (
+          <span
+            className={cn(
+              "z-10 truncate font-mono text-[13px]",
+              isSelected ? "text-accent-foreground" : "text-foreground",
+            )}
           >
-            {mismatchCount}
-          </Badge>
+            {name}
+          </span>
         )}
-        <EvidenceSummary node={node} evidence={evidence} />
+
+        <KindBadge kind={node.kind}>{kindLabel(node)}</KindBadge>
+
+        {detailText(node) && (
+          <span
+            className={cn(
+              "z-10 truncate font-mono text-[11px]",
+              isSelected ? "text-accent-foreground/80" : "text-muted-foreground",
+            )}
+          >
+            {detailText(node)}
+          </span>
+        )}
+
+        <div className="z-10 ml-auto flex shrink-0 items-center gap-1.5">
+          {fieldEntry?.optional && (
+            <Badge variant="muted" className="normal-case">
+              optional
+            </Badge>
+          )}
+          {fieldEntry?.nullable && (
+            <Badge variant="muted" className="normal-case">
+              nullable
+            </Badge>
+          )}
+          {mismatchCount > 0 && (
+            <Badge
+              variant="destructive"
+              className="normal-case"
+              aria-label={`${mismatchCount} mismatches`}
+            >
+              {mismatchCount}
+            </Badge>
+          )}
+          <EvidenceSummary node={node} evidence={evidence} isSelected={isSelected} />
+        </div>
       </div>
       {expanded && hasChildren && (
         // biome-ignore lint/a11y/useSemanticElements: <fieldset> would force a default border; this is a virtualizable tree row container
@@ -179,40 +227,56 @@ function childRows(node: Node, basePath: Path): ChildRow[] {
   }
 }
 
-function describe(node: Node): string {
+function kindLabel(node: Node): string {
+  if (node.kind === "number" && node.integer) return "integer";
+  if (node.kind === "string" && node.format) return node.format;
+  return node.kind;
+}
+
+function detailText(node: Node): string | null {
   switch (node.kind) {
-    case "unknown":
-      return "unknown";
-    case "null":
-      return "null";
     case "boolean":
-      return node.literals ? `boolean = ${node.literals.join(" | ")}` : "boolean";
-    case "number":
-      return node.integer ? "integer" : "number";
+      return node.literals ? `= ${node.literals.join(" | ")}` : null;
     case "string":
-      if (node.literals) return `"${node.literals.join('" | "')}"`;
-      if (node.format) return `string (${node.format})`;
-      return "string";
-    case "array":
-      return "array";
+      if (node.literals) {
+        const shown = node.literals.slice(0, 3).map((s) => JSON.stringify(s));
+        const more = node.literals.length > 3 ? ` +${node.literals.length - 3}` : "";
+        return shown.join(" | ") + more;
+      }
+      return null;
     case "tuple":
-      return `tuple (${node.items.length})`;
+      return `${node.items.length} items`;
     case "object":
-      return `object (${Object.keys(node.fields).length} fields)`;
-    case "record":
-      return "record";
+      return `${Object.keys(node.fields).length} fields`;
     case "union":
-      return `union (${node.variants.length})`;
+      return `${node.variants.length} variants`;
+    default:
+      return null;
   }
 }
 
-function EvidenceSummary({ node, evidence }: { node: Node; evidence: EvidenceTree | null }) {
+function EvidenceSummary({
+  node,
+  evidence,
+  isSelected,
+}: {
+  node: Node;
+  evidence: EvidenceTree | null;
+  isSelected: boolean;
+}) {
   if (!evidence) return null;
   if (evidence.kind !== node.kind) return null;
   const text = describeEvidence(evidence);
   if (!text) return null;
   return (
-    <span className="ml-auto truncate text-[10px] text-[--color-muted-foreground]">{text}</span>
+    <span
+      className={cn(
+        "max-w-[16rem] truncate font-mono text-[10px]",
+        isSelected ? "text-accent-foreground/70" : "text-muted-foreground",
+      )}
+    >
+      {text}
+    </span>
   );
 }
 
@@ -221,22 +285,26 @@ function describeEvidence(e: EvidenceTree): string {
     case "string": {
       const top = Object.entries(e.values)
         .sort((a, b) => b[1] - a[1])
-        .slice(0, 3)
-        .map(([v, c]) => `${JSON.stringify(v)}×${c}`)
+        .slice(0, 2)
+        .map(([v, c]) => `${truncate(v, 20)}×${c}`)
         .join(", ");
-      return top ? `${e.count} • ${top}` : `${e.count}`;
+      return top ? `${e.count} · ${top}` : `${e.count}`;
     }
     case "number":
-      return `${e.count} • ${e.min ?? "?"}…${e.max ?? "?"}`;
+      return `${e.count} · ${e.min ?? "?"}…${e.max ?? "?"}`;
     case "boolean":
-      return `${e.count} • t:${e.trueCount} f:${e.falseCount}`;
+      return `${e.count} · t:${e.trueCount} f:${e.falseCount}`;
     case "object":
-      return `${e.count} records`;
+      return `${e.count}`;
     case "array":
-      return e.count > 0 ? `${e.count} • len ${e.lengths.min}..${e.lengths.max}` : "";
+      return e.count > 0 ? `${e.count} · len ${e.lengths.min}..${e.lengths.max}` : `${e.count}`;
     case "union":
-      return `${e.count} • variants ${e.variantCounts.join(",")}`;
+      return `${e.count} · variants ${e.variantCounts.join(",")}`;
     default:
       return `${e.count}`;
   }
+}
+
+function truncate(s: string, n: number): string {
+  return s.length > n ? `${s.slice(0, n)}…` : s;
 }

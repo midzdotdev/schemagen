@@ -1,5 +1,4 @@
-// Banner suggesting an identity key. See docs/frontend-spec.md § "Identity-key suggestion".
-
+import { KeyRound, X } from "lucide-react";
 import { useState } from "react";
 import { useStore } from "../../state/store";
 import { Button } from "../ui/button";
@@ -20,29 +19,39 @@ export function IdentitySuggestion() {
   return (
     <>
       <output
-        className="mx-3 mb-2 block rounded border border-[--color-accent] bg-[--color-muted] p-3 text-xs"
         aria-label="Identity-key suggestion"
+        className="block border-b border-info/30 bg-info/8 px-3 py-2.5"
       >
-        <p className="mb-2">
-          <span className="font-medium">Identity-key suggestion:</span> {proposal.rationale}. Future
-          imports of records with the same{" "}
-          <code className="rounded bg-[--color-background] px-1 py-0.5 font-mono">
-            {fieldsLabel}
-          </code>{" "}
-          will replace earlier versions instead of piling up.
-        </p>
-        <div className="flex items-center gap-2">
+        <div className="flex items-start gap-2">
+          <KeyRound className="mt-0.5 size-3.5 shrink-0 text-info" aria-hidden />
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-medium text-foreground">Identity key suggestion</p>
+            <p className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">
+              {proposal.rationale}. Future imports of records with the same{" "}
+              <code className="rounded bg-background px-1 py-0.5 font-mono text-[10px] text-foreground">
+                {fieldsLabel}
+              </code>{" "}
+              will replace earlier versions.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => dismissSuggestion()}
+            aria-label="Dismiss suggestion"
+            className="rounded p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+          >
+            <X className="size-3" />
+          </button>
+        </div>
+        <div className="mt-2 flex items-center gap-1.5">
           <Button
-            size="sm"
+            size="xs"
             onClick={() => setIdentityConfig({ fields: proposal.fields, onDuplicate: "replace" })}
           >
             Use {fieldsLabel}
           </Button>
-          <Button size="sm" variant="outline" onClick={() => setPickerOpen(true)}>
+          <Button size="xs" variant="ghost" onClick={() => setPickerOpen(true)}>
             Pick a different field
-          </Button>
-          <Button size="sm" variant="ghost" onClick={() => dismissSuggestion()}>
-            Not now
           </Button>
         </div>
       </output>

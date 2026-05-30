@@ -23,9 +23,12 @@ beforeEach(() => {
 
 describe("SchemaTree", () => {
   // Spec: docs/frontend-spec.md § "Schema tree (center)"
-  it("W3-ST1: empty state when no IR is set", () => {
-    render(<SchemaTree />);
-    expect(screen.getByText(/no schema yet/i)).toBeInTheDocument();
+  // Interpretation: the empty-state messaging moved to SchemaPanel (the
+  // pane wrapper). SchemaTree itself renders nothing when no IR is set —
+  // it's a pure tree component now, with framing handled outside.
+  it("W3-ST1: renders nothing when no IR is set", () => {
+    const { container } = render(<SchemaTree />);
+    expect(container.firstChild).toBeNull();
   });
 
   // Spec: docs/frontend-spec.md § "Schema tree (center)"

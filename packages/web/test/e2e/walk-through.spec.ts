@@ -42,15 +42,20 @@ test.describe("schemagen walk-through", () => {
     await page.getByRole("button", { name: /^import$/i }).click();
 
     // Schema tree should reflect the inferred IR.
+    // Interpretation: kind/format are now color-coded badges next to the field
+    // name. Asserting on the badge text is the closest analogue to checking
+    // the old "string (uuid)" inline description.
     const schemaTree = page.getByRole("tree", { name: /schema/i });
     await expect(schemaTree.getByText("status").first()).toBeVisible();
     await expect(schemaTree.getByText('"active" | "pending"')).toBeVisible();
     await expect(schemaTree.getByText("avatar_url")).toBeVisible();
     await expect(schemaTree.getByText("optional").first()).toBeVisible();
-    await expect(schemaTree.getByText(/string \(uuid\)/).first()).toBeVisible();
+    await expect(schemaTree.getByText(/uuid/i).first()).toBeVisible();
 
     // Step 4: Open export modal — JSON Schema preview should render.
-    await page.getByRole("button", { name: /export json schema/i }).click();
+    // Interpretation: header CTA was tightened from "Export JSON Schema" to
+    // just "Export" (icon + label); the dialog content is unchanged.
+    await page.getByRole("button", { name: /^export$/i }).click();
     await expect(page.getByLabel(/json schema preview/i)).toContainText('"type": "object"');
     await page.getByRole("button", { name: /^close$/i }).click();
 
@@ -59,44 +64,46 @@ test.describe("schemagen walk-through", () => {
     await page.getByRole("button", { name: /^import$/i }).click();
 
     // Step 6: Mismatches panel surfaces literal-violation + unexpected-field.
+    // Interpretation: kind badges were tightened ("literal", "extra"). The
+    // suggestion buttons retain full descriptive labels.
     await page.getByRole("tab", { name: /mismatches/i }).click();
-    await expect(page.getByText(/literal violation/i).first()).toBeVisible();
-    await expect(page.getByText(/unexpected field/i).first()).toBeVisible();
+    await expect(page.getByText(/^literal$/i).first()).toBeVisible();
+    await expect(page.getByText(/^extra$/i).first()).toBeVisible();
 
     // Step 7: Apply both suggestions.
     await page
       .getByRole("button", { name: /add "past_due" to literals/i })
       .first()
       .click();
-    await expect(page.getByText(/literal violation/i)).toHaveCount(0);
+    await expect(page.getByText(/^literal$/i)).toHaveCount(0);
 
     await page
       .getByRole("button", { name: /add field 'stripe_customer_id'/i })
       .first()
       .click();
-    await expect(page.getByText(/unexpected field/i)).toHaveCount(0);
+    await expect(page.getByText(/^extra$/i)).toHaveCount(0);
 
-    // Step 8: Undo both via the History tab.
-    await page.getByRole("tab", { name: /history/i }).click();
+    // Step 8: Undo both via the header undo button.
+    // Interpretation: undo/redo moved out of the History panel into the
+    // AppHeader so they're available regardless of which inspector tab is open.
     await page.getByRole("button", { name: /^undo$/i }).click();
     await page.getByRole("button", { name: /^undo$/i }).click();
 
     // Mismatches reappear.
     await page.getByRole("tab", { name: /mismatches/i }).click();
-    await expect(page.getByText(/literal violation/i).first()).toBeVisible();
-    await expect(page.getByText(/unexpected field/i).first()).toBeVisible();
+    await expect(page.getByText(/^literal$/i).first()).toBeVisible();
+    await expect(page.getByText(/^extra$/i).first()).toBeVisible();
 
     // Redo both.
-    await page.getByRole("tab", { name: /history/i }).click();
     await page.getByRole("button", { name: /^redo$/i }).click();
     await page.getByRole("button", { name: /^redo$/i }).click();
 
     await page.getByRole("tab", { name: /mismatches/i }).click();
-    await expect(page.getByText(/literal violation/i)).toHaveCount(0);
-    await expect(page.getByText(/unexpected field/i)).toHaveCount(0);
+    await expect(page.getByText(/^literal$/i)).toHaveCount(0);
+    await expect(page.getByText(/^extra$/i)).toHaveCount(0);
 
     // Step 9: Re-open the export modal — JSON Schema reflects the new state.
-    await page.getByRole("button", { name: /export json schema/i }).click();
+    await page.getByRole("button", { name: /^export$/i }).click();
     const preview = page.getByLabel(/json schema preview/i);
     await expect(preview).toContainText("past_due");
     await expect(preview).toContainText("stripe_customer_id");

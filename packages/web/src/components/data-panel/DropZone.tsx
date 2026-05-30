@@ -50,14 +50,14 @@ export function DropZone({ children, onRecords, onNeedsPicker, onError }: DropZo
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
       className={cn(
-        "relative h-full",
-        over && "outline outline-2 outline-[--color-accent] outline-offset-[-4px]",
+        "relative h-full min-h-0",
+        over && "outline outline-2 -outline-offset-[4px] outline-info",
       )}
       data-testid="data-dropzone"
     >
       {children}
       {over && (
-        <output className="pointer-events-none absolute inset-0 flex items-center justify-center bg-[--color-muted]/70 text-sm font-medium">
+        <output className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center bg-info/15 text-sm font-medium text-info backdrop-blur-sm">
           Drop .json or .ndjson
         </output>
       )}

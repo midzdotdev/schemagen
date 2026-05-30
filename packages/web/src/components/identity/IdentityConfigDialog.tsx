@@ -89,12 +89,9 @@ export function IdentityConfigDialog({
           </DialogDescription>
         </DialogHeader>
         <div className="flex flex-col gap-3">
-          <div className="flex flex-col gap-1">
-            <label
-              htmlFor="identity-fields"
-              className="text-xs font-medium text-[--color-muted-foreground]"
-            >
-              Fields (comma-separated; dot-notation for nested)
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="identity-fields" className="text-xs font-medium text-foreground">
+              Fields
             </label>
             <Input
               id="identity-fields"
@@ -103,13 +100,21 @@ export function IdentityConfigDialog({
               onChange={(e) => setFieldText(e.target.value)}
               aria-label="Identity fields"
             />
+            <p className="text-[11px] text-muted-foreground">
+              Comma-separated. Use dot notation for nested fields.
+            </p>
           </div>
           <fieldset className="flex flex-col gap-1.5">
-            <legend className="text-xs font-medium text-[--color-muted-foreground]">
-              On duplicate
-            </legend>
+            <legend className="text-xs font-medium text-foreground">On duplicate</legend>
             {MODES.map((m) => (
-              <label key={m.value} className="flex items-start gap-2 text-xs">
+              <label
+                key={m.value}
+                className={`flex cursor-pointer items-start gap-2 rounded-md border p-2 text-xs transition-colors ${
+                  mode === m.value
+                    ? "border-ring/40 bg-accent/60"
+                    : "border-border hover:border-border/80 hover:bg-accent/30"
+                }`}
+              >
                 <input
                   type="radio"
                   name="onDuplicate"
@@ -120,13 +125,13 @@ export function IdentityConfigDialog({
                 />
                 <span>
                   <span className="font-medium">{m.label}</span>
-                  <span className="ml-2 text-[--color-muted-foreground]">{m.description}</span>
+                  <span className="ml-1.5 text-muted-foreground">{m.description}</span>
                 </span>
               </label>
             ))}
           </fieldset>
           {droppedCount !== null && droppedCount > 0 && (
-            <p className="rounded bg-yellow-100 px-2 py-1 text-xs text-yellow-900">
+            <p className="rounded-md bg-warning/15 px-2 py-1.5 text-xs text-warning">
               Applying this config would drop {droppedCount} records. Click Apply again to confirm.
             </p>
           )}

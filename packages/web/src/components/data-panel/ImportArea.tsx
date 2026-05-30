@@ -1,3 +1,4 @@
+import { FileUp, Plus, Upload } from "lucide-react";
 import { type ChangeEvent, useState } from "react";
 import { checkRoot, parseImport } from "../../lib/json-import";
 import type { PickerCandidate } from "../../lib/root-picker";
@@ -32,11 +33,13 @@ export function ImportArea({ onRecords, onNeedsPicker }: ImportAreaProps) {
     }
     if (!root.needsPicker && Array.isArray(parsed.value)) {
       onRecords(parsed.value);
+      setText("");
       return;
     }
     const candidates = enumerateCandidates(parsed.value);
     if (candidates.length === 0) {
       onRecords([parsed.value]);
+      setText("");
       return;
     }
     onNeedsPicker(parsed.value, candidates);
@@ -76,49 +79,70 @@ export function ImportArea({ onRecords, onNeedsPicker }: ImportAreaProps) {
   }
 
   return (
-    <div className="flex flex-col gap-2 p-3">
-      <label className="text-xs font-medium text-[--color-muted-foreground]" htmlFor="import-text">
-        Paste JSON / NDJSON
+    <div className="flex flex-col gap-2 px-3 py-3">
+      <label
+        className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground"
+        htmlFor="import-text"
+      >
+        Paste JSON
       </label>
       <Textarea
         id="import-text"
-        rows={8}
+        rows={6}
         value={text}
         onChange={(e) => setText(e.target.value)}
-        placeholder='[{"id":"a","status":"active"}, ...]'
+        placeholder={'[{ "id": "a", "status": "active" }, ...]'}
         aria-label="Import text"
+        className="resize-none text-xs leading-relaxed"
       />
-      <div className="flex flex-wrap items-center gap-2">
-        <Button size="sm" onClick={handleImport} disabled={!text.trim()}>
+      <div className="flex items-center gap-2">
+        <Button size="sm" onClick={handleImport} disabled={!text.trim()} className="flex-1">
+          <Plus className="size-3.5" />
           Import
         </Button>
-        <label className="text-xs text-[--color-muted-foreground]">
+        <label>
           <input
             type="file"
             accept=".json,.ndjson,application/json"
             onChange={handleFile}
-            className="hidden"
+            className="sr-only"
+            aria-label="Upload data file"
           />
-          <span className="cursor-pointer underline">or upload file</span>
+          <span
+            className="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-md border border-input bg-background px-3 text-xs font-medium text-foreground shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground"
+            title="Upload .json or .ndjson"
+          >
+            <Upload className="size-3.5" />
+            File
+          </span>
         </label>
-        <span className="text-xs text-[--color-muted-foreground]">·</span>
-        <label className="text-xs text-[--color-muted-foreground]">
+      </div>
+      <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+        <FileUp className="size-3" />
+        <label className="cursor-pointer hover:text-foreground hover:underline">
           <input
             type="file"
             accept=".json,.session.json,application/json"
             onChange={handleImportSession}
-            className="hidden"
+            className="sr-only"
             aria-label="Import session file"
           />
-          <span className="cursor-pointer underline">import session</span>
+          import session bundle
         </label>
       </div>
       {error && (
-        <p role="alert" className="text-xs text-red-600">
+        <p
+          role="alert"
+          className="rounded-md bg-destructive/10 px-2 py-1.5 text-xs text-destructive"
+        >
           {error}
         </p>
       )}
-      {info && <output className="text-xs text-[--color-muted-foreground]">{info}</output>}
+      {info && (
+        <output className="block rounded-md bg-success/10 px-2 py-1.5 text-xs text-success">
+          {info}
+        </output>
+      )}
     </div>
   );
 }
