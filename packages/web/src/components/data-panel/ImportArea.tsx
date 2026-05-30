@@ -1,10 +1,12 @@
 import { FileUp, Plus, Upload } from "lucide-react";
 import { type ChangeEvent, useState } from "react";
+import { shouldRenameWorkspace, workspaceNameFromFile } from "../../lib/filename";
 import { checkRoot, parseImport } from "../../lib/json-import";
 import type { PickerCandidate } from "../../lib/root-picker";
 import { enumerateCandidates } from "../../lib/root-picker";
 import { parseSessionBundle } from "../../lib/session-bundle";
 import { loadSessionBundle } from "../../state/init";
+import { useStore } from "../../state/store";
 import { Button } from "../ui/button";
 import { Textarea } from "../ui/textarea";
 
@@ -17,6 +19,8 @@ export function ImportArea({ onRecords, onNeedsPicker }: ImportAreaProps) {
   const [text, setText] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
+  const workspaceName = useStore((s) => s.workspaceName);
+  const setWorkspaceName = useStore((s) => s.setWorkspaceName);
 
   function handleImport(): void {
     setError(null);
@@ -48,6 +52,9 @@ export function ImportArea({ onRecords, onNeedsPicker }: ImportAreaProps) {
   function handleFile(e: ChangeEvent<HTMLInputElement>): void {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (shouldRenameWorkspace(workspaceName)) {
+      setWorkspaceName(workspaceNameFromFile(file.name));
+    }
     void file.text().then(setText);
   }
 

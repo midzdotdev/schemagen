@@ -16,6 +16,7 @@ import type { AppState, ApplyChangeOptions, HistoryEntry } from "./types";
 
 export interface StoreActions {
   setIR: (ir: IR | null) => void;
+  setWorkspaceName: (name: string) => void;
   addRecords: (records: unknown[]) => void;
   setRecords: (records: unknown[]) => void;
   applyChange: (change: Change, options?: ApplyChangeOptions) => HistoryEntry;
@@ -39,6 +40,7 @@ export type Store = AppState & StoreActions;
 // HydrationGate has resolved.
 export const INITIAL_STATE: AppState = {
   workspaceId: "",
+  workspaceName: "",
   ir: null,
   records: [],
   history: { entries: [], cursor: 0 },
@@ -58,6 +60,8 @@ export const useStore = create<Store>((set, get) => ({
   ...INITIAL_STATE,
 
   setIR: (ir) => set({ ir }),
+
+  setWorkspaceName: (name) => set({ workspaceName: name }),
 
   addRecords: (records) => set((s) => ({ records: [...s.records, ...records] })),
 

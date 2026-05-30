@@ -16,6 +16,7 @@ export interface HistoryEntry {
 
 export interface AppState {
   workspaceId: string;
+  workspaceName: string;
   ir: IR | null;
   records: unknown[];
   history: { entries: HistoryEntry[]; cursor: number };

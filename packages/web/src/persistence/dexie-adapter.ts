@@ -27,7 +27,7 @@ export function createDexieAdapter(opts: DexieAdapterOptions = {}): WorkspaceAda
       const ts = now();
       const row = {
         id,
-        name: name ?? "Workspace",
+        name: name ?? "Untitled workspace",
         createdAt: ts,
         updatedAt: ts,
       };
@@ -35,8 +35,16 @@ export function createDexieAdapter(opts: DexieAdapterOptions = {}): WorkspaceAda
       return row;
     },
 
+    async renameWorkspace(workspaceId, name) {
+      await dbInstance.workspaces
+        .where("id")
+        .equals(workspaceId)
+        .modify({ name, updatedAt: now() });
+    },
+
     async hydrate(workspaceId) {
-      const [irRow, meta, changeRows, recordRows] = await Promise.all([
+      const [workspace, irRow, meta, changeRows, recordRows] = await Promise.all([
+        dbInstance.workspaces.get(workspaceId),
         dbInstance.irs.get(workspaceId),
         dbInstance.meta.get(workspaceId),
         dbInstance.changes.where("workspaceId").equals(workspaceId).sortBy("seq"),
@@ -45,6 +53,7 @@ export function createDexieAdapter(opts: DexieAdapterOptions = {}): WorkspaceAda
 
       const snapshot: WorkspaceSnapshot = {
         workspaceId,
+        workspaceName: workspace?.name ?? "",
         ir: irRow?.ir ?? null,
         records: recordRows.map((r) => r.content),
         history: {
@@ -148,6 +157,7 @@ export function attachPersistence(
   let lastRecords = useStore.getState().records;
   let lastIdentityConfig = useStore.getState().identityConfig;
   let lastDismissed = useStore.getState().identityProposalDismissed;
+  let lastName = useStore.getState().workspaceName;
   const initial = useStore.getState();
 
   // Track which entries were hydrated so we don't re-write them. Hydration
@@ -208,6 +218,11 @@ export function attachPersistence(
       void adapter.patchMeta(workspaceId, {
         identityProposalDismissed: state.identityProposalDismissed,
       });
+    }
+
+    if (state.workspaceName !== lastName) {
+      lastName = state.workspaceName;
+      void adapter.renameWorkspace(workspaceId, state.workspaceName);
     }
   });
 }

@@ -18,6 +18,7 @@ export function ExportModal({ open, onOpenChange }: ExportModalProps) {
   const history = useStore((s) => s.history);
   const identityConfig = useStore((s) => s.identityConfig);
   const workspaceId = useStore((s) => s.workspaceId);
+  const workspaceName = useStore((s) => s.workspaceName);
 
   const [copied, setCopied] = useState(false);
 
@@ -35,9 +36,11 @@ export function ExportModal({ open, onOpenChange }: ExportModalProps) {
     download(schemaText, "schema.json", "application/schema+json");
   }
 
+  const bundleName = workspaceName.trim() || `Workspace ${workspaceId.slice(0, 8)}`;
+
   function handleDownloadSession(): void {
     const bundle = buildSessionBundle({
-      workspaceName: `Workspace ${workspaceId.slice(0, 8)}`,
+      workspaceName: bundleName,
       originClientId: getClientId(),
       ir,
       records,
@@ -45,13 +48,17 @@ export function ExportModal({ open, onOpenChange }: ExportModalProps) {
       identityConfig,
     });
     const text = JSON.stringify(bundle, null, 2);
-    download(text, "schemagen.session.json", "application/json");
+    const slug = bundleName
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "");
+    download(text, `${slug || "schemagen"}.session.json`, "application/json");
   }
 
   const sessionSize = ir
     ? bundleSizeBytes(
         buildSessionBundle({
-          workspaceName: workspaceId,
+          workspaceName: bundleName,
           originClientId: getClientId(),
           ir,
           records,
