@@ -4,7 +4,12 @@ A developer tool for generating, visualizing, and iterating on data schemas from
 
 ## Current state
 
-Spec stage. No code yet. The v1 specs live in [`docs/`](./docs/):
+Both the core library and the web app have shipped to `main`. JSON Schema is the only emit target so far; Zod and TypeScript follow. Nothing is published to npm yet.
+
+- `@schemagen/core` — pure-function TypeScript library. Inference, validation, mutation (applyChange + inverse), emission to JSON Schema. Strict typing throughout (`exactOptionalPropertyTypes`, `noUncheckedIndexedAccess`); covered by Vitest + fast-check property tests.
+- `@schemagen/web` — local-first React app. Named workspaces, three-pane shell (data / schema / inspector), full schema-op editor, mismatch panel with filter and grouped collapse, identity-key auto-suggest with chip-picker, session export/import, JSON syntax-highlighted preview, bundled samples for cold start, app-level ErrorBoundary, keyboard shortcuts. Persists to IndexedDB via Dexie.
+
+The v1 specs live in [`docs/`](./docs/):
 
 - [`ir-spec.md`](./docs/ir-spec.md) — schemagen's native schema format, the thing you edit. JSON Schema, Zod, and TypeScript types are emitted from it.
 - [`core-spec.md`](./docs/core-spec.md) — pure-function library API: inference, validation, mutation, emission.
