@@ -40,6 +40,25 @@ export function ArrayControls({ node, path, applyChange }: ArrayControlsProps) {
           />
         </div>
       </Subsection>
+      <Subsection title="Uniqueness">
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-[11px] text-muted-foreground">Items must be unique</span>
+          <Button
+            size="xs"
+            variant={node.uniqueItems ? "default" : "outline"}
+            onClick={() => {
+              // Core has no dedicated op for uniqueItems; use set-node with a
+              // shallow-cloned array node carrying the toggled flag.
+              const next: ArrayNode = node.uniqueItems
+                ? omitUniqueItems(node)
+                : { ...node, uniqueItems: true };
+              applyChange({ op: "set-node", path, node: next });
+            }}
+          >
+            {node.uniqueItems ? "Required" : "Off"}
+          </Button>
+        </div>
+      </Subsection>
       <Subsection title="Structure">
         <Button
           size="xs"
@@ -60,6 +79,13 @@ function Subsection({ title, children }: { title: string; children: React.ReactN
       {children}
     </div>
   );
+}
+
+// Helper: clear the uniqueItems flag without mutating the original node.
+// exactOptionalPropertyTypes makes `uniqueItems: undefined` a type error.
+function omitUniqueItems(node: ArrayNode): ArrayNode {
+  const { uniqueItems: _omit, ...rest } = node;
+  return rest;
 }
 
 function BoundField({
