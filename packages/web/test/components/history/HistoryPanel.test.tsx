@@ -50,6 +50,23 @@ describe("HistoryPanel", () => {
     expect(useStore.getState().history.cursor).toBe(0);
   });
 
+  // PR P — click the path chip to navigate
+  it("W6-HP5: clicking the path chip sets selectedPath in the store", async () => {
+    const user = userEvent.setup();
+    act(() => {
+      useStore.getState().setIR(ir);
+      // path=["name"] so the chip text isn't "(root)"
+      const change: Change = { op: "set-optional", path: [], name: "name", value: true };
+      useStore.getState().applyChange(change);
+      useStore.getState().setSelectedPath(["other"]); // start with a different path
+    });
+    render(<HistoryPanel />);
+    // The path button's accessible name comes from its title attr; the visible
+    // text is the path itself. Match by title.
+    await user.click(screen.getByTitle(/jump to this node/i));
+    expect(useStore.getState().selectedPath).toEqual([]);
+  });
+
   // Spec: docs/frontend-spec.md § "History" — redo reapplies
   it("W6-HP4: redo button reapplies an undone change", async () => {
     const user = userEvent.setup();
