@@ -1,5 +1,6 @@
 import { AlertTriangle, ShieldCheck, X } from "lucide-react";
 import { useState } from "react";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { requestPersistence, useStorageHealth } from "@/hooks/useStorageHealth";
 import { Button } from "../ui/button";
 
@@ -12,9 +13,7 @@ const DISMISS_KEY = "schemagen.storageBanner.dismissed";
 // so the user isn't nagged after acknowledging.
 export function StorageBanner() {
   const status = useStorageHealth();
-  const [dismissed, setDismissed] = useState(
-    () => typeof localStorage !== "undefined" && localStorage.getItem(DISMISS_KEY) === "1",
-  );
+  const [dismissed, setDismissed] = useLocalStorage<boolean>(DISMISS_KEY, false);
   const [persisting, setPersisting] = useState(false);
   const [granted, setGranted] = useState<boolean | null>(null);
 
@@ -23,7 +22,6 @@ export function StorageBanner() {
 
   function dismiss(): void {
     setDismissed(true);
-    if (typeof localStorage !== "undefined") localStorage.setItem(DISMISS_KEY, "1");
   }
 
   async function tryPersist(): Promise<void> {

@@ -1,15 +1,17 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect } from "react";
+import { useLocalStorage } from "./useLocalStorage";
 
 export type Theme = "light" | "dark" | "system";
 
 const STORAGE_KEY = "schemagen.theme";
 
-function readStored(): Theme {
-  if (typeof localStorage === "undefined") return "system";
-  const raw = localStorage.getItem(STORAGE_KEY);
-  if (raw === "light" || raw === "dark" || raw === "system") return raw;
-  return "system";
-}
+// Theme is stored as a plain string, not JSON-encoded. Custom (de)serializer
+// keeps existing values written by older builds compatible.
+const stringIO = {
+  serialize: (v: Theme): string => v,
+  deserialize: (raw: string): Theme =>
+    raw === "light" || raw === "dark" || raw === "system" ? raw : "system",
+};
 
 // Apply the user's choice as a class on <html>. The CSS uses .dark for an
 // explicit dark override and .light to opt out of the system media query.
@@ -22,19 +24,12 @@ function applyTheme(theme: Theme): void {
 }
 
 export function useTheme(): { theme: Theme; setTheme: (t: Theme) => void } {
-  const [theme, setThemeState] = useState<Theme>(() => readStored());
+  const [theme, setTheme] = useLocalStorage<Theme>(STORAGE_KEY, "system", stringIO);
 
   // Apply on every state change so first render and toggles both take effect.
   useEffect(() => {
     applyTheme(theme);
   }, [theme]);
-
-  const setTheme = useCallback((next: Theme): void => {
-    setThemeState(next);
-    if (typeof localStorage !== "undefined") {
-      localStorage.setItem(STORAGE_KEY, next);
-    }
-  }, []);
 
   return { theme, setTheme };
 }
