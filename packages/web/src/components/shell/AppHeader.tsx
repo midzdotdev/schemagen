@@ -17,6 +17,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 import { ResetWorkspaceDialog } from "./ResetWorkspaceDialog";
 import { ShortcutsDialog } from "./ShortcutsDialog";
 import { WorkspaceNameField } from "./WorkspaceNameField";
+import { WorkspaceSwitcher } from "./WorkspaceSwitcher";
 
 export interface AppHeaderProps {
   onExportClick: () => void;
@@ -52,7 +53,15 @@ export function AppHeader({ onExportClick, shortcutsOpen, onShortcutsChange }: A
 
       <Separator orientation="vertical" className="mx-0.5 h-5" />
 
-      <WorkspaceNameField />
+      {/*
+        Two affordances on the workspace identity:
+        - Name field is click-to-rename the current workspace.
+        - Switcher (chevron) opens a popover to switch / create.
+      */}
+      <div className="flex items-center gap-0.5">
+        <WorkspaceNameField />
+        <WorkspaceSwitcher />
+      </div>
 
       <div className="flex min-w-0 items-center gap-2 text-xs text-muted-foreground">
         {ir ? (

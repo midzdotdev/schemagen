@@ -34,6 +34,27 @@ export async function initWorkspace(
   return { workspaceId: workspace.id, disposer, adapter };
 }
 
+// Switch to an existing workspace by id. Used by the workspace switcher.
+export async function switchWorkspace(workspaceId: string): Promise<void> {
+  if (!currentAdapter) {
+    throw new Error("switchWorkspace: no adapter available; call initWorkspace first");
+  }
+  const snapshot = await currentAdapter.hydrate(workspaceId);
+  useStore.getState().hydrate(snapshot);
+  currentDisposer?.();
+  currentDisposer = attachPersistence(useStore, currentAdapter);
+}
+
+// Create a brand-new workspace and switch to it.
+export async function createAndSwitchWorkspace(name?: string): Promise<{ workspaceId: string }> {
+  if (!currentAdapter) {
+    throw new Error("createAndSwitchWorkspace: no adapter available");
+  }
+  const row = await currentAdapter.createWorkspace(name);
+  await switchWorkspace(row.id);
+  return { workspaceId: row.id };
+}
+
 export function getCurrentAdapter(): WorkspaceAdapter | null {
   return currentAdapter;
 }
