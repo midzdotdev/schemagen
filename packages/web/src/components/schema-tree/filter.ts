@@ -24,13 +24,7 @@ export function computeFilter(ir: Node, query: string): FilterResult {
 
 const join = (path: Path): string => path.map(String).join(".");
 
-function visit(
-  node: Node,
-  path: Path,
-  name: string,
-  query: string,
-  out: FilterResult,
-): boolean {
+function visit(node: Node, path: Path, name: string, query: string, out: FilterResult): boolean {
   // Match against this node's name. Root has no name and never matches itself.
   const selfMatches = name.toLowerCase().includes(query);
 
