@@ -107,7 +107,9 @@ export function JsonView({ value, text, className, "aria-label": ariaLabel }: Js
   const tokens = useMemo(() => (source ? tokenize(source) : []), [source]);
 
   return (
+    // biome-ignore lint/a11y/useSemanticElements: <section> would imply landmark semantics; this is a code preview
     <pre
+      role="region"
       aria-label={ariaLabel}
       className={cn(
         "overflow-auto rounded-md border border-border bg-muted/40 p-3 font-mono text-xs leading-relaxed",

@@ -33,7 +33,7 @@ test.describe("session export/import", () => {
     await page.getByRole("button", { name: /^export$/i }).click();
     await page.getByRole("tab", { name: /full session/i }).click();
     await expect(page.getByRole("button", { name: /download \.session\.json/i })).toBeEnabled();
-    await expect(page.getByLabel(/session size/i)).toBeVisible();
+    await expect(page.getByTestId("session-size")).toBeVisible();
   });
 
   test("X4-E2: importing a session bundle creates a new workspace with matching state", async ({

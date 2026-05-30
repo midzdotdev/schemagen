@@ -51,7 +51,6 @@ export function RecordList({ records }: RecordListProps) {
           const preview = previewFor(r);
           return (
             <li
-              // biome-ignore lint/suspicious/noArrayIndexKey: records are positional, not keyed
               key={i}
               data-testid={isSelected ? "selected-record" : undefined}
               className={cn(
