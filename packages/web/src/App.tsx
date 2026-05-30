@@ -9,16 +9,25 @@ import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 
 export function App() {
   const [exportOpen, setExportOpen] = useState(false);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
 
   useKeyboardShortcuts({
     onExportToggle: () => setExportOpen((v) => !v),
-    onEscape: () => setExportOpen(false),
+    onShortcutsToggle: () => setShortcutsOpen((v) => !v),
+    onEscape: () => {
+      setExportOpen(false);
+      setShortcutsOpen(false);
+    },
   });
 
   return (
     <TooltipProvider delayDuration={300}>
       <div className="flex h-screen flex-col bg-background text-foreground">
-        <AppHeader onExportClick={() => setExportOpen(true)} />
+        <AppHeader
+          onExportClick={() => setExportOpen(true)}
+          shortcutsOpen={shortcutsOpen}
+          onShortcutsChange={setShortcutsOpen}
+        />
         <main className="grid min-h-0 flex-1 grid-cols-[20rem_minmax(0,1fr)_24rem]">
           <section
             aria-label="Data"

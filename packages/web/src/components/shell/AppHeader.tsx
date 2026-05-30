@@ -1,15 +1,30 @@
-import { Download, FileJson, Github, Redo2, Undo2 } from "lucide-react";
+import {
+  Download,
+  FileJson,
+  Github,
+  KeyRound,
+  Keyboard,
+  Redo2,
+  RotateCcw,
+  Undo2,
+} from "lucide-react";
+import { useState } from "react";
 import { useStore } from "../../state/store";
+import { IdentityConfigDialog } from "../identity/IdentityConfigDialog";
 import { Button } from "../ui/button";
 import { Separator } from "../ui/separator";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
+import { ResetWorkspaceDialog } from "./ResetWorkspaceDialog";
+import { ShortcutsDialog } from "./ShortcutsDialog";
 import { WorkspaceNameField } from "./WorkspaceNameField";
 
 export interface AppHeaderProps {
   onExportClick: () => void;
+  shortcutsOpen?: boolean;
+  onShortcutsChange?: (open: boolean) => void;
 }
 
-export function AppHeader({ onExportClick }: AppHeaderProps) {
+export function AppHeader({ onExportClick, shortcutsOpen, onShortcutsChange }: AppHeaderProps) {
   const records = useStore((s) => s.records);
   const ir = useStore((s) => s.ir);
   const entries = useStore((s) => s.history.entries);
@@ -17,9 +32,16 @@ export function AppHeader({ onExportClick }: AppHeaderProps) {
   const undo = useStore((s) => s.undo);
   const redo = useStore((s) => s.redo);
 
+  const [identityOpen, setIdentityOpen] = useState(false);
+  const [resetOpen, setResetOpen] = useState(false);
+  const [internalShortcutsOpen, setInternalShortcutsOpen] = useState(false);
+  const shortcuts = shortcutsOpen ?? internalShortcutsOpen;
+  const setShortcuts = onShortcutsChange ?? setInternalShortcutsOpen;
+
   const canUndo = cursor > 0;
   const canRedo = cursor < entries.length;
   const recordCount = records.length;
+  const hasWorkspace = ir !== null || recordCount > 0;
 
   return (
     <header className="flex h-12 shrink-0 items-center gap-3 border-b border-border bg-background px-4">
@@ -78,6 +100,52 @@ export function AppHeader({ onExportClick }: AppHeaderProps) {
 
         <Separator orientation="vertical" className="mx-1 h-5" />
 
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              size="icon"
+              variant="ghost"
+              className="size-8"
+              aria-label="Identity key settings"
+              onClick={() => setIdentityOpen(true)}
+            >
+              <KeyRound className="size-3.5" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Identity key settings</TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              size="icon"
+              variant="ghost"
+              className="size-8"
+              aria-label="Reset workspace"
+              disabled={!hasWorkspace}
+              onClick={() => setResetOpen(true)}
+            >
+              <RotateCcw className="size-3.5" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Reset workspace</TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              size="icon"
+              variant="ghost"
+              className="size-8"
+              aria-label="Keyboard shortcuts"
+              onClick={() => setShortcuts(true)}
+            >
+              <Keyboard className="size-3.5" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Keyboard shortcuts · ?</TooltipContent>
+        </Tooltip>
+
+        <Separator orientation="vertical" className="mx-1 h-5" />
+
         <Button variant="ghost" size="sm" asChild className="text-muted-foreground">
           <a href="https://github.com/midzdotdev/schemagen" target="_blank" rel="noreferrer">
             <Github className="size-3.5" />
@@ -89,6 +157,10 @@ export function AppHeader({ onExportClick }: AppHeaderProps) {
           Export
         </Button>
       </div>
+
+      <IdentityConfigDialog open={identityOpen} onOpenChange={setIdentityOpen} />
+      <ResetWorkspaceDialog open={resetOpen} onOpenChange={setResetOpen} />
+      <ShortcutsDialog open={shortcuts} onOpenChange={setShortcuts} />
     </header>
   );
 }
