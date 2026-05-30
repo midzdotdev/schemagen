@@ -2,6 +2,7 @@ import type { ArrayNode, Change, Path } from "@schemagen/core";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { KindBadge } from "../ui/kind-badge";
+import { InspectorSubsection } from "./Section";
 
 export interface ArrayControlsProps {
   node: ArrayNode;
@@ -12,7 +13,7 @@ export interface ArrayControlsProps {
 export function ArrayControls({ node, path, applyChange }: ArrayControlsProps) {
   return (
     <div className="flex flex-col gap-3">
-      <Subsection title="Items">
+      <InspectorSubsection title="Items">
         <div className="flex items-center justify-between gap-2 rounded-md border border-border bg-card/50 px-2 py-1.5 text-xs">
           <span className="text-muted-foreground">Element type</span>
           <KindBadge kind={node.items.kind} />
@@ -21,8 +22,8 @@ export function ArrayControls({ node, path, applyChange }: ArrayControlsProps) {
           Select <code className="font-mono">items</code> in the schema tree to edit the element
           type.
         </p>
-      </Subsection>
-      <Subsection title="Length">
+      </InspectorSubsection>
+      <InspectorSubsection title="Length">
         <div className="grid grid-cols-2 gap-2">
           <BoundField
             label="Min items"
@@ -39,8 +40,8 @@ export function ArrayControls({ node, path, applyChange }: ArrayControlsProps) {
             applyChange={applyChange}
           />
         </div>
-      </Subsection>
-      <Subsection title="Uniqueness">
+      </InspectorSubsection>
+      <InspectorSubsection title="Uniqueness">
         <div className="flex items-center justify-between gap-2">
           <span className="text-[11px] text-muted-foreground">Items must be unique</span>
           <Button
@@ -58,8 +59,8 @@ export function ArrayControls({ node, path, applyChange }: ArrayControlsProps) {
             {node.uniqueItems ? "Required" : "Off"}
           </Button>
         </div>
-      </Subsection>
-      <Subsection title="Structure">
+      </InspectorSubsection>
+      <InspectorSubsection title="Structure">
         <Button
           size="xs"
           variant="outline"
@@ -67,16 +68,7 @@ export function ArrayControls({ node, path, applyChange }: ArrayControlsProps) {
         >
           Unwrap (use element type as the schema)
         </Button>
-      </Subsection>
-    </div>
-  );
-}
-
-function Subsection({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div className="flex flex-col gap-1.5">
-      <h3 className="text-[11px] font-medium text-muted-foreground">{title}</h3>
-      {children}
+      </InspectorSubsection>
     </div>
   );
 }

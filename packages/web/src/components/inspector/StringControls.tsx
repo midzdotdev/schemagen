@@ -3,6 +3,7 @@ import { X } from "lucide-react";
 import { useState } from "react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
+import { InspectorSubsection } from "./Section";
 
 const FORMATS: FormatName[] = [
   "date",
@@ -26,7 +27,7 @@ export function StringControls({ node, path, applyChange }: StringControlsProps)
 
   return (
     <div className="flex flex-col gap-4">
-      <Subsection title="Literals" count={node.literals?.length}>
+      <InspectorSubsection title="Literals" count={node.literals?.length}>
         {node.literals && node.literals.length > 0 && (
           <ul className="flex flex-wrap gap-1">
             {node.literals.map((lit) => (
@@ -77,8 +78,8 @@ export function StringControls({ node, path, applyChange }: StringControlsProps)
             Clear all
           </Button>
         )}
-      </Subsection>
-      <Subsection title="Format">
+      </InspectorSubsection>
+      <InspectorSubsection title="Format">
         <div className="flex flex-wrap gap-1">
           {FORMATS.map((f) => (
             <Button
@@ -97,9 +98,9 @@ export function StringControls({ node, path, applyChange }: StringControlsProps)
             </Button>
           ))}
         </div>
-      </Subsection>
+      </InspectorSubsection>
       <PatternControl pattern={node.pattern} path={path} applyChange={applyChange} />
-      <Subsection title="Length">
+      <InspectorSubsection title="Length">
         <div className="grid grid-cols-2 gap-2">
           <BoundField
             label="Min"
@@ -116,7 +117,7 @@ export function StringControls({ node, path, applyChange }: StringControlsProps)
             applyChange={applyChange}
           />
         </div>
-      </Subsection>
+      </InspectorSubsection>
     </div>
   );
 }
@@ -150,7 +151,7 @@ function PatternControl({
   }
 
   return (
-    <Subsection title="Pattern">
+    <InspectorSubsection title="Pattern">
       <form
         className="flex items-center gap-1.5"
         onSubmit={(e) => {
@@ -182,7 +183,7 @@ function PatternControl({
         )}
       </form>
       {error && <p className="text-[11px] text-destructive">{error}</p>}
-    </Subsection>
+    </InspectorSubsection>
   );
 }
 
@@ -222,28 +223,6 @@ function BoundField({
         }}
         aria-label={`${which} bound`}
       />
-    </div>
-  );
-}
-
-function Subsection({
-  title,
-  count,
-  children,
-}: {
-  title: string;
-  count?: number | undefined;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="flex flex-col gap-1.5">
-      <h3 className="text-[11px] font-medium text-muted-foreground">
-        {title}
-        {count !== undefined && count > 0 && (
-          <span className="ml-1 text-muted-foreground/60">({count})</span>
-        )}
-      </h3>
-      {children}
     </div>
   );
 }

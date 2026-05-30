@@ -10,6 +10,7 @@ import { ExamplesButton } from "./ExamplesButton";
 import { NumberControls } from "./NumberControls";
 import { ObjectControls } from "./ObjectControls";
 import { RecordControls } from "./RecordControls";
+import { InspectorSection } from "./Section";
 import { StringControls } from "./StringControls";
 import { TupleControls } from "./TupleControls";
 import { UnionControls } from "./UnionControls";
@@ -72,43 +73,43 @@ export function Inspector() {
         </div>
       </div>
       <div className="flex flex-col">
-        <Section title="Common">
+        <InspectorSection title="Common">
           <UniversalControls node={node} path={selectedPath} applyChange={applyChange} />
-        </Section>
+        </InspectorSection>
         {node.kind === "string" && (
-          <Section title="String">
+          <InspectorSection title="String">
             <StringControls node={node} path={selectedPath} applyChange={applyChange} />
-          </Section>
+          </InspectorSection>
         )}
         {node.kind === "number" && (
-          <Section title="Number">
+          <InspectorSection title="Number">
             <NumberControls node={node} path={selectedPath} applyChange={applyChange} />
-          </Section>
+          </InspectorSection>
         )}
         {node.kind === "object" && (
-          <Section title="Object">
+          <InspectorSection title="Object">
             <ObjectControls node={node} path={selectedPath} applyChange={applyChange} />
-          </Section>
+          </InspectorSection>
         )}
         {node.kind === "array" && (
-          <Section title="Array">
+          <InspectorSection title="Array">
             <ArrayControls node={node} path={selectedPath} applyChange={applyChange} />
-          </Section>
+          </InspectorSection>
         )}
         {node.kind === "tuple" && (
-          <Section title="Tuple">
+          <InspectorSection title="Tuple">
             <TupleControls node={node} path={selectedPath} applyChange={applyChange} />
-          </Section>
+          </InspectorSection>
         )}
         {node.kind === "union" && (
-          <Section title="Union">
+          <InspectorSection title="Union">
             <UnionControls node={node} path={selectedPath} applyChange={applyChange} />
-          </Section>
+          </InspectorSection>
         )}
         {node.kind === "record" && (
-          <Section title="Record">
+          <InspectorSection title="Record">
             <RecordControls node={node} path={selectedPath} applyChange={applyChange} />
-          </Section>
+          </InspectorSection>
         )}
         {error && (
           <div className="px-3 py-2">
@@ -121,17 +122,6 @@ export function Inspector() {
           </div>
         )}
       </div>
-    </div>
-  );
-}
-
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div className="border-b border-border last:border-b-0">
-      <div className="px-3 pt-3 pb-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-        {title}
-      </div>
-      <div className="px-3 pb-3">{children}</div>
     </div>
   );
 }
