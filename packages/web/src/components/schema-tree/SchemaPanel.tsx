@@ -1,6 +1,7 @@
-import { FileSearch, GitBranch } from "lucide-react";
-import { useValidation } from "../../hooks/useValidation";
-import { useStore } from "../../state/store";
+import { FileSearch, GitBranch, Search, X } from "lucide-react";
+import { useState } from "react";
+import { useValidation } from "@/hooks/useValidation";
+import { useStore } from "@/state/store";
 import { EmptyState } from "../shell/EmptyState";
 import { PaneHeader } from "../shell/PaneHeader";
 import { Badge } from "../ui/badge";
@@ -10,6 +11,7 @@ export function SchemaPanel() {
   const ir = useStore((s) => s.ir);
   const records = useStore((s) => s.records);
   const { mismatches } = useValidation();
+  const [query, setQuery] = useState("");
 
   if (!ir) {
     return (
@@ -44,8 +46,29 @@ export function SchemaPanel() {
           ) : null
         }
       />
+      <div className="flex shrink-0 items-center gap-1.5 border-b border-border bg-background px-3 py-2">
+        <Search className="size-3.5 text-muted-foreground" aria-hidden />
+        <input
+          type="text"
+          aria-label="Filter schema fields"
+          placeholder="Filter fields…"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          className="h-7 min-w-0 flex-1 bg-transparent text-xs text-foreground placeholder:text-muted-foreground focus-visible:outline-none"
+        />
+        {query && (
+          <button
+            type="button"
+            aria-label="Clear filter"
+            onClick={() => setQuery("")}
+            className="rounded p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+          >
+            <X className="size-3" />
+          </button>
+        )}
+      </div>
       <div className="min-h-0 flex-1 overflow-auto">
-        <SchemaTree />
+        <SchemaTree query={query} />
       </div>
     </>
   );
