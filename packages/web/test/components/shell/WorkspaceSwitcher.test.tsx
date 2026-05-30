@@ -17,6 +17,7 @@ function fakeAdapter(rows: { id: string; name: string }[]): WorkspaceAdapter {
       updatedAt: 100,
     })),
     renameWorkspace: vi.fn(async () => {}),
+    deleteWorkspace: vi.fn(async () => {}),
     hydrate: vi.fn(async (workspaceId: string) => ({ workspaceId, workspaceName: "" })),
     setIR: vi.fn(async () => {}),
     setRecords: vi.fn(async () => {}),

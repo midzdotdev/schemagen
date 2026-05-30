@@ -1,8 +1,13 @@
-import { Check, ChevronsUpDown, Plus } from "lucide-react";
+import { Check, ChevronsUpDown, Plus, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/cn";
 import type { WorkspaceRow } from "@/persistence/db";
-import { createAndSwitchWorkspace, getCurrentAdapter, switchWorkspace } from "@/state/init";
+import {
+  createAndSwitchWorkspace,
+  deleteWorkspace,
+  getCurrentAdapter,
+  switchWorkspace,
+} from "@/state/init";
 import { useStore } from "@/state/store";
 import { Button } from "../ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
@@ -43,6 +48,21 @@ export function WorkspaceSwitcher() {
     setOpen(false);
   }
 
+  async function handleDelete(ws: WorkspaceRow): Promise<void> {
+    const name = ws.name.trim() || "this workspace";
+    if (!window.confirm(`Delete "${name}"? Records, history, and identity config will be lost.`)) {
+      return;
+    }
+    await deleteWorkspace(ws.id);
+    // Refresh the list without closing the popover so the user can see the
+    // updated state.
+    const adapter = getCurrentAdapter();
+    if (adapter) {
+      const rows = await adapter.listWorkspaces();
+      setWorkspaces(rows.slice().sort((a, b) => b.updatedAt - a.updatedAt));
+    }
+  }
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
@@ -70,15 +90,18 @@ export function WorkspaceSwitcher() {
             {workspaces.map((ws) => {
               const isCurrent = ws.id === currentId;
               return (
-                <li key={ws.id}>
+                <li
+                  key={ws.id}
+                  className={cn(
+                    "group/ws flex items-center rounded-sm transition-colors",
+                    "hover:bg-accent",
+                    isCurrent && "bg-accent/60",
+                  )}
+                >
                   <button
                     type="button"
                     onClick={() => void handleSwitch(ws.id)}
-                    className={cn(
-                      "flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-xs transition-colors",
-                      "hover:bg-accent hover:text-accent-foreground",
-                      isCurrent && "bg-accent/60",
-                    )}
+                    className="flex min-w-0 flex-1 items-center gap-2 px-2 py-1.5 text-left text-xs"
                   >
                     <Check
                       className={cn(
@@ -93,6 +116,17 @@ export function WorkspaceSwitcher() {
                     <span className="shrink-0 font-mono text-[10px] text-muted-foreground">
                       {formatAgo(ws.updatedAt)}
                     </span>
+                  </button>
+                  <button
+                    type="button"
+                    aria-label={`Delete ${ws.name.trim() || "workspace"}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      void handleDelete(ws);
+                    }}
+                    className="mr-1 rounded p-1 text-muted-foreground opacity-0 transition-opacity hover:bg-destructive/15 hover:text-destructive group-hover/ws:opacity-100 focus-visible:opacity-100"
+                  >
+                    <Trash2 className="size-3" />
                   </button>
                 </li>
               );

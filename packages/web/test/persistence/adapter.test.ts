@@ -118,4 +118,20 @@ describe("WorkspaceAdapter (Dexie impl)", () => {
     const snap = await adapter.hydrate(workspaceId);
     expect(snap.workspaceName).toBe("github issues");
   });
+
+  // PR V — cascade delete
+  it("X1-A12: deleteWorkspace removes the workspace + all child rows", async () => {
+    await adapter.setIR(workspaceId, ir);
+    await adapter.setRecords(workspaceId, [{ id: "a" }, { id: "b" }]);
+    await adapter.applyChange(workspaceId, entry);
+    await adapter.patchMeta(workspaceId, { historyCursor: 1 });
+
+    await adapter.deleteWorkspace(workspaceId);
+
+    expect(await db.workspaces.get(workspaceId)).toBeUndefined();
+    expect(await db.irs.get(workspaceId)).toBeUndefined();
+    expect(await db.meta.get(workspaceId)).toBeUndefined();
+    expect(await db.records.where("workspaceId").equals(workspaceId).count()).toBe(0);
+    expect(await db.changes.where("workspaceId").equals(workspaceId).count()).toBe(0);
+  });
 });
