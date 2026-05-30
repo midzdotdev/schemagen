@@ -64,6 +64,28 @@ describe("Inspector — object ops", () => {
 });
 
 describe("Inspector — array ops", () => {
+  it("ARR-UNIQUE: clicking the Uniqueness toggle sets uniqueItems via set-node", async () => {
+    const user = userEvent.setup();
+    act(() => {
+      useStore.getState().setIR({
+        kind: "object",
+        fields: { tags: { type: { kind: "array", items: { kind: "string" } } } },
+        additional: false,
+      });
+      useStore.getState().setSelectedPath(["tags"]);
+    });
+    render(<Inspector />);
+    // Toggle starts at "Off"
+    await user.click(screen.getByRole("button", { name: /^off$/i }));
+    const tags = (
+      useStore.getState().ir as unknown as {
+        fields: { tags: { type: { uniqueItems?: boolean } } };
+      }
+    ).fields.tags?.type;
+    expect(tags?.uniqueItems).toBe(true);
+  });
+
+
   it("ARR-BOUND: setting minItems issues set-bound with minItems", async () => {
     const user = userEvent.setup();
     act(() => {
