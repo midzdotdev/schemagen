@@ -85,7 +85,6 @@ describe("Inspector — array ops", () => {
     expect(tags?.uniqueItems).toBe(true);
   });
 
-
   it("ARR-BOUND: setting minItems issues set-bound with minItems", async () => {
     const user = userEvent.setup();
     act(() => {
