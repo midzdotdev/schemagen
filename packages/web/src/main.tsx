@@ -1,6 +1,7 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./App";
+import { ErrorBoundary } from "./components/shell/ErrorBoundary";
 import { HydrationGate } from "./components/shell/HydrationGate";
 import "./styles.css";
 
@@ -9,8 +10,10 @@ if (!root) throw new Error("root element not found");
 
 createRoot(root).render(
   <StrictMode>
-    <HydrationGate>
-      <App />
-    </HydrationGate>
+    <ErrorBoundary>
+      <HydrationGate>
+        <App />
+      </HydrationGate>
+    </ErrorBoundary>
   </StrictMode>,
 );
