@@ -41,8 +41,49 @@
   --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", "Fira Code", Menlo, Consolas, monospace;
 }
 
+/*
+ * Dark theme variables. Active in two scenarios:
+ *   - .dark class is on <html> (explicit user choice, set by useTheme())
+ *   - prefers-color-scheme: dark AND .dark is NOT explicitly off (.light)
+ *
+ * The .light class is set by useTheme when the user picks light explicitly,
+ * and wins against the media query.
+ */
+.dark {
+  --color-background: hsl(240 10% 3.9%);
+  --color-foreground: hsl(0 0% 98%);
+  --color-card: hsl(240 10% 5.5%);
+  --color-card-foreground: hsl(0 0% 98%);
+  --color-popover: hsl(240 10% 5.5%);
+  --color-popover-foreground: hsl(0 0% 98%);
+  --color-primary: hsl(0 0% 98%);
+  --color-primary-foreground: hsl(240 5.9% 10%);
+  --color-secondary: hsl(240 3.7% 15.9%);
+  --color-secondary-foreground: hsl(0 0% 98%);
+  --color-muted: hsl(240 3.7% 15.9%);
+  --color-muted-foreground: hsl(240 5% 64.9%);
+  --color-accent: hsl(240 3.7% 15.9%);
+  --color-accent-foreground: hsl(0 0% 98%);
+  --color-destructive: hsl(0 62.8% 45%);
+  --color-destructive-foreground: hsl(0 0% 98%);
+  --color-success: hsl(142 70% 45%);
+  --color-success-foreground: hsl(0 0% 9%);
+  --color-warning: hsl(48 96% 53%);
+  --color-warning-foreground: hsl(0 0% 9%);
+  --color-info: hsl(217 91% 60%);
+  --color-info-foreground: hsl(0 0% 98%);
+  --color-border: hsl(240 3.7% 15.9%);
+  --color-input: hsl(240 3.7% 15.9%);
+  --color-ring: hsl(240 4.9% 83.9%);
+  --color-chart-1: hsl(220 70% 50%);
+  --color-chart-2: hsl(160 60% 45%);
+  --color-chart-3: hsl(30 80% 55%);
+  --color-chart-4: hsl(280 65% 60%);
+  --color-chart-5: hsl(340 75% 55%);
+}
+
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not(.light) {
     --color-background: hsl(240 10% 3.9%);
     --color-foreground: hsl(0 0% 98%);
     --color-card: hsl(240 10% 5.5%);
@@ -78,6 +119,12 @@
 
 html {
   color-scheme: light dark;
+}
+html.dark {
+  color-scheme: dark;
+}
+html.light {
+  color-scheme: light;
 }
 
 html,
