@@ -4,6 +4,7 @@ import { ExportModal } from "./components/export/ExportModal";
 import { SchemaPanel } from "./components/schema-tree/SchemaPanel";
 import { AppHeader } from "./components/shell/AppHeader";
 import { InspectorPane } from "./components/shell/InspectorPane";
+import { StorageBanner } from "./components/shell/StorageBanner";
 import { TooltipProvider } from "./components/ui/tooltip";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 
@@ -28,6 +29,7 @@ export function App() {
           shortcutsOpen={shortcutsOpen}
           onShortcutsChange={setShortcutsOpen}
         />
+        <StorageBanner />
         <main className="grid min-h-0 flex-1 grid-cols-[20rem_minmax(0,1fr)_24rem]">
           <section
             aria-label="Data"
