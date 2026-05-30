@@ -73,11 +73,13 @@ The inspector shows evidence next to each node: `status` reports `active: 162, t
 
 **3. Tweak.** You don't trust that `"active" | "trialing"` covers every future case, so you widen `status` to a union of those literals OR a free string. Future unknown values will validate, but the literal set stays in the schema as documentation. The change lands in history as "Wrapped status in union with free string".
 
-**4. New data.** A week later you drag in a fresh export of all 220 users using "Add and validate". Because `id` is the identity key, 200 records replace their earlier versions (some now in different states) and 20 are new. The workspace stays at 220 records, not 420. The mismatch panel populates:
+**4. New data.** A week later you drag a fresh JSON file with all 220 users onto the data pane. The workspace gets named after the file. Because `id` is the identity key, 200 records replace their earlier versions (some now in different states) and 20 are new. The workspace stays at 220 records, not 420. The mismatch panel populates and the count badge on the Mismatches tab updates live:
 
 - **14× `literal-violation`** at `.status`: value `"past_due"`. Suggestion: *Add `"past_due"` to status literals*.
 - **50× `unexpected-field`** at the root: `.stripe_customer_id`. Suggestion: *Add field `stripe_customer_id` as optional string*.
 
-You click both suggestions. Each lands in history as its own labeled entry; either can be undone individually. The mismatch panel clears.
+You click both suggestions. Each lands in history as its own labeled entry; either can be undone individually (`⌘Z` in the header). The mismatch panel clears.
 
-**5. Export.** From the export panel you copy the JSON Schema and commit it to the consuming service's repo. The schemagen workspace stays in IndexedDB; next month, the next batch starts at step 4.
+**5. Export.** `⌘E` opens the export modal: copy the syntax-highlighted JSON Schema and commit it to the consuming service's repo. The schemagen workspace stays in IndexedDB — named, named history preserved; next month, the next batch starts at step 4.
+
+If you'd rather take it for a spin without your own data, the empty workspace shows a few one-click samples (HackerNews top stories, SWAPI characters, Open Library — Tolkien) bundled with the app.
