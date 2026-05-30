@@ -17,6 +17,7 @@ import type { AppState, ApplyChangeOptions, HistoryEntry } from "./types";
 export interface StoreActions {
   setIR: (ir: IR | null) => void;
   setWorkspaceName: (name: string) => void;
+  resetWorkspace: () => void;
   addRecords: (records: unknown[]) => void;
   setRecords: (records: unknown[]) => void;
   applyChange: (change: Change, options?: ApplyChangeOptions) => HistoryEntry;
@@ -62,6 +63,16 @@ export const useStore = create<Store>((set, get) => ({
   setIR: (ir) => set({ ir }),
 
   setWorkspaceName: (name) => set({ workspaceName: name }),
+
+  // Reset workspace content while preserving the workspace identity.
+  // Clears IR + records + history + identity + selection; keeps workspaceId
+  // and workspaceName so the user knows which workspace they emptied.
+  resetWorkspace: () =>
+    set((s) => ({
+      ...INITIAL_STATE,
+      workspaceId: s.workspaceId,
+      workspaceName: s.workspaceName,
+    })),
 
   addRecords: (records) => set((s) => ({ records: [...s.records, ...records] })),
 

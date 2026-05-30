@@ -6,6 +6,7 @@ import { useStore } from "../state/store";
 
 export interface ShortcutHandlers {
   onExportToggle?: () => void;
+  onShortcutsToggle?: () => void;
   onEscape?: () => void;
 }
 
@@ -40,6 +41,15 @@ export function useKeyboardShortcuts(handlers: ShortcutHandlers = {}): void {
         handlers.onExportToggle?.();
         return;
       }
+      // ? — open the shortcuts help dialog. Note: '?' is Shift+/ on most
+      // layouts; we read e.key directly so layout-mapping is the browser's
+      // problem. Stands down while typing in an input.
+      if (e.key === "?" && !meta) {
+        if (inEditable) return;
+        e.preventDefault();
+        handlers.onShortcutsToggle?.();
+        return;
+      }
       if (e.key === "Escape") {
         handlers.onEscape?.();
       }
@@ -48,5 +58,5 @@ export function useKeyboardShortcuts(handlers: ShortcutHandlers = {}): void {
     return () => {
       window.removeEventListener("keydown", handler);
     };
-  }, [undo, redo, handlers.onExportToggle, handlers.onEscape]);
+  }, [undo, redo, handlers.onExportToggle, handlers.onShortcutsToggle, handlers.onEscape]);
 }
