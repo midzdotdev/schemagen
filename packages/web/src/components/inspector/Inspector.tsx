@@ -80,7 +80,7 @@ export function Inspector() {
       <EmptyState
         icon={<Wand2 className="size-5" />}
         title="Nothing to inspect"
-        description="Once data is imported, the schema tree will appear in the center pane. Select a node to edit it here."
+        description="Generate the schema first, then select any node in the tree to inspect and edit it here."
       />
     );
   }

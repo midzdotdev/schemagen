@@ -22,7 +22,8 @@ describe("DataPanel", () => {
       const records = useStore.getState().records;
       expect(records).toHaveLength(2); // dedup removes the third duplicate
     });
-    expect(useStore.getState().ir).not.toBeNull();
+    // PR AA — import only stores records; the user inferSchema()s explicitly.
+    expect(useStore.getState().ir).toBeNull();
   });
 
   // PR Q — identity proposal re-evaluates on each commit when no config + not dismissed

@@ -9,6 +9,7 @@ import {
   type IdentityProposal,
   type InferOptions,
   type IR,
+  infer,
   type Path,
 } from "@schemagen/core";
 import { create } from "zustand";
@@ -35,6 +36,8 @@ export interface StoreActions {
   setSelectedRecordIndices: (indices: number[]) => void;
   // Z: cold-start inference overrides
   setInferenceOptions: (options: InferOptions | null) => void;
+  // AA: explicit cold-start infer. No-op if an IR exists or records are empty.
+  inferSchema: () => void;
 }
 
 export type Store = AppState & StoreActions;
@@ -151,6 +154,13 @@ export const useStore = create<Store>((set, get) => ({
   setSelectedRecordIndices: (indices) => set({ selectedRecordIndices: indices }),
 
   setInferenceOptions: (options) => set({ inferenceOptions: options }),
+
+  inferSchema: () => {
+    const { ir, records, inferenceOptions } = get();
+    if (ir !== null) return; // post-IR is sacred — use re-infer (PR FF) instead.
+    if (records.length === 0) return;
+    set({ ir: infer(records, inferenceOptions ?? undefined) });
+  },
 }));
 
 export function labelFor(change: Change): string {

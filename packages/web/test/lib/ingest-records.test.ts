@@ -19,12 +19,7 @@ describe("ingestRecords", () => {
     expect(r.records).toEqual([{ id: 1 }, { id: 2 }, { id: 3 }]);
   });
 
-  it("infers an IR on the cold start (no existing ir, non-empty merged set)", () => {
-    const r = ingestRecords(baseState, [{ id: "a", status: "active" }]);
-    expect(r.ir).not.toBeNull();
-    expect(r.ir?.kind).toBe("object");
-  });
-
+  // PR AA — see AA-I1 below; cold-start no longer auto-infers.
   it("keeps the existing IR when one is already set", () => {
     const ir: IR = { kind: "object", fields: {}, additional: true };
     const r = ingestRecords({ ...baseState, ir }, [{ id: "a" }]);
@@ -67,47 +62,26 @@ describe("ingestRecords", () => {
     expect((r.records[0] as { v: number }).v).toBe(2);
   });
 
-  // PR Z — workspace-scoped inference options thread into cold-start infer().
-  // Plan: docs/plans/pr-z-inference-options.md § "Wiring".
+  // PR AA — ingestRecords no longer auto-infers on cold-start. The user
+  // explicitly commits with `inferSchema()` after reviewing records and any
+  // inference-option overrides. ingestRecords still byte-dedupes + applies
+  // identity dedupe + proposes identity, but never produces an IR.
 
-  // 100 records, `kind` cycles through 25 unique strings (4 occurrences each).
-  // Each record is unique by `id`, so byteDedup keeps all 100.
-  // For `kind`: cardinality=25, total=100, ratio=0.25 (≤ default 0.3).
-  const buildKindRecords = (): unknown[] =>
-    Array.from({ length: 100 }, (_, i) => ({ id: i, kind: `kind-${i % 25}` }));
+  it("AA-I1: cold-start ingest does not auto-infer; ir stays null", () => {
+    const r = ingestRecords(baseState, [{ id: "a" }, { id: "b" }]);
+    expect(r.ir).toBeNull();
+    expect(r.records).toHaveLength(2);
+  });
 
-  // Plan: § "Tests" — "ingestRecords with custom maxCardinality: 30 produces a literal union from 25-unique data."
-  it("Z-I1: cold-start with maxCardinality=30 produces a literal union for the 25-unique field", () => {
+  it("AA-I2: cold-start ingest ignores inferenceOptions (they apply at inferSchema time)", () => {
     const options: InferOptions = { literals: { maxCardinality: 30 } };
-    const r = ingestRecords({ ...baseState, inferenceOptions: options }, buildKindRecords());
-    expect(r.ir?.kind).toBe("object");
-    const kindField = r.ir?.kind === "object" ? r.ir.fields.kind?.type : undefined;
-    expect(kindField?.kind).toBe("string");
-    if (kindField?.kind === "string") {
-      expect(kindField.literals).toBeDefined();
-      expect(kindField.literals).toHaveLength(25);
-    }
+    const r = ingestRecords({ ...baseState, inferenceOptions: options }, [{ id: "a" }]);
+    expect(r.ir).toBeNull();
   });
 
-  // Plan: § "The tension to address" — control case: default maxCardinality=20 leaves the field as bare string.
-  it("Z-I2: cold-start without inferenceOptions leaves a 25-unique field as bare string", () => {
-    const r = ingestRecords(baseState, buildKindRecords());
-    const kindField = r.ir?.kind === "object" ? r.ir.fields.kind?.type : undefined;
-    expect(kindField?.kind).toBe("string");
-    if (kindField?.kind === "string") {
-      expect(kindField.literals).toBeUndefined();
-    }
-  });
-
-  // Plan: § "Scope" — "Out: Re-inference after an IR exists." Options are inert once IR is set.
-  it("Z-I3: post-IR ingest preserves the existing IR regardless of inferenceOptions", () => {
+  it("AA-I3: post-IR ingest preserves the existing IR (unchanged from PR Z)", () => {
     const existingIR: IR = { kind: "object", fields: {}, additional: true };
-    const options: InferOptions = { literals: { maxCardinality: 30 } };
-    const r = ingestRecords(
-      { ...baseState, ir: existingIR, inferenceOptions: options },
-      buildKindRecords(),
-    );
-    // Same reference — infer was not called at all.
+    const r = ingestRecords({ ...baseState, ir: existingIR }, [{ id: "a" }]);
     expect(r.ir).toBe(existingIR);
   });
 });
