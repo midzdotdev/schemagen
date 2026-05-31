@@ -47,6 +47,11 @@ function seed(opts: InferOptions | null): FormState {
   };
 }
 
+// Pre-resolved defaults for the "Default: X" muted labels next to each input.
+// Drift-proof — these values come from the same source as `resolveOptions`.
+const D = resolveOptions(undefined);
+const onOff = (b: boolean): string => (b ? "on" : "off");
+
 function commit(f: FormState): InferOptions {
   return {
     literals: { ...f.literals },
@@ -101,7 +106,7 @@ export function InferenceOptionsDialog({ open, onOpenChange }: InferenceOptionsD
           className="flex max-h-[60vh] flex-col gap-4 overflow-y-auto pr-1"
         >
           <Section title="Literals">
-            <Row label="Enable" defaultLabel="on">
+            <Row label="Enable" defaultLabel={onOff(true)}>
               {(id) => (
                 <Checkbox
                   id={id}
@@ -110,7 +115,7 @@ export function InferenceOptionsDialog({ open, onOpenChange }: InferenceOptionsD
                 />
               )}
             </Row>
-            <Row label="Max cardinality" defaultLabel="20">
+            <Row label="Max cardinality" defaultLabel={String(D.literals.maxCardinality)}>
               {(id) => (
                 <NumberInput
                   id={id}
@@ -120,7 +125,7 @@ export function InferenceOptionsDialog({ open, onOpenChange }: InferenceOptionsD
                 />
               )}
             </Row>
-            <Row label="Max unique ratio" defaultLabel="0.3">
+            <Row label="Max unique ratio" defaultLabel={String(D.literals.maxUniqueRatio)}>
               {(id) => (
                 <NumberInput
                   id={id}
@@ -132,7 +137,7 @@ export function InferenceOptionsDialog({ open, onOpenChange }: InferenceOptionsD
                 />
               )}
             </Row>
-            <Row label="Min samples" defaultLabel="5">
+            <Row label="Min samples" defaultLabel={String(D.literals.minSamples)}>
               {(id) => (
                 <NumberInput
                   id={id}
@@ -145,7 +150,7 @@ export function InferenceOptionsDialog({ open, onOpenChange }: InferenceOptionsD
           </Section>
 
           <Section title="Formats">
-            <Row label="Enable" defaultLabel="on">
+            <Row label="Enable" defaultLabel={onOff(true)}>
               {(id) => (
                 <Checkbox
                   id={id}
@@ -157,7 +162,7 @@ export function InferenceOptionsDialog({ open, onOpenChange }: InferenceOptionsD
           </Section>
 
           <Section title="Numbers">
-            <Row label="Integer detection" defaultLabel="on">
+            <Row label="Integer detection" defaultLabel={onOff(true)}>
               {(id) => (
                 <Checkbox
                   id={id}
@@ -166,7 +171,7 @@ export function InferenceOptionsDialog({ open, onOpenChange }: InferenceOptionsD
                 />
               )}
             </Row>
-            <Row label="Range mode" defaultLabel="evidence-only">
+            <Row label="Range mode" defaultLabel={D.numbers.rangeMode}>
               {(id) => (
                 <select
                   id={id}
@@ -188,7 +193,7 @@ export function InferenceOptionsDialog({ open, onOpenChange }: InferenceOptionsD
           </Section>
 
           <Section title="Objects">
-            <Row label="Closed (no additional properties)" defaultLabel="on">
+            <Row label="Closed (no additional properties)" defaultLabel={onOff(true)}>
               {(id) => (
                 <Checkbox
                   id={id}
@@ -199,7 +204,7 @@ export function InferenceOptionsDialog({ open, onOpenChange }: InferenceOptionsD
             </Row>
             <Row
               label="Optional threshold"
-              defaultLabel="1.0"
+              defaultLabel={D.objects.optionalThreshold.toFixed(1)}
               help="Presence ratio required for a field to count as required. 1.0 = present in every record."
             >
               {(id) => (
@@ -216,7 +221,7 @@ export function InferenceOptionsDialog({ open, onOpenChange }: InferenceOptionsD
           </Section>
 
           <Section title="Discriminators">
-            <Row label="Enable" defaultLabel="on">
+            <Row label="Enable" defaultLabel={onOff(true)}>
               {(id) => (
                 <Checkbox
                   id={id}
@@ -228,7 +233,7 @@ export function InferenceOptionsDialog({ open, onOpenChange }: InferenceOptionsD
           </Section>
 
           <Section title="Conflict resolution">
-            <Row label="On type conflict" defaultLabel="union">
+            <Row label="On type conflict" defaultLabel={D.onTypeConflict}>
               {(id) => (
                 <select
                   id={id}
