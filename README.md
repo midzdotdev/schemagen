@@ -7,7 +7,7 @@ A developer tool for generating, visualizing, and iterating on data schemas from
 Both the core library and the web app have shipped to `main`. JSON Schema is the only emit target so far; Zod and TypeScript follow. Nothing is published to npm yet.
 
 - `@schemagen/core` — pure-function TypeScript library. Inference, validation, mutation (applyChange + inverse), emission to JSON Schema. Strict typing throughout (`exactOptionalPropertyTypes`, `noUncheckedIndexedAccess`); covered by Vitest + fast-check property tests.
-- `@schemagen/web` — local-first React app. Named workspaces, three-pane shell (data / schema / inspector), full schema-op editor, mismatch panel with filter and grouped collapse, identity-key auto-suggest with chip-picker, session export/import, JSON syntax-highlighted preview, bundled samples for cold start, app-level ErrorBoundary, keyboard shortcuts. Persists to IndexedDB via Dexie.
+- `@schemagen/web` — local-first React app. Named workspaces, resizable three-pane shell (data / schema / inspector), full schema-op editor, mismatch panel with filter and grouped collapse, per-node mismatch count badges that roll up to ancestors, identity-key auto-suggest with chip-picker, session export/import, JSON syntax-highlighted preview, bundled samples for cold start, app-level ErrorBoundary, keyboard shortcuts. Persists to IndexedDB via Dexie.
 
 The v1 specs live in [`docs/`](./docs/):
 
