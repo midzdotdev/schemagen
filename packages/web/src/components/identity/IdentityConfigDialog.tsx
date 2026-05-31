@@ -3,7 +3,12 @@
 import type { IdentityConfig } from "@schemagen/core";
 import { useEffect, useMemo, useState } from "react";
 import { cn } from "@/lib/cn";
-import { compositeUniqueness, computeFieldStats } from "@/lib/field-stats";
+import {
+  compositeUniqueness,
+  computeFieldStats,
+  type FieldStat,
+  isPrimitiveKind,
+} from "@/lib/field-stats";
 import { useStore } from "@/state/store";
 import { Button } from "../ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "../ui/dialog";
@@ -50,7 +55,14 @@ export function IdentityConfigDialog({
   const [mode, setMode] = useState<IdentityConfig["onDuplicate"]>("replace");
   const [droppedCount, setDroppedCount] = useState<number | null>(null);
 
-  const stats = useMemo(() => computeFieldStats(records), [records]);
+  const allStats = useMemo(() => computeFieldStats(records), [records]);
+  // Filter to primitives — objects/arrays/mixed values can't reliably anchor
+  // identity (JSON-string equality is fragile; mixed runtime types compare
+  // unpredictably). Null-only fields are present-zero anyway.
+  const stats = useMemo<FieldStat[]>(
+    () => allStats.filter((s) => isPrimitiveKind(s.kind)),
+    [allStats],
+  );
   const composite = useMemo(
     () => (selected.length > 0 ? compositeUniqueness(records, selected) : 0),
     [records, selected],
@@ -93,6 +105,7 @@ export function IdentityConfigDialog({
   }
 
   const noRecords = records.length === 0;
+  const noPrimitiveFields = !noRecords && stats.length === 0;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -127,6 +140,10 @@ export function IdentityConfigDialog({
                 Import some records first — schemagen needs a sample to compute uniqueness per
                 field.
               </p>
+            ) : noPrimitiveFields ? (
+              <p className="rounded-md border border-border bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
+                No primitive fields available — identity keys must be strings, numbers, or booleans.
+              </p>
             ) : (
               <ul
                 aria-label="Available identity fields"
@@ -157,6 +174,12 @@ export function IdentityConfigDialog({
                         <code className="min-w-0 flex-1 truncate font-mono text-foreground">
                           {s.name}
                         </code>
+                        <span
+                          title="Field type"
+                          className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground"
+                        >
+                          {s.kind}
+                        </span>
                         <span
                           title="Uniqueness"
                           className={cn(
@@ -221,7 +244,7 @@ export function IdentityConfigDialog({
         </div>
         <div className="flex justify-between">
           <Button variant="ghost" size="sm" onClick={handleClear} disabled={!current}>
-            Clear identity
+            Remove identity key
           </Button>
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={() => onOpenChange(false)}>
