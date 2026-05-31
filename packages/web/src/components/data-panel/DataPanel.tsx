@@ -121,7 +121,7 @@ export function DataPanel() {
               <EmptyState
                 icon={<Inbox className="size-5" />}
                 title="No records"
-                description="Paste JSON above, drag a file here, or import a session bundle."
+                description="Paste JSON above or drag a file here."
               />
             ) : (
               <RecordList records={records} />

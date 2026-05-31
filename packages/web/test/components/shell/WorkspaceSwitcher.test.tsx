@@ -98,6 +98,49 @@ describe("WorkspaceSwitcher", () => {
     expect(screen.getByText(/42.*array/i)).toBeInTheDocument();
   });
 
+  // PR BB — bundle import moves to workspace-level. The button used to live
+  // in DataPanel's ImportArea, which mixed two concerns (record import vs
+  // workspace creation from a snapshot).
+  it("BB-S1: switcher exposes an 'Import session bundle' file input", async () => {
+    const user = userEvent.setup();
+    const adapter = createTestAdapter({ rows: [{ id: "ws-a", name: "Current" }] });
+    vi.spyOn(init, "getCurrentAdapter").mockReturnValue(adapter);
+
+    render(<WorkspaceSwitcher />);
+    await user.click(screen.getByRole("button", { name: /switch workspace/i }));
+    await waitFor(() => screen.getByText("Current"));
+    expect(screen.getByLabelText(/import session bundle/i)).toBeInTheDocument();
+  });
+
+  it("BB-S2: selecting a valid bundle file calls loadSessionBundle", async () => {
+    const user = userEvent.setup();
+    const adapter = createTestAdapter({ rows: [{ id: "ws-a", name: "Current" }] });
+    vi.spyOn(init, "getCurrentAdapter").mockReturnValue(adapter);
+    const loadSpy = vi
+      .spyOn(init, "loadSessionBundle")
+      .mockResolvedValue({ workspaceId: "imported-ws" });
+
+    render(<WorkspaceSwitcher />);
+    await user.click(screen.getByRole("button", { name: /switch workspace/i }));
+    await waitFor(() => screen.getByText("Current"));
+
+    const bundle = {
+      version: 1,
+      workspaceName: "Imported",
+      exportedAt: 0,
+      originClientId: "test",
+      records: [],
+      history: [],
+      ir: null,
+    };
+    const file = new File([JSON.stringify(bundle)], "bundle.session.json", {
+      type: "application/json",
+    });
+    await user.upload(screen.getByLabelText(/import session bundle/i), file);
+
+    await waitFor(() => expect(loadSpy).toHaveBeenCalled());
+  });
+
   it("DD-S2: workspace with no IR shows a 'no schema yet' summary", async () => {
     const user = userEvent.setup();
     const adapter = createTestAdapter({

@@ -43,4 +43,11 @@ describe("ExportModal", () => {
     expect(screen.getByRole("button", { name: /^copy$/i })).toBeEnabled();
     expect(screen.getByRole("button", { name: /^download$/i })).toBeEnabled();
   });
+
+  // PR BB — terminology audit: 'session' alone reads ambiguously.
+  it("BB-E1: the bundle tab is labelled 'Session bundle', not 'Full session'", () => {
+    render(<ExportModal open onOpenChange={() => {}} />);
+    expect(screen.getByRole("tab", { name: /session bundle/i })).toBeInTheDocument();
+    expect(screen.queryByRole("tab", { name: /^full session$/i })).toBeNull();
+  });
 });
