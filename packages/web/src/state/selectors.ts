@@ -13,6 +13,29 @@ export function mismatchCountAtPath(mismatches: Mismatch[], path: Path): number 
   return count;
 }
 
+// Pre-index mismatches by every prefix path so every NodeRow can read its
+// subtree-count in O(1). Without this, drawing the tree is O(rows × mismatches)
+// because each row would otherwise call mismatchCountAtPath. The index walks
+// the mismatch list once and bumps every prefix's count.
+//
+// Keys are pathKey strings: segments joined by "." with no escaping (mirrors
+// NodeRow's `path.map(String).join(".")`). The empty path "" is the root.
+export function buildMismatchIndex(mismatches: Mismatch[]): ReadonlyMap<string, number> {
+  const index = new Map<string, number>();
+  for (const m of mismatches) {
+    // Bump every prefix from the root down to the mismatch's own path.
+    for (let i = 0; i <= m.path.length; i++) {
+      const key = m.path.slice(0, i).map(String).join(".");
+      index.set(key, (index.get(key) ?? 0) + 1);
+    }
+  }
+  return index;
+}
+
+export function pathKey(path: Path): string {
+  return path.map(String).join(".");
+}
+
 export function isPathPrefix(prefix: Path, candidate: Path): boolean {
   if (prefix.length > candidate.length) return false;
   for (let i = 0; i < prefix.length; i++) {
