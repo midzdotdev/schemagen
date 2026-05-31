@@ -8,6 +8,7 @@ import { createObservation, type Observation, observeInto } from "./observe";
 import { type InferOptions, resolveOptions } from "./options";
 
 export type { InferOptions } from "./options";
+export { INFER_OPTION_DEFAULTS } from "./options";
 
 export function infer(samples: unknown[], options?: InferOptions): IR {
   const opts = resolveOptions(options);
