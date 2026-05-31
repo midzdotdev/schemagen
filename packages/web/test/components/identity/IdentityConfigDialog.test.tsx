@@ -63,15 +63,15 @@ describe("IdentityConfigDialog", () => {
     expect(useStore.getState().identityConfig?.onDuplicate).toBe("keep-all");
   });
 
-  // Spec: docs/frontend-spec.md § "Identity-key suggestion"
-  it("X2-D4: Clear identity removes the current config", async () => {
+  // PR CC — button rename ("Clear" reads like "reset to default"; "Remove" is unambiguous).
+  it("X2-D4 (CC): Remove identity key clears the current config", async () => {
     const user = userEvent.setup();
     seedRecords();
     act(() => {
       useStore.getState().setIdentityConfig({ fields: [["id"]], onDuplicate: "replace" });
     });
     render(<IdentityConfigDialog open onOpenChange={() => {}} />);
-    await user.click(screen.getByRole("button", { name: /clear identity/i }));
+    await user.click(screen.getByRole("button", { name: /remove identity key/i }));
     expect(useStore.getState().identityConfig).toBeNull();
   });
 
@@ -79,5 +79,47 @@ describe("IdentityConfigDialog", () => {
   it("D-EMPTY: shows guidance when no records are loaded", () => {
     render(<IdentityConfigDialog open onOpenChange={() => {}} />);
     expect(screen.getByText(/import some records first/i)).toBeInTheDocument();
+  });
+
+  // PR CC — non-primitive fields are filtered out of the picker (object/array
+  // values don't make sense as identity keys; JSON.stringify of an object is
+  // fragile and the user can't reason about composite ordering).
+  it("CC-D1: picker omits object-typed fields", () => {
+    act(() => {
+      useStore.getState().setRecords([
+        { id: "a", profile: { name: "x" } },
+        { id: "b", profile: { name: "y" } },
+      ]);
+    });
+    render(<IdentityConfigDialog open onOpenChange={() => {}} />);
+    expect(screen.getByRole("checkbox", { name: /\bid\b/ })).toBeInTheDocument();
+    expect(screen.queryByRole("checkbox", { name: /profile/ })).toBeNull();
+  });
+
+  it("CC-D2: picker omits array-typed and mixed-typed fields", () => {
+    act(() => {
+      useStore.getState().setRecords([
+        { id: "a", tags: ["x"], mixed: 1 },
+        { id: "b", tags: ["y"], mixed: "two" },
+      ]);
+    });
+    render(<IdentityConfigDialog open onOpenChange={() => {}} />);
+    expect(screen.queryByRole("checkbox", { name: /tags/ })).toBeNull();
+    expect(screen.queryByRole("checkbox", { name: /mixed/ })).toBeNull();
+  });
+
+  it("CC-D3: each picker row shows the field's kind chip", () => {
+    act(() => {
+      useStore.getState().setRecords([
+        { id: "a", count: 1 },
+        { id: "b", count: 2 },
+      ]);
+    });
+    render(<IdentityConfigDialog open onOpenChange={() => {}} />);
+    // The id row labels itself with the kind ("string"); count labels itself "number".
+    const idRow = screen.getByRole("checkbox", { name: /\bid\b/ }).closest("label");
+    const countRow = screen.getByRole("checkbox", { name: /count/ }).closest("label");
+    expect(idRow?.textContent).toMatch(/string/i);
+    expect(countRow?.textContent).toMatch(/number/i);
   });
 });
