@@ -5,7 +5,7 @@
 // once an IR exists the dialog still opens but inputs are disabled and Apply is
 // hidden — the schema tree is the right surface to edit per-node after that.
 
-import type { InferOptions } from "@schemagen/core";
+import { INFER_OPTION_DEFAULTS as DEFAULTS, type InferOptions } from "@schemagen/core";
 import { useEffect, useId, useState } from "react";
 import { useStore } from "@/state/store";
 import { Button } from "../ui/button";
@@ -15,17 +15,6 @@ export interface InferenceOptionsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
-
-// Mirror @schemagen/core's resolveOptions defaults so the user sees what each
-// override deviates from. If core defaults change, update this table too.
-const DEFAULTS = {
-  literals: { enable: true, maxCardinality: 20, maxUniqueRatio: 0.3, minSamples: 5 },
-  formats: { enable: true },
-  numbers: { integerDetection: true, rangeMode: "evidence-only" as const },
-  objects: { closed: true, optionalThreshold: 1.0 },
-  discriminators: { enable: true },
-  onTypeConflict: "union" as const,
-};
 
 interface FormState {
   literals: {
