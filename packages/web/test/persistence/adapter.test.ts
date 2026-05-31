@@ -156,6 +156,36 @@ describe("WorkspaceAdapter (Dexie impl)", () => {
     expect(snap.inferenceOptions).toBeNull();
   });
 
+  // PR DD — workspace summary (record count + root kind) for the switcher.
+  it("DD-A1: summariseWorkspaces returns recordCount + rootKind for a populated workspace", async () => {
+    await adapter.setIR(workspaceId, ir);
+    await adapter.setRecords(workspaceId, [{ id: 1 }, { id: 2 }, { id: 3 }]);
+    const map = await adapter.summariseWorkspaces([workspaceId]);
+    expect(map.get(workspaceId)).toEqual({ recordCount: 3, rootKind: "object" });
+  });
+
+  it("DD-A2: summariseWorkspaces returns rootKind: null when no IR is set", async () => {
+    await adapter.setRecords(workspaceId, [{ id: 1 }]);
+    const map = await adapter.summariseWorkspaces([workspaceId]);
+    expect(map.get(workspaceId)).toEqual({ recordCount: 1, rootKind: null });
+  });
+
+  it("DD-A3: summariseWorkspaces handles empty workspaces", async () => {
+    const map = await adapter.summariseWorkspaces([workspaceId]);
+    expect(map.get(workspaceId)).toEqual({ recordCount: 0, rootKind: null });
+  });
+
+  it("DD-A4: summariseWorkspaces batches across multiple ids", async () => {
+    const ws2 = await adapter.createWorkspace("second");
+    await adapter.setIR(workspaceId, ir);
+    await adapter.setRecords(workspaceId, [{ id: 1 }]);
+    await adapter.setRecords(ws2.id, [{ id: 2 }, { id: 3 }]);
+    const map = await adapter.summariseWorkspaces([workspaceId, ws2.id]);
+    expect(map.size).toBe(2);
+    expect(map.get(workspaceId)?.recordCount).toBe(1);
+    expect(map.get(ws2.id)?.recordCount).toBe(2);
+  });
+
   // PR V — cascade delete
   it("X1-A12: deleteWorkspace removes the workspace + all child rows", async () => {
     await adapter.setIR(workspaceId, ir);

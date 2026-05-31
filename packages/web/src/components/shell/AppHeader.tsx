@@ -29,8 +29,7 @@ export function AppHeader() {
 
   const canUndo = cursor > 0;
   const canRedo = cursor < entries.length;
-  const recordCount = records.length;
-  const hasWorkspace = ir !== null || recordCount > 0;
+  const hasWorkspace = ir !== null || records.length > 0;
 
   return (
     <header className="flex h-12 shrink-0 items-center gap-3 border-b border-border bg-background px-4">
@@ -49,18 +48,6 @@ export function AppHeader() {
       <div className="flex items-center gap-0.5">
         <WorkspaceNameField />
         <WorkspaceSwitcher />
-      </div>
-
-      <div className="flex min-w-0 items-center gap-2 text-xs text-muted-foreground">
-        {ir ? (
-          <span className="truncate">
-            <span className="text-foreground font-medium">{recordCount.toLocaleString()}</span>{" "}
-            record{recordCount === 1 ? "" : "s"} ·{" "}
-            <span className="text-foreground font-medium">{describeIR(ir)}</span>
-          </span>
-        ) : (
-          <span>Empty · Import data to begin</span>
-        )}
       </div>
 
       <div className="ml-auto flex items-center gap-1">
@@ -171,12 +158,4 @@ export function AppHeader() {
       </div>
     </header>
   );
-}
-
-function describeIR(ir: { kind: string }): string {
-  // Brief noun phrase for the workspace strip — keep it scannable.
-  if (ir.kind === "object") return "object schema";
-  if (ir.kind === "array") return "array schema";
-  if (ir.kind === "union") return "union schema";
-  return `${ir.kind} schema`;
 }

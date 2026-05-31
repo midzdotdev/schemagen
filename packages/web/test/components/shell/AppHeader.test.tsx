@@ -41,4 +41,20 @@ describe("AppHeader — inference options trigger", () => {
     // The dialog's content has aria-label "Inference options".
     expect(screen.getByRole("dialog", { name: /inference options/i })).toBeInTheDocument();
   });
+
+  // PR DD — the 'N records · object schema' strip is duplicated by the schema
+  // panel subtitle and tree root. Drop it; the switcher now carries the
+  // per-workspace summary.
+  it("DD-H1: header no longer renders the 'N records · …' summary strip", () => {
+    useStore.getState().setRecords([{ id: 1 }, { id: 2 }]);
+    useStore.getState().setIR({ kind: "object", fields: {}, additional: false });
+    renderHeader();
+    expect(screen.queryByText(/records ·/i)).toBeNull();
+    expect(screen.queryByText(/object schema/i)).toBeNull();
+  });
+
+  it("DD-H2: header no longer renders the empty-state strip either", () => {
+    renderHeader();
+    expect(screen.queryByText(/empty · import data to begin/i)).toBeNull();
+  });
 });
