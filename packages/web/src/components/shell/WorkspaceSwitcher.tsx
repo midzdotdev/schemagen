@@ -1,6 +1,7 @@
 import { Check, ChevronsUpDown, Plus, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/cn";
+import type { WorkspaceSummary } from "@/persistence/adapter";
 import type { WorkspaceRow } from "@/persistence/db";
 import {
   createAndSwitchWorkspace,
@@ -19,6 +20,7 @@ export function WorkspaceSwitcher() {
   const currentId = useStore((s) => s.workspaceId);
   const [open, setOpen] = useState(false);
   const [workspaces, setWorkspaces] = useState<WorkspaceRow[]>([]);
+  const [summaries, setSummaries] = useState<Map<string, WorkspaceSummary>>(new Map());
   const [loading, setLoading] = useState(false);
 
   // Refresh the list each time we open the popover so renames/creates in
@@ -30,7 +32,12 @@ export function WorkspaceSwitcher() {
     setLoading(true);
     void adapter
       .listWorkspaces()
-      .then((rows) => setWorkspaces(rows.slice().sort((a, b) => b.updatedAt - a.updatedAt)))
+      .then(async (rows) => {
+        const sorted = rows.slice().sort((a, b) => b.updatedAt - a.updatedAt);
+        setWorkspaces(sorted);
+        const sums = await adapter.summariseWorkspaces(sorted.map((r) => r.id));
+        setSummaries(sums);
+      })
       .finally(() => setLoading(false));
   }, [open]);
 
@@ -101,20 +108,25 @@ export function WorkspaceSwitcher() {
                   <button
                     type="button"
                     onClick={() => void handleSwitch(ws.id)}
-                    className="flex min-w-0 flex-1 items-center gap-2 px-2 py-1.5 text-left text-xs"
+                    className="flex min-w-0 flex-1 flex-col gap-0.5 px-2 py-1.5 text-left text-xs"
                   >
-                    <Check
-                      className={cn(
-                        "size-3 shrink-0",
-                        isCurrent ? "text-foreground" : "text-transparent",
-                      )}
-                      aria-hidden
-                    />
-                    <span className="min-w-0 flex-1 truncate font-medium">
-                      {ws.name.trim() || "Untitled workspace"}
+                    <span className="flex items-center gap-2">
+                      <Check
+                        className={cn(
+                          "size-3 shrink-0",
+                          isCurrent ? "text-foreground" : "text-transparent",
+                        )}
+                        aria-hidden
+                      />
+                      <span className="min-w-0 flex-1 truncate font-medium">
+                        {ws.name.trim() || "Untitled workspace"}
+                      </span>
+                      <span className="shrink-0 font-mono text-[10px] text-muted-foreground">
+                        {formatAgo(ws.updatedAt)}
+                      </span>
                     </span>
-                    <span className="shrink-0 font-mono text-[10px] text-muted-foreground">
-                      {formatAgo(ws.updatedAt)}
+                    <span className="ml-5 truncate font-mono text-[10px] text-muted-foreground">
+                      {formatSummary(summaries.get(ws.id))}
                     </span>
                   </button>
                   <button
@@ -146,6 +158,13 @@ export function WorkspaceSwitcher() {
       </PopoverContent>
     </Popover>
   );
+}
+
+function formatSummary(summary: WorkspaceSummary | undefined): string {
+  if (!summary) return "—";
+  const count = summary.recordCount.toLocaleString();
+  if (summary.rootKind === null) return `${count} records · no schema yet`;
+  return `${count} records · ${summary.rootKind}`;
 }
 
 // Short relative time. We don't pull in a full date lib for this.

@@ -46,6 +46,9 @@ export function createTestAdapter(opts: CreateTestAdapterOptions = {}): Workspac
     setHistoryCursor: vi.fn(async () => {}),
     setSyncCursor: vi.fn(async () => {}),
     patchMeta: vi.fn(async () => {}),
+    summariseWorkspaces: vi.fn(
+      async (ids: string[]) => new Map(ids.map((id) => [id, { recordCount: 0, rootKind: null }])),
+    ),
   };
 
   return { ...defaults, ...opts.overrides };

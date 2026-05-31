@@ -154,6 +154,19 @@ export function createDexieAdapter(opts: DexieAdapterOptions = {}): WorkspaceAda
       });
     },
 
+    async summariseWorkspaces(workspaceIds) {
+      const entries = await Promise.all(
+        workspaceIds.map(async (id) => {
+          const [recordCount, irRow] = await Promise.all([
+            dbInstance.records.where("workspaceId").equals(id).count(),
+            dbInstance.irs.get(id),
+          ]);
+          return [id, { recordCount, rootKind: irRow?.ir?.kind ?? null }] as const;
+        }),
+      );
+      return new Map(entries);
+    },
+
     async patchMeta(workspaceId, partial) {
       const existing = await dbInstance.meta.get(workspaceId);
       const merged = {

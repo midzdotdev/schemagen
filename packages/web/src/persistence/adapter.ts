@@ -10,12 +10,20 @@
 //   - Per-edit identity: ChangeRow / HistoryEntry carry `clientId`.
 //   - Cursor for future sync: MetaRow.syncCursor (declared, unused in v1).
 
-import type { IR } from "@schemagen/core";
+import type { IR, NodeKind } from "@schemagen/core";
 import type { AppState, HistoryEntry } from "../state/types";
 import type { MetaRow, WorkspaceRow } from "./db";
 
 export interface WorkspaceSnapshot extends Partial<AppState> {
   workspaceId: string;
+}
+
+// Lightweight workspace overview used by the switcher quick-info. Avoids a
+// full hydrate (which would load every record) when all we need is a count
+// + root kind.
+export interface WorkspaceSummary {
+  recordCount: number;
+  rootKind: NodeKind | null;
 }
 
 export interface WorkspaceAdapter {
@@ -36,4 +44,8 @@ export interface WorkspaceAdapter {
   // Generic meta merge — set any subset of meta fields. Other fields are
   // preserved. Used for identityConfig / identityProposalDismissed in X2.
   patchMeta(workspaceId: string, partial: Partial<MetaRow>): Promise<void>;
+  // Batched per-workspace overview for the switcher. Cheaper than hydrate —
+  // counts records via index, reads the IR kind only. Returns an empty entry
+  // for unknown ids; callers can default to "no schema yet".
+  summariseWorkspaces(workspaceIds: string[]): Promise<Map<string, WorkspaceSummary>>;
 }

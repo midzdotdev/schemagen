@@ -69,4 +69,50 @@ describe("WorkspaceSwitcher", () => {
 
     expect(createSpy).toHaveBeenCalled();
   });
+
+  // PR DD — quick-info per row replaces the header's records/schema strip.
+  it("DD-S1: each workspace row shows record count and root schema kind", async () => {
+    const user = userEvent.setup();
+    const adapter = createTestAdapter({
+      rows: [
+        { id: "ws-a", name: "Current" },
+        { id: "ws-b", name: "Other" },
+      ],
+      overrides: {
+        summariseWorkspaces: vi.fn(
+          async () =>
+            new Map([
+              ["ws-a", { recordCount: 200000, rootKind: "object" as const }],
+              ["ws-b", { recordCount: 42, rootKind: "array" as const }],
+            ]),
+        ),
+      },
+    });
+    vi.spyOn(init, "getCurrentAdapter").mockReturnValue(adapter);
+
+    render(<WorkspaceSwitcher />);
+    await user.click(screen.getByRole("button", { name: /switch workspace/i }));
+    await waitFor(() => screen.getByText("Current"));
+    // Count is locale-formatted; kind is shown.
+    expect(screen.getByText(/200,?000.*object/i)).toBeInTheDocument();
+    expect(screen.getByText(/42.*array/i)).toBeInTheDocument();
+  });
+
+  it("DD-S2: workspace with no IR shows a 'no schema yet' summary", async () => {
+    const user = userEvent.setup();
+    const adapter = createTestAdapter({
+      rows: [{ id: "ws-a", name: "Fresh" }],
+      overrides: {
+        summariseWorkspaces: vi.fn(
+          async () => new Map([["ws-a", { recordCount: 0, rootKind: null }]]),
+        ),
+      },
+    });
+    vi.spyOn(init, "getCurrentAdapter").mockReturnValue(adapter);
+
+    render(<WorkspaceSwitcher />);
+    await user.click(screen.getByRole("button", { name: /switch workspace/i }));
+    await waitFor(() => screen.getByText("Fresh"));
+    expect(screen.getByText(/no schema yet/i)).toBeInTheDocument();
+  });
 });
