@@ -13,16 +13,25 @@ export interface DropZoneProps {
   onRecords: (records: unknown[]) => void;
   onNeedsPicker: (parsed: unknown, candidates: PickerCandidate[]) => void;
   onError?: (msg: string) => void;
+  // When true, ignore drops to keep a second ingest from racing the first.
+  disabled?: boolean;
 }
 
 const ACCEPTED_EXTENSIONS = [".json", ".ndjson"];
 
-export function DropZone({ children, onRecords, onNeedsPicker, onError }: DropZoneProps) {
+export function DropZone({
+  children,
+  onRecords,
+  onNeedsPicker,
+  onError,
+  disabled = false,
+}: DropZoneProps) {
   const [over, setOver] = useState(false);
   const workspaceName = useStore((s) => s.workspaceName);
   const setWorkspaceName = useStore((s) => s.setWorkspaceName);
 
   function handleDragOver(e: DragEvent<HTMLDivElement>): void {
+    if (disabled) return;
     if (!hasFiles(e)) return;
     e.preventDefault();
     setOver(true);
@@ -35,6 +44,7 @@ export function DropZone({ children, onRecords, onNeedsPicker, onError }: DropZo
   function handleDrop(e: DragEvent<HTMLDivElement>): void {
     e.preventDefault();
     setOver(false);
+    if (disabled) return;
     const file = e.dataTransfer.files[0];
     if (!file) return;
     const name = file.name.toLowerCase();

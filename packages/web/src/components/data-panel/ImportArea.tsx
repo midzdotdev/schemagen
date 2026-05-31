@@ -13,9 +13,12 @@ import { Textarea } from "../ui/textarea";
 export interface ImportAreaProps {
   onRecords: (records: unknown[]) => void;
   onNeedsPicker: (parsed: unknown, candidates: PickerCandidate[]) => void;
+  // While true, disable Import + file inputs so the user can't enqueue a
+  // second batch while the previous one is still being processed.
+  ingesting?: boolean;
 }
 
-export function ImportArea({ onRecords, onNeedsPicker }: ImportAreaProps) {
+export function ImportArea({ onRecords, onNeedsPicker, ingesting = false }: ImportAreaProps) {
   const [text, setText] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
@@ -103,7 +106,12 @@ export function ImportArea({ onRecords, onNeedsPicker }: ImportAreaProps) {
         className="resize-none text-xs leading-relaxed"
       />
       <div className="flex items-center gap-2">
-        <Button size="sm" onClick={handleImport} disabled={!text.trim()} className="flex-1">
+        <Button
+          size="sm"
+          onClick={handleImport}
+          disabled={!text.trim() || ingesting}
+          className="flex-1"
+        >
           <Plus className="size-3.5" />
           Import
         </Button>
@@ -114,6 +122,7 @@ export function ImportArea({ onRecords, onNeedsPicker }: ImportAreaProps) {
             onChange={handleFile}
             className="sr-only"
             aria-label="Upload data file"
+            disabled={ingesting}
           />
           <span
             className="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-md border border-input bg-background px-3 text-xs font-medium text-foreground shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground"
