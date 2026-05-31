@@ -1,5 +1,5 @@
 // Pure record-ingestion pipeline. Given the existing workspace state + a
-// batch of incoming records, decide the next records / IR / identityProposal
+// batch of incoming records, decide the next records + identityProposal
 // values. The DataPanel handler used to do all of this inline; extracting it
 // makes the rules testable in isolation and keeps the component focused on UI.
 //
@@ -8,14 +8,15 @@
 //      counted twice no matter how many times it's imported).
 //   2. If an identityConfig is set, run dedupeByIdentity (logical dedup) over
 //      the merged set; keep only the survivors.
-//   3. If no IR exists yet, infer one from the merged records (cold-start
-//      behaviour — once an IR exists, the user is in charge of its shape).
+//   3. Preserve the existing IR if there is one. PR AA stops auto-infer on
+//      cold-start — the user calls `inferSchema()` explicitly after reviewing
+//      records and any inference-option overrides.
 //   4. If no identityConfig + the user hasn't dismissed the suggestion,
 //      recompute proposeIdentityKey against the merged records. Result is
 //      whatever proposeIdentityKey returns (null clears the banner).
 
 import type { IdentityConfig, IdentityProposal, InferOptions, IR } from "@schemagen/core";
-import { dedupeByIdentity, infer, proposeIdentityKey } from "@schemagen/core";
+import { dedupeByIdentity, proposeIdentityKey } from "@schemagen/core";
 import { canonicalHash } from "./canonical-hash";
 
 export interface IngestState {
@@ -43,8 +44,7 @@ export function ingestRecords(state: IngestState, incoming: unknown[]): IngestRe
     ? dedupeByIdentity(merged, state.identityConfig).kept
     : merged;
 
-  const ir =
-    state.ir ?? (records.length > 0 ? infer(records, state.inferenceOptions ?? undefined) : null);
+  const ir = state.ir;
 
   const identityProposal: IngestResult["identityProposal"] =
     !state.identityConfig && !state.identityProposalDismissed

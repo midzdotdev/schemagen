@@ -5,6 +5,7 @@ import { useStore } from "@/state/store";
 import { EmptyState } from "../shell/EmptyState";
 import { PaneHeader } from "../shell/PaneHeader";
 import { Badge } from "../ui/badge";
+import { GenerateSchemaCard } from "./GenerateSchemaCard";
 import { SchemaTree } from "./SchemaTree";
 
 export function SchemaPanel() {
@@ -16,6 +17,19 @@ export function SchemaPanel() {
   const [query, setQuery] = useUIPref(workspaceId, "schemaFilter");
 
   if (!ir) {
+    // PR AA — once records arrive, schema inference is the user's explicit
+    // next step. Surface the CTA + inference-options summary in place of the
+    // "no schema yet" empty state.
+    if (records.length > 0) {
+      return (
+        <>
+          <PaneHeader title="Schema" icon={<GitBranch className="size-3.5" />} />
+          <div className="min-h-0 flex-1 overflow-auto">
+            <GenerateSchemaCard />
+          </div>
+        </>
+      );
+    }
     return (
       <>
         <PaneHeader title="Schema" icon={<GitBranch className="size-3.5" />} />
@@ -23,7 +37,7 @@ export function SchemaPanel() {
           <EmptyState
             icon={<FileSearch className="size-5" />}
             title="No schema yet"
-            description="Paste or drop JSON into the data pane on the left. schemagen will infer a strict first cut."
+            description="Paste or drop JSON into the data pane on the left to begin."
           />
         </div>
       </>

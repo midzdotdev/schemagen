@@ -22,7 +22,9 @@ describe("ingestAsync", () => {
   it("Y-A1: resolves with an IngestResult shape", async () => {
     const result = await ingestAsync(emptyState, [{ id: "a" }, { id: "b" }]);
     expect(result.records).toHaveLength(2);
-    expect(result.ir).not.toBeNull();
+    // PR AA — cold-start no longer auto-infers; the user calls inferSchema()
+    // explicitly. ir stays null here even though records arrived.
+    expect(result.ir).toBeNull();
     // identityProposal is computed in the fallback path too.
     expect(result.identityProposal !== undefined).toBe(true);
   });
