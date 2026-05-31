@@ -12,6 +12,7 @@ const emptyState: IngestState = {
   ir: null,
   identityConfig: null,
   identityProposalDismissed: false,
+  inferenceOptions: null,
 };
 
 describe("ingestAsync", () => {

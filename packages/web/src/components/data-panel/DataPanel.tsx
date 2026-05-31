@@ -27,6 +27,7 @@ export function DataPanel() {
   const identityConfig = useStore((s) => s.identityConfig);
   const setIdentityProposal = useStore((s) => s.setIdentityProposal);
   const dismissed = useStore((s) => s.identityProposalDismissed);
+  const inferenceOptions = useStore((s) => s.inferenceOptions);
 
   const [picker, setPicker] = useState<PickerState>({
     open: false,
@@ -43,7 +44,13 @@ export function DataPanel() {
     setIngesting(true);
     try {
       const result = await ingestAsync(
-        { records, ir, identityConfig, identityProposalDismissed: dismissed },
+        {
+          records,
+          ir,
+          identityConfig,
+          identityProposalDismissed: dismissed,
+          inferenceOptions,
+        },
         newRecords,
       );
       setRecords(result.records);

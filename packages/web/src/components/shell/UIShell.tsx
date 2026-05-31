@@ -10,10 +10,11 @@ import { createContext, type ReactNode, useCallback, useContext, useMemo, useSta
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { ExportModal } from "../export/ExportModal";
 import { IdentityConfigDialog } from "../identity/IdentityConfigDialog";
+import { InferenceOptionsDialog } from "../inference/InferenceOptionsDialog";
 import { ResetWorkspaceDialog } from "./ResetWorkspaceDialog";
 import { ShortcutsDialog } from "./ShortcutsDialog";
 
-export type ModalName = "export" | "shortcuts" | "reset" | "identity";
+export type ModalName = "export" | "shortcuts" | "reset" | "identity" | "inference-options";
 
 interface UIShellContextValue {
   openModal: (name: ModalName) => void;
@@ -66,6 +67,10 @@ export function UIShellProvider({ children }: { children: ReactNode }) {
       <ResetWorkspaceDialog open={current === "reset"} onOpenChange={(o) => !o && closeModal()} />
       <IdentityConfigDialog
         open={current === "identity"}
+        onOpenChange={(o) => !o && closeModal()}
+      />
+      <InferenceOptionsDialog
+        open={current === "inference-options"}
         onOpenChange={(o) => !o && closeModal()}
       />
     </UIShellContext.Provider>

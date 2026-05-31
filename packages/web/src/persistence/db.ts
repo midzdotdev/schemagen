@@ -1,6 +1,6 @@
 // Dexie schema. See docs/frontend-spec.md § "Persistence".
 
-import type { Change, IdentityConfig, IR } from "@schemagen/core";
+import type { Change, IdentityConfig, InferOptions, IR } from "@schemagen/core";
 import Dexie, { type Table } from "dexie";
 import { getClientId } from "./client-id";
 
@@ -44,6 +44,10 @@ export interface MetaRow {
   // X2: identity-key configuration + per-workspace dismissal of the suggestion banner.
   identityConfig?: IdentityConfig;
   identityProposalDismissed?: boolean;
+  // Z: cold-start inference overrides. Absent on pre-v3 workspaces; hydrates to null.
+  // `| undefined` lets the subscription pass `undefined` through patchMeta to clear
+  // the field — required under exactOptionalPropertyTypes.
+  inferenceOptions?: InferOptions | undefined;
 }
 
 export interface SchemaGenDB extends Dexie {
@@ -112,6 +116,17 @@ export function createDb(name = "schemagen"): SchemaGenDB {
           });
       }
     });
+
+  // v3: MetaRow gains optional `inferenceOptions`. Purely additive — no schema
+  // string change, no upgrade function needed. The version bump tags the change
+  // so future migrations can anchor against it.
+  db.version(3).stores({
+    workspaces: "id, updatedAt",
+    records: "id, workspaceId",
+    changes: "[workspaceId+seq], workspaceId, seq",
+    irs: "workspaceId",
+    meta: "workspaceId",
+  });
 
   return db;
 }
