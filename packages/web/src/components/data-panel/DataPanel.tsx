@@ -1,7 +1,6 @@
-import { dedupeByIdentity, infer, proposeIdentityKey } from "@schemagen/core";
 import { Database, FileText, Inbox } from "lucide-react";
 import { useState } from "react";
-import { canonicalHash } from "@/lib/canonical-hash";
+import { ingestRecords } from "@/lib/ingest-records";
 import type { PickerCandidate } from "@/lib/root-picker";
 import { useStore } from "@/state/store";
 import { IdentitySuggestion } from "../identity/IdentitySuggestion";
@@ -36,34 +35,15 @@ export function DataPanel() {
   });
 
   function commitRecords(newRecords: unknown[]): void {
-    // Byte-dedup against existing + new records by canonical hash.
-    const seen = new Set<string>();
-    let merged: unknown[] = [];
-    for (const r of [...records, ...newRecords]) {
-      const h = canonicalHash(r);
-      if (seen.has(h)) continue;
-      seen.add(h);
-      merged.push(r);
-    }
-
-    if (identityConfig) {
-      const { kept } = dedupeByIdentity(merged, identityConfig);
-      merged = kept;
-    }
-
-    setRecords(merged);
-
-    if (!ir) setIR(infer(merged));
-
-    // Re-evaluate the identity proposal on every commit when there's no
-    // active config and the user hasn't dismissed. Earlier code only ran
-    // proposeIdentityKey on the first import; subsequent imports could
-    // invalidate the stored proposal or surface a stronger candidate, and
-    // neither was being reflected.
-    if (!identityConfig && !dismissed) {
-      const proposal = proposeIdentityKey(merged);
-      setIdentityProposal(proposal);
-    }
+    const result = ingestRecords(
+      { records, ir, identityConfig, identityProposalDismissed: dismissed },
+      newRecords,
+    );
+    setRecords(result.records);
+    // Only set IR on the cold-start transition; once it exists the user owns it.
+    if (!ir && result.ir) setIR(result.ir);
+    // undefined = "don't touch the proposal" (e.g. config is set or dismissed).
+    if (result.identityProposal !== undefined) setIdentityProposal(result.identityProposal);
   }
 
   function handleNeedsPicker(parsed: unknown, candidates: PickerCandidate[]): void {
