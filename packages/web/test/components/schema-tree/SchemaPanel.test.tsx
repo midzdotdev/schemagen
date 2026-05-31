@@ -65,4 +65,32 @@ describe("SchemaPanel — explicit infer CTA", () => {
     renderPanel();
     expect(screen.getByText(/strict defaults/i)).toBeInTheDocument();
   });
+
+  // PR EE — post-IR, the data panel is gone; importing more data uses the
+  // 'Add data' button surfaced in the schema header.
+  it("EE-SP1: schema panel renders an 'Add data' button when IR exists", () => {
+    act(() => {
+      useStore.getState().setIR({ kind: "object", fields: {}, additional: false });
+    });
+    renderPanel();
+    expect(screen.getByRole("button", { name: /add data/i })).toBeInTheDocument();
+  });
+
+  it("EE-SP2: 'Add data' button is hidden when no IR is set", () => {
+    act(() => {
+      useStore.getState().setRecords([{ id: "a" }]);
+    });
+    renderPanel();
+    expect(screen.queryByRole("button", { name: /add data/i })).toBeNull();
+  });
+
+  it("EE-SP3: clicking 'Add data' opens the AddDataModal", async () => {
+    const user = userEvent.setup();
+    act(() => {
+      useStore.getState().setIR({ kind: "object", fields: {}, additional: false });
+    });
+    renderPanel();
+    await user.click(screen.getByRole("button", { name: /add data/i }));
+    expect(screen.getByRole("dialog", { name: /add data/i })).toBeInTheDocument();
+  });
 });
