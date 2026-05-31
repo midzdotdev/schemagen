@@ -1,10 +1,12 @@
 import type { Mismatch } from "@schemagen/core";
 import { describe, expect, it } from "vitest";
 import {
+  buildMismatchIndex,
   evidenceAtPath,
   formatPath,
   isPathPrefix,
   mismatchCountAtPath,
+  pathKey,
   pathsEqual,
 } from "@/state/selectors";
 
@@ -87,6 +89,75 @@ describe("mismatchCountAtPath", () => {
   // Spec: docs/frontend-spec.md § "Schema tree"
   it("W3-SE9: paths with no matches return 0", () => {
     expect(mismatchCountAtPath(mismatches, ["other"])).toBe(0);
+  });
+});
+
+describe("buildMismatchIndex", () => {
+  const mismatches: Mismatch[] = [
+    {
+      path: ["status"],
+      kind: "literal-violation",
+      expected: "x",
+      actual: { value: "y", description: "" },
+      suggestions: [],
+    },
+    {
+      path: ["address", "country"],
+      kind: "type-mismatch",
+      expected: "x",
+      actual: { value: 1, description: "" },
+      suggestions: [],
+    },
+    {
+      path: ["address", "city"],
+      kind: "missing-required-field",
+      expected: "x",
+      actual: { value: undefined, description: "" },
+      suggestions: [],
+    },
+  ];
+
+  // Interpretation: the index aggregates the same prefix counts that the
+  // per-row mismatchCountAtPath would produce — that's the contract NodeRow
+  // depends on when looking up its own count.
+  it("X-IDX1: agrees with mismatchCountAtPath for every prefix", () => {
+    const index = buildMismatchIndex(mismatches);
+    expect(index.get(pathKey([]))).toBe(3);
+    expect(index.get(pathKey(["address"]))).toBe(2);
+    expect(index.get(pathKey(["status"]))).toBe(1);
+    expect(index.get(pathKey(["address", "country"]))).toBe(1);
+    expect(index.get(pathKey(["address", "city"]))).toBe(1);
+  });
+
+  // Interpretation: paths with no mismatch-prefix relationship should not be
+  // present in the map — NodeRow defaults `index.get(key) ?? 0` to render
+  // "no badge".
+  it("X-IDX2: paths with no mismatches have no entry", () => {
+    const index = buildMismatchIndex(mismatches);
+    expect(index.has(pathKey(["unrelated"]))).toBe(false);
+  });
+
+  // Interpretation: numeric segments (tuple/union variant indices) round-trip
+  // through the same pathKey serialization NodeRow uses.
+  it("X-IDX3: numeric path segments stringify into the key", () => {
+    const arrayMismatches: Mismatch[] = [
+      {
+        path: ["items", 3, "name"],
+        kind: "type-mismatch",
+        expected: "x",
+        actual: { value: 1, description: "" },
+        suggestions: [],
+      },
+    ];
+    const index = buildMismatchIndex(arrayMismatches);
+    expect(index.get(pathKey(["items", 3]))).toBe(1);
+    expect(index.get(pathKey(["items", 3, "name"]))).toBe(1);
+  });
+
+  // Interpretation: empty input must produce an empty map — guards against
+  // a Map<string, number> default of "always has root".
+  it("X-IDX4: empty mismatches yields empty index", () => {
+    expect(buildMismatchIndex([]).size).toBe(0);
   });
 });
 

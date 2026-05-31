@@ -2,7 +2,7 @@ import type { EvidenceTree, FieldEntry, Node, Path } from "@schemagen/core";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/cn";
-import { evidenceAtPath, pathsEqual } from "@/state/selectors";
+import { evidenceAtPath, pathKey as pathKeyOf, pathsEqual } from "@/state/selectors";
 import { useStore } from "@/state/store";
 import { Badge } from "../ui/badge";
 import { KindBadge } from "../ui/kind-badge";
@@ -14,7 +14,9 @@ export interface NodeRowProps {
   name?: string;
   fieldEntry?: FieldEntry;
   evidence: EvidenceTree | null;
-  mismatchCount: number;
+  // Path-prefix-keyed map of mismatch counts (root key is ""). NodeRow looks
+  // up its own count in O(1) instead of scanning the mismatch list per row.
+  mismatchIndex: ReadonlyMap<string, number>;
   depth: number;
   defaultExpanded?: boolean;
   // When non-null, only render rows whose pathKey is in visible. Auto-expand
@@ -28,14 +30,15 @@ export function NodeRow({
   name,
   fieldEntry,
   evidence,
-  mismatchCount,
+  mismatchIndex,
   depth,
   defaultExpanded,
   filter = null,
 }: NodeRowProps) {
   const selectedPath = useStore((s) => s.selectedPath);
   const setSelectedPath = useStore((s) => s.setSelectedPath);
-  const pathKey = path.map(String).join(".");
+  const pathKey = pathKeyOf(path);
+  const mismatchCount = mismatchIndex.get(pathKey) ?? 0;
 
   // X6: default-collapse below depth 3 — root + 2 levels visible by default.
   // When a filter is active, force-expand any node on a matching ancestor chain.
@@ -177,7 +180,7 @@ export function NodeRow({
                 node={child.node}
                 path={child.path}
                 evidence={childEvidence}
-                mismatchCount={child.mismatchCount}
+                mismatchIndex={mismatchIndex}
                 depth={depth + 1}
                 filter={filter}
                 {...(child.name !== undefined ? { name: child.name } : {})}
@@ -197,7 +200,6 @@ interface ChildRow {
   path: Path;
   name?: string;
   fieldEntry?: FieldEntry;
-  mismatchCount: number;
 }
 
 function childRows(node: Node, basePath: Path): ChildRow[] {
@@ -209,7 +211,6 @@ function childRows(node: Node, basePath: Path): ChildRow[] {
         path: [...basePath, name],
         name,
         fieldEntry: entry,
-        mismatchCount: 0,
       }));
     case "array":
       return [
@@ -218,7 +219,6 @@ function childRows(node: Node, basePath: Path): ChildRow[] {
           node: node.items,
           path: [...basePath, "items"],
           name: "items",
-          mismatchCount: 0,
         },
       ];
     case "tuple":
@@ -227,7 +227,6 @@ function childRows(node: Node, basePath: Path): ChildRow[] {
         node: item,
         path: [...basePath, i],
         name: `[${i}]`,
-        mismatchCount: 0,
       }));
     case "union":
       return node.variants.map((variant, i) => ({
@@ -235,7 +234,6 @@ function childRows(node: Node, basePath: Path): ChildRow[] {
         node: variant,
         path: [...basePath, i],
         name: `variant ${i}`,
-        mismatchCount: 0,
       }));
     case "record":
       return [
@@ -244,7 +242,6 @@ function childRows(node: Node, basePath: Path): ChildRow[] {
           node: node.values,
           path: [...basePath, "values"],
           name: "values",
-          mismatchCount: 0,
         },
       ];
     default:

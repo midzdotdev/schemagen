@@ -80,4 +80,22 @@ describe("SchemaTree", () => {
     render(<SchemaTree />);
     expect(screen.getByText("items")).toBeInTheDocument();
   });
+
+  // Spec: docs/frontend-spec.md § "Schema tree" — mismatch badges roll up.
+  // Interpretation: a literal violation on `status` should produce a
+  // descendant-count badge on the root row AND a self-count badge on the
+  // status row, both reading "1". Previously every non-root row showed 0.
+  it("X-ST7: mismatch counts roll up onto every ancestor row", () => {
+    act(() => {
+      useStore.getState().setIR(ir);
+      // Drive a literal violation on status by ingesting a record that
+      // doesn't match the union — the store recomputes mismatches.
+      useStore.getState().setRecords([{ id: "a-uuid", status: "deprecated", tags: [] }]);
+    });
+    render(<SchemaTree />);
+    // Two badges expected: status row's own, plus root's rollup. Either is
+    // missing pre-PR-X (root only).
+    const badges = screen.getAllByLabelText("1 mismatches");
+    expect(badges).toHaveLength(2);
+  });
 });
