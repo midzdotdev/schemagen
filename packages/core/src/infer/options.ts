@@ -37,9 +37,9 @@ export interface ResolvedInferOptions {
   onTypeConflict: "union" | "unknown";
 }
 
-// Single source of truth for option defaults. Read by `resolveOptions` here and
-// by the @schemagen/web inference-options dialog — see PR Z. Treat as immutable.
-export const INFER_OPTION_DEFAULTS: ResolvedInferOptions = {
+// Single source of truth for option defaults. External callers should call
+// `resolveOptions(undefined)` to read defaults rather than importing this directly.
+const INFER_OPTION_DEFAULTS: ResolvedInferOptions = {
   literals: { enable: true, maxCardinality: 20, maxUniqueRatio: 0.3, minSamples: 5 },
   discriminators: { enable: true, fields: undefined },
   formats: { enable: true, detect: "all" },
