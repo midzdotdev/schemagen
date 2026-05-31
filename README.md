@@ -2,37 +2,33 @@
 
 A developer tool for generating, visualizing, and iterating on data schemas from real samples.
 
-## Current state
+## Status
 
-Both the core library and the web app have shipped to `main`. JSON Schema is the only emit target so far; Zod and TypeScript follow. Nothing is published to npm yet.
+`@schemagen/core` and `@schemagen/web` are in `main`. JSON Schema emits today; Zod and TypeScript follow. No npm release yet.
 
-- `@schemagen/core` — pure-function TypeScript library. Inference, validation, mutation (applyChange + inverse), emission to JSON Schema. Strict typing throughout (`exactOptionalPropertyTypes`, `noUncheckedIndexedAccess`); covered by Vitest + fast-check property tests.
-- `@schemagen/web` — local-first React app. Named workspaces, resizable three-pane shell (data / schema / inspector), full schema-op editor, mismatch panel with filter and grouped collapse, per-node mismatch count badges that roll up to ancestors, identity-key auto-suggest with chip-picker, session export/import, JSON syntax-highlighted preview, bundled samples for cold start, app-level ErrorBoundary, keyboard shortcuts. Persists to IndexedDB via Dexie.
+- `@schemagen/core` — pure TypeScript. Inference, validation, mutation (`applyChange` + inverse), JSON Schema emission. Strict typing (`exactOptionalPropertyTypes`, `noUncheckedIndexedAccess`). Vitest + fast-check.
+- `@schemagen/web` — local-first React app. Resizable three-pane shell (data / schema / inspector), full op editor, mismatch panel with filter and grouped collapse, rolled-up mismatch counts, identity-key auto-suggest, session export/import, JSON syntax highlighting, sample loader, undo/redo, keyboard shortcuts. Persists to IndexedDB via Dexie.
 
-The v1 specs live in [`docs/`](./docs/):
+Specs in [`docs/`](./docs/):
 
-- [`ir-spec.md`](./docs/ir-spec.md) — schemagen's native schema format, the thing you edit. JSON Schema, Zod, and TypeScript types are emitted from it.
-- [`core-spec.md`](./docs/core-spec.md) — pure-function library API: inference, validation, mutation, emission.
-- [`frontend-spec.md`](./docs/frontend-spec.md) — three-pane web UI, IndexedDB workspaces, schema and session exports.
+- [`ir-spec.md`](./docs/ir-spec.md) — native schema format. Edit this; emit everything else from it.
+- [`core-spec.md`](./docs/core-spec.md) — library API.
+- [`frontend-spec.md`](./docs/frontend-spec.md) — three-pane web UI.
 
-## Aspirations
+## Capabilities
 
-A schema editor that closes the loop between data and types. Paste a dataset, get an opinionated first cut, refine it interactively, validate new records against it, and export to whichever schema format the consumer needs (JSON Schema for v1; Zod, TypeScript, and others follow).
+- **Strict by default.** Infer literal unions for low-cardinality strings. Mark unobserved fields optional. Close objects. Detect discriminators.
+- **One source, many targets.** Edit schemagen's IR. JSON Schema emits today; Zod and TypeScript follow. Edits live in one place.
+- **Edits never block on validity.** Multi-step changes pass through invalid states. The UI surfaces mismatches continuously.
+- **Schema iteration is first-class.** New data flows in. Mismatches surface with one-click resolutions. Every edit is invertible. Full undo/redo history persists.
+- **Evidence-driven.** Top-K values, presence frequencies, ranges — always computed from the workspace's records.
+- **Identity-aware dedup.** Set an identity key (single field or composition). Repeated imports replace rather than accumulate. schemagen auto-suggests a key by uniqueness.
 
-## What makes it unique
+## Walk-through
 
-- **Strict by default.** Inference proposes literal unions for low-cardinality strings, marks unobserved fields optional, closes objects, and detects discriminators. Existing tools default to permissive; schemagen defaults to specific.
-- **One editable schema, many export targets.** You iterate on schemagen's own small, hand-editable schema format — not on emitted JSON Schema or generated TypeScript. Edits happen in one place; JSON Schema (and later Zod, TS, others) are produced as one-way exports.
-- **Operations are never gated on validity.** Multi-step edits can pass through states that don't match the data. The UI surfaces mismatches continuously as feedback; it never blocks an edit.
-- **Schema iteration is first-class.** New data flows in, mismatches surface in a side panel with one-click suggested resolutions, every edit is invertible, full undo/redo history is preserved.
-- **Evidence-driven decisions.** Top-K observed values, presence frequencies, and ranges are always computable from the workspace's record set so you can make informed choices about widening, tightening, or rejecting new data.
-- **Identity-aware dedup.** Workspaces can be configured with a logical identity key — a field or composition of fields — so repeated imports of the same entities don't pile up. schemagen auto-suggests a key based on uniqueness, and you choose whether to replace older versions or preserve them for richer schema evidence.
+Build a schema for user records from an analytics API.
 
-## A walk-through
-
-Say you want a schema for user records returned by an analytics API.
-
-**1. Import.** You paste a JSON response into the data panel:
+**1. Import.** Paste a JSON response into the data panel:
 
 ```json
 {
@@ -44,15 +40,15 @@ Say you want a schema for user records returned by an analytics API.
 }
 ```
 
-The root picker walks the structure and offers `.users` as the only path to an array of objects. You select it; the 200 records in the response are deduped by canonical hash and stored in the workspace.
+The root picker offers `.users`. Select it. schemagen dedupes the 200 records by canonical hash and stores them.
 
 A banner appears above the data panel:
 
-> Field `id` appears in 100% of records and is unique in 100% of them. Use it as the identity key? Future imports will replace records with matching `id` instead of accumulating duplicates.
+> Field `id` is unique across 100% of records. Use as identity key? Future imports will replace records with matching `id`.
 
-You accept. `id` is now the workspace's identity key; subsequent imports will dedupe against it.
+Accept. `id` is now the workspace identity key.
 
-**2. Inference.** schemagen produces a strict first cut, rendered in the schema tree roughly as:
+**2. Inference.** schemagen produces a first cut:
 
 ```
 object {
@@ -64,22 +60,22 @@ object {
 }
 ```
 
-Two specific calls it made:
+Two calls worth flagging:
 
-- `status` had cardinality 2 across 200 records (well under the literal threshold), so it's a union of literals — not just `string`.
-- `avatar_url` was missing from 38 of 200 records, so it's marked optional.
+- `status` had 2 distinct values across 200 records — under the literal threshold — so it's a literal union, not just `string`.
+- `avatar_url` was missing from 38 of 200 records, so it's optional.
 
-The inspector shows evidence next to each node: `status` reports `active: 162, trialing: 38`; `avatar_url` reports `present in 162/200 (81%)`.
+The inspector shows evidence per node: `status` → `active: 162, trialing: 38`. `avatar_url` → `present in 162/200 (81%)`.
 
-**3. Tweak.** You don't trust that `"active" | "trialing"` covers every future case, so you widen `status` to a union of those literals OR a free string. Future unknown values will validate, but the literal set stays in the schema as documentation. The change lands in history as "Wrapped status in union with free string".
+**3. Tweak.** Widen `status` to its literal union OR a free string. Future unknown values validate; the literal set stays as documentation. The change lands in history as "Wrapped status in union with free string".
 
-**4. New data.** A week later you drag a fresh JSON file with all 220 users onto the data pane. The workspace gets named after the file. Because `id` is the identity key, 200 records replace their earlier versions (some now in different states) and 20 are new. The workspace stays at 220 records, not 420. The mismatch panel populates and the count badge on the Mismatches tab updates live:
+**4. New data.** Drag a fresh JSON file with 220 users onto the data pane. The workspace renames itself after the file. Because `id` is the identity key, 200 records replace earlier versions and 20 are new — the workspace stays at 220, not 420. The mismatch panel populates:
 
 - **14× `literal-violation`** at `.status`: value `"past_due"`. Suggestion: *Add `"past_due"` to status literals*.
 - **50× `unexpected-field`** at the root: `.stripe_customer_id`. Suggestion: *Add field `stripe_customer_id` as optional string*.
 
-You click both suggestions. Each lands in history as its own labeled entry; either can be undone individually (`⌘Z` in the header). The mismatch panel clears.
+Click both. Each lands in history as its own labeled entry; undo each individually with `⌘Z`. The mismatch panel clears.
 
-**5. Export.** `⌘E` opens the export modal: copy the syntax-highlighted JSON Schema and commit it to the consuming service's repo. The schemagen workspace stays in IndexedDB — named, named history preserved; next month, the next batch starts at step 4.
+**5. Export.** `⌘E` opens the export modal. Copy the JSON Schema. Commit it to the consuming service's repo. The workspace stays in IndexedDB — history preserved. Next month, the next batch starts at step 4.
 
-If you'd rather take it for a spin without your own data, the empty workspace shows a few one-click samples (HackerNews top stories, SWAPI characters, Open Library — Tolkien) bundled with the app.
+No data on hand? The empty workspace offers bundled samples: HackerNews top stories, SWAPI characters, Open Library — Tolkien.
