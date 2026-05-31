@@ -93,6 +93,7 @@ export function createDexieAdapter(opts: DexieAdapterOptions = {}): WorkspaceAda
         selectedPath: null,
         identityConfig: meta?.identityConfig ?? null,
         identityProposalDismissed: meta?.identityProposalDismissed ?? false,
+        inferenceOptions: meta?.inferenceOptions ?? null,
       };
       return snapshot;
     },
@@ -179,6 +180,7 @@ export function attachPersistence(
   let lastRecords = useStore.getState().records;
   let lastIdentityConfig = useStore.getState().identityConfig;
   let lastDismissed = useStore.getState().identityProposalDismissed;
+  let lastInferenceOptions = useStore.getState().inferenceOptions;
   let lastName = useStore.getState().workspaceName;
   const initial = useStore.getState();
 
@@ -239,6 +241,14 @@ export function attachPersistence(
       lastDismissed = state.identityProposalDismissed;
       void adapter.patchMeta(workspaceId, {
         identityProposalDismissed: state.identityProposalDismissed,
+      });
+    }
+
+    if (state.inferenceOptions !== lastInferenceOptions) {
+      lastInferenceOptions = state.inferenceOptions;
+      // null → undefined so patchMeta clears the meta field (Reset semantics).
+      void adapter.patchMeta(workspaceId, {
+        inferenceOptions: state.inferenceOptions ?? undefined,
       });
     }
 

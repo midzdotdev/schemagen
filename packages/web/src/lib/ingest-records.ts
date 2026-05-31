@@ -14,7 +14,7 @@
 //      recompute proposeIdentityKey against the merged records. Result is
 //      whatever proposeIdentityKey returns (null clears the banner).
 
-import type { IdentityConfig, IdentityProposal, IR } from "@schemagen/core";
+import type { IdentityConfig, IdentityProposal, InferOptions, IR } from "@schemagen/core";
 import { dedupeByIdentity, infer, proposeIdentityKey } from "@schemagen/core";
 import { canonicalHash } from "./canonical-hash";
 
@@ -23,6 +23,8 @@ export interface IngestState {
   ir: IR | null;
   identityConfig: IdentityConfig | null;
   identityProposalDismissed: boolean;
+  // Z: cold-start inference overrides. Inert once `ir` is set.
+  inferenceOptions: InferOptions | null;
 }
 
 export interface IngestResult {
@@ -41,7 +43,8 @@ export function ingestRecords(state: IngestState, incoming: unknown[]): IngestRe
     ? dedupeByIdentity(merged, state.identityConfig).kept
     : merged;
 
-  const ir = state.ir ?? (records.length > 0 ? infer(records) : null);
+  const ir =
+    state.ir ?? (records.length > 0 ? infer(records, state.inferenceOptions ?? undefined) : null);
 
   const identityProposal: IngestResult["identityProposal"] =
     !state.identityConfig && !state.identityProposalDismissed

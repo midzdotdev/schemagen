@@ -7,6 +7,7 @@ import {
   dedupeByIdentity,
   type IdentityConfig,
   type IdentityProposal,
+  type InferOptions,
   type IR,
   type Path,
 } from "@schemagen/core";
@@ -32,6 +33,8 @@ export interface StoreActions {
   dismissIdentitySuggestion: () => void;
   // X3: selected records (findExamples result)
   setSelectedRecordIndices: (indices: number[]) => void;
+  // Z: cold-start inference overrides
+  setInferenceOptions: (options: InferOptions | null) => void;
 }
 
 export type Store = AppState & StoreActions;
@@ -50,6 +53,7 @@ export const INITIAL_STATE: AppState = {
   identityProposal: null,
   identityProposalDismissed: false,
   selectedRecordIndices: [],
+  inferenceOptions: null,
 };
 
 let nowFn: () => number = () => Date.now();
@@ -145,6 +149,8 @@ export const useStore = create<Store>((set, get) => ({
   dismissIdentitySuggestion: () => set({ identityProposalDismissed: true }),
 
   setSelectedRecordIndices: (indices) => set({ selectedRecordIndices: indices }),
+
+  setInferenceOptions: (options) => set({ inferenceOptions: options }),
 }));
 
 export function labelFor(change: Change): string {

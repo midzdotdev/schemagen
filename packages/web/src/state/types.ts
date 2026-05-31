@@ -1,6 +1,13 @@
 // Store types. See docs/frontend-spec.md § "Persistence" + § "History".
 
-import type { Change, IdentityConfig, IdentityProposal, IR, Path } from "@schemagen/core";
+import type {
+  Change,
+  IdentityConfig,
+  IdentityProposal,
+  InferOptions,
+  IR,
+  Path,
+} from "@schemagen/core";
 
 export type HistorySource = "manual" | "suggestion" | "inferred";
 
@@ -27,6 +34,8 @@ export interface AppState {
   identityProposalDismissed: boolean;
   // X3: indices of records currently highlighted by findExamples.
   selectedRecordIndices: number[];
+  // Z: workspace-scoped overrides for cold-start inference. Inert once `ir` is set.
+  inferenceOptions: InferOptions | null;
 }
 
 export interface ApplyChangeOptions {

@@ -1,4 +1,4 @@
-import type { Change, IR } from "@schemagen/core";
+import type { Change, InferOptions, IR } from "@schemagen/core";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import type { WorkspaceAdapter } from "@/persistence/adapter";
 import { createDb, type SchemaGenDB } from "@/persistence/db";
@@ -117,6 +117,43 @@ describe("WorkspaceAdapter (Dexie impl)", () => {
     await adapter.renameWorkspace(workspaceId, "github issues");
     const snap = await adapter.hydrate(workspaceId);
     expect(snap.workspaceName).toBe("github issues");
+  });
+
+  // PR Z — workspace-scoped inference options.
+  // Plan: docs/plans/pr-z-inference-options.md § "Persistence" — round-trip via meta.
+  it("Z-A1: patchMeta(inferenceOptions) + hydrate round-trip", async () => {
+    const opts: InferOptions = {
+      literals: { maxCardinality: 30 },
+      objects: { closed: false },
+    };
+    await adapter.patchMeta(workspaceId, { inferenceOptions: opts });
+    const snap = await adapter.hydrate(workspaceId);
+    expect(snap.inferenceOptions).toEqual(opts);
+  });
+
+  // Plan: § "Persistence" — default state is absent; hydrate yields null.
+  it("Z-A2: hydrate of fresh workspace yields inferenceOptions = null", async () => {
+    const snap = await adapter.hydrate(workspaceId);
+    expect(snap.inferenceOptions).toBeNull();
+  });
+
+  // Plan-implementation § "Resolved interpretations" #5 — Reset clears stored options.
+  it("Z-A3: patchMeta with undefined inferenceOptions clears it on hydrate", async () => {
+    await adapter.patchMeta(workspaceId, {
+      inferenceOptions: { literals: { maxCardinality: 30 } },
+    });
+    await adapter.patchMeta(workspaceId, { inferenceOptions: undefined });
+    const snap = await adapter.hydrate(workspaceId);
+    expect(snap.inferenceOptions).toBeNull();
+  });
+
+  // Plan: § "Persistence" — additive schema bump; old meta rows still hydrate.
+  // (Collapses the original catalog's separate T7 — backward-compat is a direct
+  //  shape check, not a Dexie migration concern, since v3 adds no schema string.)
+  it("Z-A4: meta row written before inferenceOptions existed still hydrates", async () => {
+    await db.meta.put({ workspaceId, historyCursor: 0 });
+    const snap = await adapter.hydrate(workspaceId);
+    expect(snap.inferenceOptions).toBeNull();
   });
 
   // PR V — cascade delete

@@ -6,6 +6,7 @@ import {
   KeyRound,
   Redo2,
   RotateCcw,
+  Sliders,
   Undo2,
 } from "lucide-react";
 import { useStore } from "@/state/store";
@@ -109,6 +110,20 @@ export function AppHeader() {
             </Button>
           </TooltipTrigger>
           <TooltipContent>Identity key settings</TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              size="icon"
+              variant="ghost"
+              className="size-8"
+              aria-label="Inference options"
+              onClick={() => openModal("inference-options")}
+            >
+              <Sliders className="size-3.5" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Inference options</TooltipContent>
         </Tooltip>
         <Tooltip>
           <TooltipTrigger asChild>
