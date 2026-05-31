@@ -8,37 +8,23 @@ import {
   RotateCcw,
   Undo2,
 } from "lucide-react";
-import { useState } from "react";
 import { useStore } from "@/state/store";
-import { IdentityConfigDialog } from "../identity/IdentityConfigDialog";
 import { Button } from "../ui/button";
 import { Separator } from "../ui/separator";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
-import { ResetWorkspaceDialog } from "./ResetWorkspaceDialog";
-import { ShortcutsDialog } from "./ShortcutsDialog";
 import { ThemeToggle } from "./ThemeToggle";
+import { useUIShell } from "./UIShell";
 import { WorkspaceNameField } from "./WorkspaceNameField";
 import { WorkspaceSwitcher } from "./WorkspaceSwitcher";
 
-export interface AppHeaderProps {
-  onExportClick: () => void;
-  shortcutsOpen?: boolean;
-  onShortcutsChange?: (open: boolean) => void;
-}
-
-export function AppHeader({ onExportClick, shortcutsOpen, onShortcutsChange }: AppHeaderProps) {
+export function AppHeader() {
   const records = useStore((s) => s.records);
   const ir = useStore((s) => s.ir);
   const entries = useStore((s) => s.history.entries);
   const cursor = useStore((s) => s.history.cursor);
   const undo = useStore((s) => s.undo);
   const redo = useStore((s) => s.redo);
-
-  const [identityOpen, setIdentityOpen] = useState(false);
-  const [resetOpen, setResetOpen] = useState(false);
-  const [internalShortcutsOpen, setInternalShortcutsOpen] = useState(false);
-  const shortcuts = shortcutsOpen ?? internalShortcutsOpen;
-  const setShortcuts = onShortcutsChange ?? setInternalShortcutsOpen;
+  const { openModal } = useUIShell();
 
   const canUndo = cursor > 0;
   const canRedo = cursor < entries.length;
@@ -117,7 +103,7 @@ export function AppHeader({ onExportClick, shortcutsOpen, onShortcutsChange }: A
               variant="ghost"
               className="size-8"
               aria-label="Identity key settings"
-              onClick={() => setIdentityOpen(true)}
+              onClick={() => openModal("identity")}
             >
               <KeyRound className="size-3.5" />
             </Button>
@@ -132,7 +118,7 @@ export function AppHeader({ onExportClick, shortcutsOpen, onShortcutsChange }: A
               className="size-8"
               aria-label="Reset workspace"
               disabled={!hasWorkspace}
-              onClick={() => setResetOpen(true)}
+              onClick={() => openModal("reset")}
             >
               <RotateCcw className="size-3.5" />
             </Button>
@@ -146,7 +132,7 @@ export function AppHeader({ onExportClick, shortcutsOpen, onShortcutsChange }: A
               variant="ghost"
               className="size-8"
               aria-label="Keyboard shortcuts"
-              onClick={() => setShortcuts(true)}
+              onClick={() => openModal("shortcuts")}
             >
               <Keyboard className="size-3.5" />
             </Button>
@@ -163,15 +149,11 @@ export function AppHeader({ onExportClick, shortcutsOpen, onShortcutsChange }: A
             <span className="sr-only">GitHub</span>
           </a>
         </Button>
-        <Button size="sm" onClick={onExportClick} disabled={!ir}>
+        <Button size="sm" onClick={() => openModal("export")} disabled={!ir}>
           <Download className="size-3.5" />
           Export
         </Button>
       </div>
-
-      <IdentityConfigDialog open={identityOpen} onOpenChange={setIdentityOpen} />
-      <ResetWorkspaceDialog open={resetOpen} onOpenChange={setResetOpen} />
-      <ShortcutsDialog open={shortcuts} onOpenChange={setShortcuts} />
     </header>
   );
 }
