@@ -5,7 +5,7 @@
 // once an IR exists the dialog still opens but inputs are disabled and Apply is
 // hidden — the schema tree is the right surface to edit per-node after that.
 
-import { INFER_OPTION_DEFAULTS as DEFAULTS, type InferOptions } from "@schemagen/core";
+import { type InferOptions, resolveOptions } from "@schemagen/core";
 import { useEffect, useId, useState } from "react";
 import { useStore } from "@/state/store";
 import { Button } from "../ui/button";
@@ -34,26 +34,16 @@ interface FormState {
 }
 
 function seed(opts: InferOptions | null): FormState {
+  // Reuse core's resolver to fill in defaults, then project to FormState
+  // (drops `formats.detect` and `discriminators.fields` — see interpretation #1).
+  const r = resolveOptions(opts ?? undefined);
   return {
-    literals: {
-      enable: opts?.literals?.enable ?? DEFAULTS.literals.enable,
-      maxCardinality: opts?.literals?.maxCardinality ?? DEFAULTS.literals.maxCardinality,
-      maxUniqueRatio: opts?.literals?.maxUniqueRatio ?? DEFAULTS.literals.maxUniqueRatio,
-      minSamples: opts?.literals?.minSamples ?? DEFAULTS.literals.minSamples,
-    },
-    formats: { enable: opts?.formats?.enable ?? DEFAULTS.formats.enable },
-    numbers: {
-      integerDetection: opts?.numbers?.integerDetection ?? DEFAULTS.numbers.integerDetection,
-      rangeMode: opts?.numbers?.rangeMode ?? DEFAULTS.numbers.rangeMode,
-    },
-    objects: {
-      closed: opts?.objects?.closed ?? DEFAULTS.objects.closed,
-      optionalThreshold: opts?.objects?.optionalThreshold ?? DEFAULTS.objects.optionalThreshold,
-    },
-    discriminators: {
-      enable: opts?.discriminators?.enable ?? DEFAULTS.discriminators.enable,
-    },
-    onTypeConflict: opts?.onTypeConflict ?? DEFAULTS.onTypeConflict,
+    literals: r.literals,
+    formats: { enable: r.formats.enable },
+    numbers: r.numbers,
+    objects: r.objects,
+    discriminators: { enable: r.discriminators.enable },
+    onTypeConflict: r.onTypeConflict,
   };
 }
 
