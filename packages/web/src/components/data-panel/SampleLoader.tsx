@@ -41,9 +41,11 @@ const SAMPLES: Sample[] = [
 export interface SampleLoaderProps {
   onRecords: (records: unknown[]) => void;
   onNeedsPicker: (parsed: unknown, candidates: PickerCandidate[]) => void;
+  // Disable sample buttons while a previous ingest is still in flight.
+  disabled?: boolean;
 }
 
-export function SampleLoader({ onRecords, onNeedsPicker }: SampleLoaderProps) {
+export function SampleLoader({ onRecords, onNeedsPicker, disabled = false }: SampleLoaderProps) {
   const workspaceName = useStore((s) => s.workspaceName);
   const setWorkspaceName = useStore((s) => s.setWorkspaceName);
   const [busy, setBusy] = useState<string | null>(null);
@@ -78,7 +80,7 @@ export function SampleLoader({ onRecords, onNeedsPicker }: SampleLoaderProps) {
           <li key={sample.id}>
             <button
               type="button"
-              disabled={busy !== null}
+              disabled={busy !== null || disabled}
               onClick={() => void pick(sample)}
               className="flex w-full items-start gap-2 rounded-md border border-border bg-card/40 px-2.5 py-2 text-left text-xs transition-colors hover:border-ring/40 hover:bg-accent/40 disabled:cursor-wait disabled:opacity-60"
             >

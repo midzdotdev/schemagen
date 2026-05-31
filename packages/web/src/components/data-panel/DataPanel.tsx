@@ -1,6 +1,6 @@
-import { Database, FileText, Inbox } from "lucide-react";
+import { Database, FileText, Inbox, Loader2 } from "lucide-react";
 import { useState } from "react";
-import { ingestRecords } from "@/lib/ingest-records";
+import { ingestAsync } from "@/lib/ingest-async";
 import type { PickerCandidate } from "@/lib/root-picker";
 import { useStore } from "@/state/store";
 import { IdentitySuggestion } from "../identity/IdentitySuggestion";
@@ -33,17 +33,27 @@ export function DataPanel() {
     parsed: null,
     candidates: [],
   });
+  // Drives spinner + button-disable while an ingest is in flight. Keeps a
+  // second concurrent import from racing with the first (both would compute
+  // against stale state otherwise).
+  const [ingesting, setIngesting] = useState(false);
 
-  function commitRecords(newRecords: unknown[]): void {
-    const result = ingestRecords(
-      { records, ir, identityConfig, identityProposalDismissed: dismissed },
-      newRecords,
-    );
-    setRecords(result.records);
-    // Only set IR on the cold-start transition; once it exists the user owns it.
-    if (!ir && result.ir) setIR(result.ir);
-    // undefined = "don't touch the proposal" (e.g. config is set or dismissed).
-    if (result.identityProposal !== undefined) setIdentityProposal(result.identityProposal);
+  async function commitRecords(newRecords: unknown[]): Promise<void> {
+    if (ingesting) return;
+    setIngesting(true);
+    try {
+      const result = await ingestAsync(
+        { records, ir, identityConfig, identityProposalDismissed: dismissed },
+        newRecords,
+      );
+      setRecords(result.records);
+      // Only set IR on the cold-start transition; once it exists the user owns it.
+      if (!ir && result.ir) setIR(result.ir);
+      // undefined = "don't touch the proposal" (e.g. config is set or dismissed).
+      if (result.identityProposal !== undefined) setIdentityProposal(result.identityProposal);
+    } finally {
+      setIngesting(false);
+    }
   }
 
   function handleNeedsPicker(parsed: unknown, candidates: PickerCandidate[]): void {
@@ -52,11 +62,16 @@ export function DataPanel() {
 
   function handlePick(picked: unknown[]): void {
     setPicker((p) => ({ ...p, open: false }));
-    commitRecords(picked);
+    void commitRecords(picked);
   }
 
+  // Fire-and-forget wrapper for child components whose props expect void.
+  const onRecords = (rs: unknown[]): void => {
+    void commitRecords(rs);
+  };
+
   return (
-    <DropZone onRecords={commitRecords} onNeedsPicker={handleNeedsPicker}>
+    <DropZone onRecords={onRecords} onNeedsPicker={handleNeedsPicker} disabled={ingesting}>
       <div className="flex h-full min-h-0 flex-col">
         <PaneHeader
           title="Data"
@@ -70,15 +85,29 @@ export function DataPanel() {
           }
         />
         <IdentitySuggestion />
-        <ImportArea onRecords={commitRecords} onNeedsPicker={handleNeedsPicker} />
+        <ImportArea onRecords={onRecords} onNeedsPicker={handleNeedsPicker} ingesting={ingesting} />
         {records.length === 0 && (
-          <SampleLoader onRecords={commitRecords} onNeedsPicker={handleNeedsPicker} />
+          <SampleLoader
+            onRecords={onRecords}
+            onNeedsPicker={handleNeedsPicker}
+            disabled={ingesting}
+          />
         )}
         <div className="flex min-h-0 flex-1 flex-col border-t border-border">
           <div className="flex h-8 shrink-0 items-center gap-1.5 border-b border-border bg-muted/20 px-3 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
             <FileText className="size-3" />
             Records
             {records.length > 0 && <span className="text-foreground/60">· {records.length}</span>}
+            {ingesting && (
+              <span
+                className="ml-auto inline-flex items-center gap-1 text-[10px] normal-case text-foreground/70"
+                role="status"
+                aria-live="polite"
+              >
+                <Loader2 className="size-3 animate-spin" aria-hidden />
+                Ingesting…
+              </span>
+            )}
           </div>
           <div className="min-h-0 flex-1 overflow-y-auto">
             {records.length === 0 ? (
