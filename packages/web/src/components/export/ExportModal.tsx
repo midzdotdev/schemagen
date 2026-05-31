@@ -75,13 +75,13 @@ export function ExportModal({ open, onOpenChange }: ExportModalProps) {
         <DialogHeader>
           <DialogTitle>Export</DialogTitle>
           <DialogDescription>
-            Download the schema for downstream tools, or the full session to move workspaces.
+            Download the schema for downstream tools, or the full session bundle to move workspaces.
           </DialogDescription>
         </DialogHeader>
         <Tabs defaultValue="schema">
           <TabsList>
             <TabsTrigger value="schema">Schema only</TabsTrigger>
-            <TabsTrigger value="session">Full session</TabsTrigger>
+            <TabsTrigger value="session">Session bundle</TabsTrigger>
           </TabsList>
           <TabsContent value="schema">
             <JsonView

@@ -1,11 +1,9 @@
-import { FileUp, Plus, Upload } from "lucide-react";
+import { Plus, Upload } from "lucide-react";
 import { type ChangeEvent, useState } from "react";
 import { shouldRenameWorkspace, workspaceNameFromFile } from "@/lib/filename";
 import { checkRoot, parseImport } from "@/lib/json-import";
 import type { PickerCandidate } from "@/lib/root-picker";
 import { enumerateCandidates } from "@/lib/root-picker";
-import { parseSessionBundle } from "@/lib/session-bundle";
-import { loadSessionBundle } from "@/state/init";
 import { useStore } from "@/state/store";
 import { Button } from "../ui/button";
 import { Textarea } from "../ui/textarea";
@@ -21,13 +19,11 @@ export interface ImportAreaProps {
 export function ImportArea({ onRecords, onNeedsPicker, ingesting = false }: ImportAreaProps) {
   const [text, setText] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [info, setInfo] = useState<string | null>(null);
   const workspaceName = useStore((s) => s.workspaceName);
   const setWorkspaceName = useStore((s) => s.setWorkspaceName);
 
   function handleImport(): void {
     setError(null);
-    setInfo(null);
     const parsed = parseImport(text);
     if (!parsed.ok) {
       setError(parsed.error);
@@ -59,33 +55,6 @@ export function ImportArea({ onRecords, onNeedsPicker, ingesting = false }: Impo
       setWorkspaceName(workspaceNameFromFile(file.name));
     }
     void file.text().then(setText);
-  }
-
-  function handleImportSession(e: ChangeEvent<HTMLInputElement>): void {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setError(null);
-    setInfo(null);
-    void file.text().then(async (raw) => {
-      let value: unknown;
-      try {
-        value = JSON.parse(raw);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "could not parse session file");
-        return;
-      }
-      const result = parseSessionBundle(value);
-      if (!result.ok) {
-        setError(result.error);
-        return;
-      }
-      try {
-        const { workspaceId } = await loadSessionBundle(result.bundle);
-        setInfo(`Imported session as workspace ${workspaceId.slice(0, 8)}.`);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "could not import session");
-      }
-    });
   }
 
   return (
@@ -133,19 +102,6 @@ export function ImportArea({ onRecords, onNeedsPicker, ingesting = false }: Impo
           </span>
         </label>
       </div>
-      <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-        <FileUp className="size-3" />
-        <label className="cursor-pointer hover:text-foreground hover:underline">
-          <input
-            type="file"
-            accept=".json,.session.json,application/json"
-            onChange={handleImportSession}
-            className="sr-only"
-            aria-label="Import session file"
-          />
-          import session bundle
-        </label>
-      </div>
       {error && (
         <p
           role="alert"
@@ -153,11 +109,6 @@ export function ImportArea({ onRecords, onNeedsPicker, ingesting = false }: Impo
         >
           {error}
         </p>
-      )}
-      {info && (
-        <output className="block rounded-md bg-success/10 px-2 py-1.5 text-xs text-success">
-          {info}
-        </output>
       )}
     </div>
   );

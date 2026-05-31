@@ -60,15 +60,16 @@ test.describe("session export/import", () => {
       });
     });
 
-    const fileInput = page.locator('input[aria-label="Import session file"]');
+    // PR BB — bundle import moved into the workspace switcher.
+    await page.getByRole("button", { name: /switch workspace/i }).click();
+    const fileInput = page.locator('input[aria-label="Import session bundle file"]');
     await fileInput.setInputFiles({
       name: "schemagen.session.json",
       mimeType: "application/json",
       buffer: Buffer.from(bundleJson),
     });
 
-    // The workspace should be replaced; records show 5; status reads.
-    await expect(page.getByText("5").first()).toBeVisible();
-    await expect(page.getByText(/imported session as workspace/i)).toBeVisible();
+    // The workspace is replaced; record count shows 5 in the schema panel subtitle.
+    await expect(page.getByText(/inferred from 5 records/i)).toBeVisible();
   });
 });

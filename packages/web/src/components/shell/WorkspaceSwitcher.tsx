@@ -1,12 +1,14 @@
-import { Check, ChevronsUpDown, Plus, Trash2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Check, ChevronsUpDown, FileUp, Plus, Trash2 } from "lucide-react";
+import { type ChangeEvent, useEffect, useState } from "react";
 import { cn } from "@/lib/cn";
+import { parseSessionBundle } from "@/lib/session-bundle";
 import type { WorkspaceSummary } from "@/persistence/adapter";
 import type { WorkspaceRow } from "@/persistence/db";
 import {
   createAndSwitchWorkspace,
   deleteWorkspace,
   getCurrentAdapter,
+  loadSessionBundle,
   switchWorkspace,
 } from "@/state/init";
 import { useStore } from "@/state/store";
@@ -22,6 +24,7 @@ export function WorkspaceSwitcher() {
   const [workspaces, setWorkspaces] = useState<WorkspaceRow[]>([]);
   const [summaries, setSummaries] = useState<Map<string, WorkspaceSummary>>(new Map());
   const [loading, setLoading] = useState(false);
+  const [importError, setImportError] = useState<string | null>(null);
 
   // Refresh the list each time we open the popover so renames/creates in
   // other tabs (unlikely but cheap) are reflected.
@@ -53,6 +56,32 @@ export function WorkspaceSwitcher() {
   async function handleNew(): Promise<void> {
     await createAndSwitchWorkspace();
     setOpen(false);
+  }
+
+  function handleImportBundle(e: ChangeEvent<HTMLInputElement>): void {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImportError(null);
+    void file.text().then(async (raw) => {
+      let value: unknown;
+      try {
+        value = JSON.parse(raw);
+      } catch (err) {
+        setImportError(err instanceof Error ? err.message : "could not parse bundle file");
+        return;
+      }
+      const result = parseSessionBundle(value);
+      if (!result.ok) {
+        setImportError(result.error);
+        return;
+      }
+      try {
+        await loadSessionBundle(result.bundle);
+        setOpen(false);
+      } catch (err) {
+        setImportError(err instanceof Error ? err.message : "could not import bundle");
+      }
+    });
   }
 
   async function handleDelete(ws: WorkspaceRow): Promise<void> {
@@ -155,6 +184,30 @@ export function WorkspaceSwitcher() {
           <Plus className="size-3.5" />
           New workspace
         </Button>
+        <label
+          className={cn(
+            "flex w-full cursor-pointer items-center gap-2 rounded-md px-3 py-1.5 text-xs font-medium",
+            "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+          )}
+        >
+          <input
+            type="file"
+            accept=".json,.session.json,application/json"
+            onChange={handleImportBundle}
+            className="sr-only"
+            aria-label="Import session bundle file"
+          />
+          <FileUp className="size-3.5" />
+          Import session bundle…
+        </label>
+        {importError && (
+          <p
+            role="alert"
+            className="mx-1 mt-1 rounded-md bg-destructive/10 px-2 py-1.5 text-[11px] text-destructive"
+          >
+            {importError}
+          </p>
+        )}
       </PopoverContent>
     </Popover>
   );

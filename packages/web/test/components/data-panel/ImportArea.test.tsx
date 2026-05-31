@@ -51,4 +51,10 @@ describe("ImportArea", () => {
     render(<ImportArea onRecords={onRecords} onNeedsPicker={onNeedsPicker} />);
     expect(screen.getByRole("button", { name: /^import$/i })).toBeDisabled();
   });
+
+  // PR BB — bundle import moved out; ImportArea is records-only now.
+  it("BB-I1: ImportArea no longer exposes the session-bundle import", () => {
+    render(<ImportArea onRecords={onRecords} onNeedsPicker={onNeedsPicker} />);
+    expect(screen.queryByLabelText(/import session/i)).toBeNull();
+  });
 });
