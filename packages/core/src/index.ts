@@ -16,8 +16,8 @@ export { proposeIdentityKey } from "./identity/propose";
 // Identity
 export type { IdentityConfig, IdentityProposal } from "./identity/types";
 // Inference
-export type { InferOptions } from "./infer";
-export { INFER_OPTION_DEFAULTS, infer } from "./infer";
+export type { InferOptions, ResolvedInferOptions } from "./infer";
+export { infer, resolveOptions } from "./infer";
 // Paths
 export { getNodeAt, setNodeAt } from "./ir/paths";
 // Structural validity
