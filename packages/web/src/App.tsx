@@ -29,7 +29,9 @@ export function App() {
       <UIShellProvider>
         <div className="flex h-screen flex-col bg-background text-foreground">
           <AppHeader />
-          <StorageBanner />
+          {/* Storage banner only when there's actual workspace state at risk.
+              On a fresh workspace the warning is noise — nothing to lose yet. */}
+          {!isFresh && <StorageBanner />}
           <main className="flex min-h-0 flex-1 flex-col">
             {isFresh ? (
               <WelcomeView />
