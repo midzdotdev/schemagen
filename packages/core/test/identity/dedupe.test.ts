@@ -153,7 +153,6 @@ describe("dedupeByIdentity", () => {
       { id: "b", v: 2 },
     ]);
   });
-
 });
 
 describe("dedupeByteIdentical", () => {

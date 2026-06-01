@@ -75,7 +75,8 @@ export function ExportModal({ open, onOpenChange }: ExportModalProps) {
         <DialogHeader>
           <DialogTitle>Export</DialogTitle>
           <DialogDescription>
-            Download the schema for downstream tools, or the full workspace bundle to move workspaces.
+            Download the schema for downstream tools, or the full workspace bundle to move
+            workspaces.
           </DialogDescription>
         </DialogHeader>
         <Tabs defaultValue="schema">

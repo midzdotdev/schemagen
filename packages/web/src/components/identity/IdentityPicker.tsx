@@ -83,10 +83,7 @@ export function IdentityPicker({
             <span className="text-[11px] text-muted-foreground">
               Composite uniqueness:{" "}
               <span
-                className={cn(
-                  "font-medium",
-                  composite >= 0.95 ? "text-success" : "text-warning",
-                )}
+                className={cn("font-medium", composite >= 0.95 ? "text-success" : "text-warning")}
               >
                 {(composite * 100).toFixed(0)}%
               </span>
@@ -160,8 +157,8 @@ export function IdentityPicker({
           </ul>
         )}
         <p className="text-[11px] text-muted-foreground">
-          Toggle one field for a simple key, or several for a composite key (uniqueness of the
-          tuple is shown above).
+          Toggle one field for a simple key, or several for a composite key (uniqueness of the tuple
+          is shown above).
         </p>
         <p className="rounded-md border border-dashed border-border bg-muted/30 px-2 py-1.5 text-[11px] text-muted-foreground">
           Either way, schemagen always collapses records that are byte-identical (same fields and

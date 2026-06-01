@@ -84,9 +84,7 @@ describe("RecordsSidebar — filter chip", () => {
     const user = userEvent.setup();
     act(() => {
       useStore.getState().setRecords([{ x: 1 }, { x: 2 }]);
-      useStore
-        .getState()
-        .setRecordsFilter({ path: "x", predicate: "= 1", indices: [0] });
+      useStore.getState().setRecordsFilter({ path: "x", predicate: "= 1", indices: [0] });
     });
     renderSidebar({ collapsed: false });
     await user.click(screen.getByRole("button", { name: /clear records filter/i }));
@@ -96,9 +94,7 @@ describe("RecordsSidebar — filter chip", () => {
   it("header description switches to 'Showing X of Y' when filter active", () => {
     act(() => {
       useStore.getState().setRecords([{ x: 1 }, { x: 2 }, { x: 3 }]);
-      useStore
-        .getState()
-        .setRecordsFilter({ path: "x", predicate: "= 1", indices: [0] });
+      useStore.getState().setRecordsFilter({ path: "x", predicate: "= 1", indices: [0] });
     });
     renderSidebar({ collapsed: false });
     expect(screen.getByText(/showing 1 of 3/i)).toBeInTheDocument();

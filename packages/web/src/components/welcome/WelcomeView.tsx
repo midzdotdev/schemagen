@@ -21,8 +21,8 @@ import {
 } from "lucide-react";
 import { type ChangeEvent, useState } from "react";
 import { shouldRenameWorkspace, workspaceNameFromFile } from "@/lib/filename";
-import { ingestAsync } from "@/lib/ingest-async";
 import { ingestText } from "@/lib/import-pipeline";
+import { ingestAsync } from "@/lib/ingest-async";
 import type { PickerCandidate } from "@/lib/root-picker";
 import { parseWorkspaceBundle } from "@/lib/workspace-bundle";
 import { loadWorkspaceBundle } from "@/state/init";
@@ -209,8 +209,8 @@ export function WelcomeView() {
               Welcome to your workspace
             </h1>
             <p className="text-sm text-muted-foreground">
-              Schemagen infers a JSON schema from a sample of your data, then lets you refine it
-              by hand. Start by giving it some records.
+              Schemagen infers a JSON schema from a sample of your data, then lets you refine it by
+              hand. Start by giving it some records.
             </p>
           </header>
 
@@ -308,9 +308,7 @@ export function WelcomeView() {
             <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-border bg-card/40 p-3 transition-colors hover:border-ring/50 hover:bg-accent/40">
               <FileUp className="size-5 text-muted-foreground" aria-hidden />
               <span className="flex-1 text-sm">
-                <span className="block font-medium text-foreground">
-                  Import a workspace bundle
-                </span>
+                <span className="block font-medium text-foreground">Import a workspace bundle</span>
                 <span className="block text-[11px] text-muted-foreground">
                   A <code className="font-mono">.workspace.json</code> exported from schemagen —
                   restores records, schema edits, history, and identity config.
