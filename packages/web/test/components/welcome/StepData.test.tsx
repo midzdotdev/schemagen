@@ -14,9 +14,7 @@ describe("StepData", () => {
   // Plan § "Step 1 — Your data" — record count + top-level shape stat card
   it("HH-D1: renders the record count and top-level shape", () => {
     act(() => {
-      useStore
-        .getState()
-        .setRecords([{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }, { id: 5 }]);
+      useStore.getState().setRecords([{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }, { id: 5 }]);
     });
     render(<StepData onContinue={() => {}} />);
     expect(screen.getByText(/5 records/i)).toBeInTheDocument();
