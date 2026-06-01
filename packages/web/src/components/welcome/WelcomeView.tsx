@@ -85,6 +85,7 @@ export function WelcomeView() {
   const inferenceOptions = useStore((s) => s.inferenceOptions);
   const workspaceName = useStore((s) => s.workspaceName);
   const setWorkspaceName = useStore((s) => s.setWorkspaceName);
+  const setPendingImport = useStore((s) => s.setPendingImport);
 
   const [pasteText, setPasteText] = useState("");
   const [importError, setImportError] = useState<string | null>(null);
@@ -144,6 +145,9 @@ export function WelcomeView() {
       }
       const result = ingestText(text, onRecords, handleNeedsPicker);
       if (!result.ok) throw new Error(result.error ?? "could not import");
+      if (result.parsed !== undefined && result.candidates) {
+        setPendingImport({ parsed: result.parsed, candidates: result.candidates });
+      }
     } catch (e) {
       setImportError(e instanceof Error ? e.message : "failed to load sample");
     } finally {
@@ -158,6 +162,9 @@ export function WelcomeView() {
       setImportError(result.error ?? "could not import");
       return;
     }
+    if (result.parsed !== undefined && result.candidates) {
+      setPendingImport({ parsed: result.parsed, candidates: result.candidates });
+    }
     setPasteText("");
   }
 
@@ -170,7 +177,13 @@ export function WelcomeView() {
     }
     void file.text().then((text) => {
       const result = ingestText(text, onRecords, handleNeedsPicker);
-      if (!result.ok) setImportError(result.error ?? "could not import");
+      if (!result.ok) {
+        setImportError(result.error ?? "could not import");
+        return;
+      }
+      if (result.parsed !== undefined && result.candidates) {
+        setPendingImport({ parsed: result.parsed, candidates: result.candidates });
+      }
     });
   }
 

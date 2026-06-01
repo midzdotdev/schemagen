@@ -8,6 +8,7 @@ import type {
   IR,
   Path,
 } from "@schemagen/core";
+import type { PickerCandidate } from "@/lib/root-picker";
 
 export type HistorySource = "manual" | "suggestion" | "inferred";
 
@@ -51,6 +52,16 @@ export interface AppState {
   recordsFilter: RecordsFilter | null;
   // Z: workspace-scoped overrides for cold-start inference. Inert once `ir` is set.
   inferenceOptions: InferOptions | null;
+  // The most recent successfully-parsed import payload + its candidate roots.
+  // Lets the wizard's Step 1 surface a "Pick a different root path" affordance
+  // when the original parse had multiple candidate arrays. Cleared on
+  // inferSchema() / resetWorkspace() — irrelevant once an IR exists.
+  pendingImport: PendingImport | null;
+}
+
+export interface PendingImport {
+  parsed: unknown;
+  candidates: PickerCandidate[];
 }
 
 export interface ApplyChangeOptions {

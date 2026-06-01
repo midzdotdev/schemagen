@@ -22,15 +22,16 @@ describe("StepData", () => {
     expect(screen.getByText(/array of 5 objects/i)).toBeInTheDocument();
   });
 
-  // Plan § "Resolved interpretations #2" — first record collapsed by default
-  it("HH-D2: first-record <details> element is closed by default", () => {
+  // First record is shown unconditionally with a height cap + scroll —
+  // users have asked for it always-visible to skip the click.
+  it("HH-D2: first record is rendered (height-capped, scrollable)", () => {
     act(() => {
       useStore.getState().setRecords([{ id: 1, title: "Hi" }]);
     });
     render(<StepData onContinue={() => {}} />);
-    const details = screen.getByText(/^first record$/i).closest("details");
-    expect(details).not.toBeNull();
-    expect(details?.hasAttribute("open")).toBe(false);
+    // Label + JsonView region both present.
+    expect(screen.getByText(/^first record$/i)).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: /first record/i })).toBeInTheDocument();
   });
 
   // Plan § "Step 1 — Your data" — field-stats peek
@@ -43,8 +44,10 @@ describe("StepData", () => {
       ]);
     });
     render(<StepData onContinue={() => {}} />);
-    expect(screen.getByText(/4 primitive fields/i)).toBeInTheDocument();
-    expect(screen.getByText(/1 compound/i)).toBeInTheDocument();
+    expect(screen.getByText(/^simple fields$/i)).toBeInTheDocument();
+    expect(screen.getByText(/^4 \(string, number, boolean\)$/i)).toBeInTheDocument();
+    expect(screen.getByText(/^nested fields$/i)).toBeInTheDocument();
+    expect(screen.getByText(/^1 \(object, array\)$/i)).toBeInTheDocument();
   });
 
   // The field breakdown is skipped when records aren't object-shaped — there
@@ -55,6 +58,36 @@ describe("StepData", () => {
     });
     render(<StepData onContinue={() => {}} />);
     expect(screen.getByText(/array of 3 strings/i)).toBeInTheDocument();
-    expect(screen.queryByText(/primitive fields/i)).toBeNull();
+    expect(screen.queryByText(/simple fields/i)).toBeNull();
+    expect(screen.queryByText(/nested fields/i)).toBeNull();
+  });
+
+  // Re-pick root affordance — only when the original parse had multiple
+  // candidate root paths (e.g. nested objects with arrays at several levels).
+  it("HH-D4: 'Pick a different root' is hidden when pendingImport has 0 or 1 candidates", () => {
+    act(() => {
+      useStore.getState().setRecords([{ id: 1 }]);
+      useStore.getState().setPendingImport({
+        parsed: [{ id: 1 }],
+        candidates: [{ path: [], recordCount: 1, preview: { id: 1 } }],
+      });
+    });
+    render(<StepData onContinue={() => {}} />);
+    expect(screen.queryByRole("button", { name: /pick a different root/i })).toBeNull();
+  });
+
+  it("HH-D5: 'Pick a different root' surfaces when pendingImport has 2+ candidates", () => {
+    act(() => {
+      useStore.getState().setRecords([{ id: 1 }]);
+      useStore.getState().setPendingImport({
+        parsed: { items: [{ id: 1 }], extras: [{ name: "x" }] },
+        candidates: [
+          { path: ["items"], recordCount: 1, preview: { id: 1 } },
+          { path: ["extras"], recordCount: 1, preview: { name: "x" } },
+        ],
+      });
+    });
+    render(<StepData onContinue={() => {}} />);
+    expect(screen.getByRole("button", { name: /pick a different root/i })).toBeInTheDocument();
   });
 });

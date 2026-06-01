@@ -14,7 +14,13 @@ import {
 } from "@schemagen/core";
 import { create } from "zustand";
 import { getClientId } from "../persistence/client-id";
-import type { ApplyChangeOptions, AppState, HistoryEntry, RecordsFilter } from "./types";
+import type {
+  ApplyChangeOptions,
+  AppState,
+  HistoryEntry,
+  PendingImport,
+  RecordsFilter,
+} from "./types";
 
 export interface StoreActions {
   setIR: (ir: IR | null) => void;
@@ -38,6 +44,9 @@ export interface StoreActions {
   setInferenceOptions: (options: InferOptions | null) => void;
   // AA: explicit cold-start infer. No-op if an IR exists or records are empty.
   inferSchema: () => void;
+  // Pending import payload — set by the import flow so the wizard can offer
+  // a "Pick a different root path" affordance. Cleared on inferSchema.
+  setPendingImport: (next: PendingImport | null) => void;
 }
 
 export type Store = AppState & StoreActions;
@@ -57,6 +66,7 @@ export const INITIAL_STATE: AppState = {
   identityProposalDismissed: false,
   recordsFilter: null,
   inferenceOptions: null,
+  pendingImport: null,
 };
 
 let nowFn: () => number = () => Date.now();
@@ -162,8 +172,11 @@ export const useStore = create<Store>((set, get) => ({
     const { ir, records, inferenceOptions } = get();
     if (ir !== null) return; // post-IR is sacred — use re-infer (PR FF) instead.
     if (records.length === 0) return;
-    set({ ir: infer(records, inferenceOptions ?? undefined) });
+    // Clear pendingImport: once an IR exists the wizard is done with it.
+    set({ ir: infer(records, inferenceOptions ?? undefined), pendingImport: null });
   },
+
+  setPendingImport: (next) => set({ pendingImport: next }),
 }));
 
 export function labelFor(change: Change): string {
