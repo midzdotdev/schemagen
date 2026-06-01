@@ -13,13 +13,11 @@ import { RecordsModal } from "../data-panel/RecordsModal";
 import { ExportModal } from "../export/ExportModal";
 import { IdentityConfigDialog } from "../identity/IdentityConfigDialog";
 import { InferenceOptionsDialog } from "../inference/InferenceOptionsDialog";
-import { ResetWorkspaceDialog } from "./ResetWorkspaceDialog";
 import { ShortcutsDialog } from "./ShortcutsDialog";
 
 export type ModalName =
   | "export"
   | "shortcuts"
-  | "reset"
   | "identity"
   | "inference-options"
   | "add-data"
@@ -73,7 +71,6 @@ export function UIShellProvider({ children }: { children: ReactNode }) {
       {children}
       <ExportModal open={current === "export"} onOpenChange={(o) => !o && closeModal()} />
       <ShortcutsDialog open={current === "shortcuts"} onOpenChange={(o) => !o && closeModal()} />
-      <ResetWorkspaceDialog open={current === "reset"} onOpenChange={(o) => !o && closeModal()} />
       <IdentityConfigDialog
         open={current === "identity"}
         onOpenChange={(o) => !o && closeModal()}
