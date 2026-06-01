@@ -21,11 +21,14 @@ export interface HistoryEntry {
   clientId: string;
 }
 
-// Active filter on the records list. Driven from the inspector / mismatch
-// panel today; the architecture supports a user-typed filter later (same
-// shape — caller computes label + indices).
+// Active filter on the records list. The chip renders `path` in monospace
+// (the field path is code-like) and `predicate` in regular weight (it reads
+// as English: "is present", "= 42", "matches /^abc/"). Together they answer
+// "which records am I looking at?". Driven from the inspector / mismatch
+// panel today; same shape supports a user-typed filter later.
 export interface RecordsFilter {
-  label: string;
+  path: string;
+  predicate: string;
   indices: number[];
 }
 
