@@ -44,10 +44,7 @@ export function IdentitySuggestion() {
           </button>
         </div>
         <div className="mt-2 flex items-center gap-1.5">
-          <Button
-            size="xs"
-            onClick={() => setIdentityConfig({ fields: proposal.fields, onDuplicate: "replace" })}
-          >
+          <Button size="xs" onClick={() => setIdentityConfig({ fields: proposal.fields })}>
             Use {fieldsLabel}
           </Button>
           <Button size="xs" variant="ghost" onClick={() => setPickerOpen(true)}>

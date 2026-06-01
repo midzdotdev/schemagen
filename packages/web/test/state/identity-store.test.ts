@@ -25,19 +25,17 @@ describe("identity store slices", () => {
     ]);
     const { droppedCount } = useStore.getState().setIdentityConfig({
       fields: [["id"]],
-      onDuplicate: "replace",
     });
     expect(droppedCount).toBe(1);
     expect(useStore.getState().records).toHaveLength(2);
     expect(useStore.getState().identityConfig).toEqual({
       fields: [["id"]],
-      onDuplicate: "replace",
     });
   });
 
   // Spec: docs/frontend-spec.md § "Identity-key suggestion"
   it("X2-S3: setIdentityConfig(null) clears config without dedup", () => {
-    useStore.getState().setIdentityConfig({ fields: [["id"]], onDuplicate: "replace" });
+    useStore.getState().setIdentityConfig({ fields: [["id"]] });
     useStore.getState().setIdentityConfig(null);
     expect(useStore.getState().identityConfig).toBeNull();
   });
@@ -48,13 +46,14 @@ describe("identity store slices", () => {
     expect(useStore.getState().identityProposalDismissed).toBe(true);
   });
 
-  // Spec: docs/frontend-spec.md § "Identity-key suggestion"
-  it("X2-S5: dedup under 'skip' keeps the first occurrence", () => {
+  // Spec: docs/frontend-spec.md § "Identity-key suggestion" — newest per
+  // identity wins (single dedup mode after dropping 'skip').
+  it("X2-S5: dedup keeps the newest occurrence per identity", () => {
     useStore.getState().setRecords([
       { id: 1, v: "first" },
       { id: 1, v: "second" },
     ]);
-    useStore.getState().setIdentityConfig({ fields: [["id"]], onDuplicate: "skip" });
-    expect(useStore.getState().records).toEqual([{ id: 1, v: "first" }]);
+    useStore.getState().setIdentityConfig({ fields: [["id"]] });
+    expect(useStore.getState().records).toEqual([{ id: 1, v: "second" }]);
   });
 });

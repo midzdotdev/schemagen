@@ -40,7 +40,6 @@ describe("IdentitySuggestion", () => {
     await user.click(screen.getByRole("button", { name: /^use id$/i }));
     expect(useStore.getState().identityConfig).toEqual({
       fields: [["id"]],
-      onDuplicate: "replace",
     });
   });
 
@@ -61,7 +60,7 @@ describe("IdentitySuggestion", () => {
   it("X2-B5: hides once an identity config is set", () => {
     act(() => {
       seedProposal();
-      useStore.getState().setIdentityConfig({ fields: [["id"]], onDuplicate: "replace" });
+      useStore.getState().setIdentityConfig({ fields: [["id"]] });
     });
     render(<IdentitySuggestion />);
     expect(screen.queryByLabelText(/identity-key suggestion/i)).not.toBeInTheDocument();

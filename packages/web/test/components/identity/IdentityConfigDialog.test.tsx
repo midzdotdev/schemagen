@@ -29,10 +29,7 @@ describe("IdentityConfigDialog", () => {
     render(<IdentityConfigDialog open onOpenChange={() => {}} />);
     await user.click(screen.getByRole("checkbox", { name: /\bid\b/ }));
     await user.click(screen.getByRole("button", { name: /^apply$/i }));
-    expect(useStore.getState().identityConfig).toEqual({
-      fields: [["id"]],
-      onDuplicate: "replace",
-    });
+    expect(useStore.getState().identityConfig).toEqual({ fields: [["id"]] });
   });
 
   // Spec: docs/frontend-spec.md § "Identity-key suggestion" — composite key
@@ -52,23 +49,12 @@ describe("IdentityConfigDialog", () => {
     expect(fields?.flat().sort()).toEqual(["lineId", "status"]);
   });
 
-  // Spec: docs/frontend-spec.md § "Identity-key suggestion" — switching modes
-  it("X2-D3: switching to skip is applied", async () => {
-    const user = userEvent.setup();
-    seedRecords();
-    render(<IdentityConfigDialog open onOpenChange={() => {}} />);
-    await user.click(screen.getByRole("checkbox", { name: /\bid\b/ }));
-    await user.click(screen.getByLabelText(/skip/i));
-    await user.click(screen.getByRole("button", { name: /^apply$/i }));
-    expect(useStore.getState().identityConfig?.onDuplicate).toBe("skip");
-  });
-
   // PR CC — button rename ("Clear" reads like "reset to default"; "Remove" is unambiguous).
   it("X2-D4 (CC): Remove identity key clears the current config", async () => {
     const user = userEvent.setup();
     seedRecords();
     act(() => {
-      useStore.getState().setIdentityConfig({ fields: [["id"]], onDuplicate: "replace" });
+      useStore.getState().setIdentityConfig({ fields: [["id"]] });
     });
     render(<IdentityConfigDialog open onOpenChange={() => {}} />);
     await user.click(screen.getByRole("button", { name: /remove identity key/i }));

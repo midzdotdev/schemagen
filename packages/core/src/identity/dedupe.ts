@@ -16,8 +16,8 @@ export interface DedupeResult {
 // (sorts keys), giving each record a canonical hash.
 //
 // Use this as the dedup floor when there is no identity config; identity
-// config (replace / skip) already subsumes this behaviour via its key-based
-// dedup, so callers don't need to run both.
+// config already subsumes this behaviour via its key-based dedup, so callers
+// don't need to run both.
 export function dedupeByteIdentical(samples: unknown[]): DedupeResult {
   const kept: unknown[] = [];
   const dropped: { record: unknown; reason: DropReason }[] = [];
@@ -34,6 +34,9 @@ export function dedupeByteIdentical(samples: unknown[]): DedupeResult {
   return { kept, dropped };
 }
 
+// Dedup by identity key. Newest occurrence wins per identity — the later
+// record overwrites the earlier one at the same key. Records missing all of
+// the identity fields are kept verbatim (the identity has nothing to compare).
 export function dedupeByIdentity(samples: unknown[], config: IdentityConfig): DedupeResult {
   const kept: unknown[] = [];
   const dropped: { record: unknown; reason: DropReason }[] = [];
@@ -53,14 +56,9 @@ export function dedupeByIdentity(samples: unknown[], config: IdentityConfig): De
       continue;
     }
 
-    if (config.onDuplicate === "replace") {
-      const replaced = kept[existingIdx];
-      kept[existingIdx] = s;
-      dropped.push({ record: replaced, reason: "duplicate-identity" });
-    } else {
-      // skip
-      dropped.push({ record: s, reason: "duplicate-identity" });
-    }
+    const replaced = kept[existingIdx];
+    kept[existingIdx] = s;
+    dropped.push({ record: replaced, reason: "duplicate-identity" });
   }
 
   return { kept, dropped };
