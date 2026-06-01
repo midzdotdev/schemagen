@@ -1,4 +1,4 @@
-// dedupeByIdentity. See docs/core-spec.md § "`dedupeByIdentity`".
+// dedupeByIdentity / dedupeByteIdentical. See docs/core-spec.md § "Identity".
 
 import stringify from "safe-stable-stringify";
 import type { Path } from "../ir/types";
@@ -11,27 +11,30 @@ export interface DedupeResult {
   dropped: { record: unknown; reason: DropReason }[];
 }
 
-export function dedupeByIdentity(samples: unknown[], config: IdentityConfig): DedupeResult {
-  if (config.onDuplicate === "keep-all") {
-    // No logical (identity-key) dedup, but canonical byte-dedup still applies: records that are
-    // value-identical (equal up to object key order) collapse to their first occurrence.
-    // safe-stable-stringify is deterministic (sorts keys), giving each record a canonical hash.
-    // See docs/core-spec.md § "Identity".
-    const kept: unknown[] = [];
-    const dropped: { record: unknown; reason: DropReason }[] = [];
-    const seen = new Set<string>();
-    for (const s of samples) {
-      const hash = stringify(s) ?? "undefined";
-      if (seen.has(hash)) {
-        dropped.push({ record: s, reason: "duplicate-record" });
-        continue;
-      }
-      seen.add(hash);
-      kept.push(s);
+// Collapses records that are value-identical (equal up to object key order)
+// into their first occurrence. safe-stable-stringify is deterministic
+// (sorts keys), giving each record a canonical hash.
+//
+// Use this as the dedup floor when there is no identity config; identity
+// config (replace / skip) already subsumes this behaviour via its key-based
+// dedup, so callers don't need to run both.
+export function dedupeByteIdentical(samples: unknown[]): DedupeResult {
+  const kept: unknown[] = [];
+  const dropped: { record: unknown; reason: DropReason }[] = [];
+  const seen = new Set<string>();
+  for (const s of samples) {
+    const hash = stringify(s) ?? "undefined";
+    if (seen.has(hash)) {
+      dropped.push({ record: s, reason: "duplicate-record" });
+      continue;
     }
-    return { kept, dropped };
+    seen.add(hash);
+    kept.push(s);
   }
+  return { kept, dropped };
+}
 
+export function dedupeByIdentity(samples: unknown[], config: IdentityConfig): DedupeResult {
   const kept: unknown[] = [];
   const dropped: { record: unknown; reason: DropReason }[] = [];
   const seenKeyToIndex = new Map<string, number>();

@@ -4,10 +4,13 @@
 // makes the rules testable in isolation and keeps the component focused on UI.
 //
 // Rules, in order:
-//   1. Concat existing + new, byte-dedup by canonicalHash (same record never
-//      counted twice no matter how many times it's imported).
-//   2. If an identityConfig is set, run dedupeByIdentity (logical dedup) over
-//      the merged set; keep only the survivors.
+//   1. Concat existing + new.
+//   2. Dedup the merged set:
+//      - If an identityConfig is set, run dedupeByIdentity. (No byte-dedup
+//        on top — identity-key dedup already collapses byte-identical
+//        records via their shared key.)
+//      - Otherwise, run dedupeByteIdentical so a re-import of the same
+//        payload doesn't pile up.
 //   3. Preserve the existing IR if there is one. PR AA stops auto-infer on
 //      cold-start — the user calls `inferSchema()` explicitly after reviewing
 //      records and any inference-option overrides.
@@ -16,8 +19,7 @@
 //      whatever proposeIdentityKey returns (null clears the banner).
 
 import type { IdentityConfig, IdentityProposal, InferOptions, IR } from "@schemagen/core";
-import { dedupeByIdentity, proposeIdentityKey } from "@schemagen/core";
-import { canonicalHash } from "./canonical-hash";
+import { dedupeByIdentity, dedupeByteIdentical, proposeIdentityKey } from "@schemagen/core";
 
 export interface IngestState {
   records: unknown[];
@@ -39,10 +41,10 @@ export interface IngestResult {
 }
 
 export function ingestRecords(state: IngestState, incoming: unknown[]): IngestResult {
-  const merged = byteDedup([...state.records, ...incoming]);
+  const merged = [...state.records, ...incoming];
   const records = state.identityConfig
     ? dedupeByIdentity(merged, state.identityConfig).kept
-    : merged;
+    : dedupeByteIdentical(merged).kept;
 
   const ir = state.ir;
 
@@ -52,16 +54,4 @@ export function ingestRecords(state: IngestState, incoming: unknown[]): IngestRe
       : undefined;
 
   return { records, ir, identityProposal };
-}
-
-function byteDedup(records: unknown[]): unknown[] {
-  const seen = new Set<string>();
-  const out: unknown[] = [];
-  for (const r of records) {
-    const h = canonicalHash(r);
-    if (seen.has(h)) continue;
-    seen.add(h);
-    out.push(r);
-  }
-  return out;
 }

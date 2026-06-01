@@ -11,7 +11,7 @@ export { emit } from "./emit/json-schema";
 export type { EvidenceTree, FieldEvidence, RecordRef } from "./evidence";
 export { computeEvidence } from "./evidence";
 export { findExamples } from "./evidence/examples";
-export { dedupeByIdentity } from "./identity/dedupe";
+export { dedupeByIdentity, dedupeByteIdentical } from "./identity/dedupe";
 export { proposeIdentityKey } from "./identity/propose";
 // Identity
 export type { IdentityConfig, IdentityProposal } from "./identity/types";

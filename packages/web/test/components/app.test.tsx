@@ -19,8 +19,13 @@ describe("App", () => {
     expect(screen.getByRole("heading", { name: /schemagen/i })).toBeInTheDocument();
   });
 
-  // PR EE — pre-IR shows all three regions; post-IR drops the data pane.
-  it("W0-2: pre-IR renders the three top-level regions", () => {
+  // PR EE — pre-IR (with records imported) shows all three regions; post-IR
+  // drops the data pane. A workspace that is truly fresh (no records, no IR)
+  // shows the welcome view and is covered separately.
+  it("W0-2: pre-IR with records renders the three top-level regions", () => {
+    act(() => {
+      useStore.getState().setRecords([{ id: 1 }]);
+    });
     render(<App />);
     expect(screen.getByRole("region", { name: /data/i })).toBeInTheDocument();
     expect(screen.getByRole("region", { name: /schema/i })).toBeInTheDocument();

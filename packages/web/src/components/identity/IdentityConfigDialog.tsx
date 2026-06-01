@@ -32,12 +32,6 @@ const MODES: { value: IdentityConfig["onDuplicate"]; label: string; description:
     label: "Skip",
     description: "First occurrence wins. Useful when you want to lock in the original version.",
   },
-  {
-    value: "keep-all",
-    label: "Keep all",
-    description:
-      "No logical dedup. Useful when entities mutate and the schema should see every version.",
-  },
 ];
 
 export function IdentityConfigDialog({

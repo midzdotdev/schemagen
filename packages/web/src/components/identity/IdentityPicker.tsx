@@ -42,12 +42,6 @@ export const ON_DUPLICATE_MODES: {
     label: "Skip",
     description: "First occurrence wins. Useful when you want to lock in the original version.",
   },
-  {
-    value: "keep-all",
-    label: "Keep all",
-    description:
-      "No logical dedup. Useful when entities mutate and the schema should see every version.",
-  },
 ];
 
 export function IdentityPicker({
@@ -168,6 +162,10 @@ export function IdentityPicker({
         <p className="text-[11px] text-muted-foreground">
           Toggle one field for a simple key, or several for a composite key (uniqueness of the
           tuple is shown above).
+        </p>
+        <p className="rounded-md border border-dashed border-border bg-muted/30 px-2 py-1.5 text-[11px] text-muted-foreground">
+          Either way, schemagen always collapses records that are byte-identical (same fields and
+          values, regardless of key order) — re-imports of the same payload won't pile up.
         </p>
       </div>
       <fieldset className="flex flex-col gap-1.5">

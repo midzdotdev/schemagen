@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { dedupeByIdentity } from "../../src/identity/dedupe";
+import { dedupeByIdentity, dedupeByteIdentical } from "../../src/identity/dedupe";
 import type { IdentityConfig } from "../../src/identity/types";
 
 describe("dedupeByIdentity", () => {
@@ -49,20 +49,6 @@ describe("dedupeByIdentity", () => {
       { id: "a", v: 3 },
       { id: "b", v: 2 },
     ]);
-  });
-
-  // Spec: docs/core-spec.md § "`dedupeByIdentity`" — `keep-all`
-  it("I_D3: onDuplicate:'keep-all' — kept returns all records, dropped is empty", () => {
-    const samples = [
-      { id: "a", v: 1 },
-      { id: "a", v: 2 },
-      { id: "b", v: 1 },
-    ];
-    const config: IdentityConfig = { fields: [["id"]], onDuplicate: "keep-all" };
-    const result = dedupeByIdentity(samples, config);
-
-    expect(result.kept).toEqual(samples);
-    expect(result.dropped).toEqual([]);
   });
 
   // Spec: docs/core-spec.md § "IdentityConfig" — `fields: Path[]`
@@ -119,7 +105,7 @@ describe("dedupeByIdentity", () => {
   });
 
   // Spec: docs/core-spec.md § "`dedupeByIdentity`" — "order-sensitive"
-  it("I_D7: reversing input changes kept under replace/skip but not under keep-all", () => {
+  it("I_D7: reversing input changes kept under replace/skip", () => {
     const samples = [
       { id: "a", v: 1 },
       { id: "a", v: 2 },
@@ -141,17 +127,6 @@ describe("dedupeByIdentity", () => {
     expect(replaceForward.kept).toEqual([{ id: "a", v: 3 }]);
     expect(replaceReversed.kept).toEqual([{ id: "a", v: 1 }]);
     expect(replaceForward.kept).not.toEqual(replaceReversed.kept);
-
-    const keepAllForward = dedupeByIdentity(samples, { fields: [["id"]], onDuplicate: "keep-all" });
-    const keepAllReversed = dedupeByIdentity(reversed, {
-      fields: [["id"]],
-      onDuplicate: "keep-all",
-    });
-    // Same set of records, different orders — but each call's kept equals its input order.
-    expect(keepAllForward.kept).toEqual(samples);
-    expect(keepAllReversed.kept).toEqual(reversed);
-    // Logically (as multisets), kept is unchanged under keep-all.
-    expect(keepAllForward.kept.slice().reverse()).toEqual(keepAllReversed.kept);
   });
 
   // Spec: docs/core-spec.md § "Module surface" — determinism
@@ -179,19 +154,20 @@ describe("dedupeByIdentity", () => {
     ]);
   });
 
-  // Spec: docs/core-spec.md § "Identity" — records are byte-deduped by canonical-stringification
-  // ("non-optional"), and under keep-all "canonical-hash dedup still applies". Byte-identical
-  // records (equal up to object key order) collapse; records merely sharing an identity key do not.
-  it("I_D9: keep-all still removes canonically-identical records", () => {
+});
+
+describe("dedupeByteIdentical", () => {
+  // Spec: docs/core-spec.md § "Identity" — byte-dedup is the floor when no
+  // identity config is set. Records canonically equal (sorted-key) collapse.
+  it("I_B1: removes canonically-identical records", () => {
     const samples = [
       { id: "a", v: 1 },
       { id: "a", v: 1 }, // exact duplicate of the first
       { v: 1, id: "a" }, // same value, different key order → canonical duplicate
-      { id: "a", v: 2 }, // same identity key but different content → kept under keep-all
+      { id: "a", v: 2 }, // different content → kept
       { id: "b", v: 2 },
     ];
-    const config: IdentityConfig = { fields: [["id"]], onDuplicate: "keep-all" };
-    const result = dedupeByIdentity(samples, config);
+    const result = dedupeByteIdentical(samples);
 
     expect(result.kept).toEqual([
       { id: "a", v: 1 },
@@ -200,5 +176,13 @@ describe("dedupeByIdentity", () => {
     ]);
     expect(result.dropped).toHaveLength(2);
     expect(result.dropped.every((d) => d.reason === "duplicate-record")).toBe(true);
+  });
+
+  it("I_B2: pure / deterministic — repeated runs produce equal output", () => {
+    const samples = [{ a: 1 }, { b: 2 }, { a: 1 }];
+    const r1 = dedupeByteIdentical(samples);
+    const r2 = dedupeByteIdentical(samples);
+    expect(r1).toEqual(r2);
+    expect(samples).toEqual([{ a: 1 }, { b: 2 }, { a: 1 }]);
   });
 });
