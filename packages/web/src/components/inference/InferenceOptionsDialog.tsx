@@ -360,6 +360,7 @@ function Section({
   children: ReactNode;
 }) {
   return (
+    // biome-ignore lint/a11y/useSemanticElements: <fieldset>+<legend> would render the title overlapping the border; this card layout needs the header to flow as a block child
     <div
       role="group"
       aria-label={title}
