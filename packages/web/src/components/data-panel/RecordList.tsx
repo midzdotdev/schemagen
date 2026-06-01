@@ -38,7 +38,7 @@ export function RecordList({ records }: RecordListProps) {
   if (visible.length === 0) {
     return (
       <p className="px-3 py-4 text-xs text-muted-foreground">
-        {filter ? "No records match this filter." : "No records in this workspace."}
+        {filter ? "No records in this filter." : "No records in this workspace."}
       </p>
     );
   }
