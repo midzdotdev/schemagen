@@ -34,6 +34,7 @@ Locked in based on the user's feedback so far. Anything called out here is a dev
 5. **Skip-wizard = fast-forward.** A single "Skip" action at any step calls `inferSchema()` with whatever the current state is (identity if confirmed, default inference options) and lands the user in the main view. Not "drop to 3-pane cold-start" — that just defers the same decision.
 6. **`wizardCompleted` is UI state, not workspace data.** Stored in `UIPrefs` localStorage (per-workspace key), not Dexie meta. Worst case after a `localStorage.clear()` is that the user sees the wizard once more — fine.
 7. **No "Back to welcome" affordance for now.** Each step has `Back` (prev step) and `Continue` (next step). To return to the welcome state, the user can delete the workspace from the switcher. Adding "Back to welcome" needs `clearRecords` mechanics we don't have.
+8. **`keep-all` identity mode is gone; byte-dedup is the floor whenever there's no identity config.** The previous `keep-all` mode was "no logical dedup, byte-dedup only" — functionally equivalent to "no identity key" once byte-dedup runs unconditionally on the no-identity path. Dropping it simplifies the on-duplicate radio from three options to two (Replace / Skip). The IdentityPicker also surfaces a small reassurance: "Either way, schemagen always collapses records that are byte-identical (same fields and values, regardless of key order) — re-imports of the same payload won't pile up." Implemented ahead of the wizard so the dialog already reflects the simplified model.
 
 ## Step-by-step content
 

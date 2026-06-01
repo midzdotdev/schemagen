@@ -58,17 +58,4 @@ describe("identity store slices", () => {
     expect(useStore.getState().records).toEqual([{ id: 1, v: "first" }]);
   });
 
-  // Spec: docs/frontend-spec.md § "Identity-key suggestion"
-  it("X2-S6: keep-all preserves both versions", () => {
-    useStore.getState().setRecords([
-      { id: 1, v: "first" },
-      { id: 1, v: "second" },
-    ]);
-    const { droppedCount } = useStore.getState().setIdentityConfig({
-      fields: [["id"]],
-      onDuplicate: "keep-all",
-    });
-    expect(droppedCount).toBe(0);
-    expect(useStore.getState().records).toHaveLength(2);
-  });
 });

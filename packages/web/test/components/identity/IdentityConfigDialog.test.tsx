@@ -52,15 +52,15 @@ describe("IdentityConfigDialog", () => {
     expect(fields?.flat().sort()).toEqual(["lineId", "status"]);
   });
 
-  // Spec: docs/frontend-spec.md § "Identity-key suggestion" — replace vs keep-all
-  it("X2-D3: switching to keep-all is applied", async () => {
+  // Spec: docs/frontend-spec.md § "Identity-key suggestion" — switching modes
+  it("X2-D3: switching to skip is applied", async () => {
     const user = userEvent.setup();
     seedRecords();
     render(<IdentityConfigDialog open onOpenChange={() => {}} />);
     await user.click(screen.getByRole("checkbox", { name: /\bid\b/ }));
-    await user.click(screen.getByLabelText(/keep all/i));
+    await user.click(screen.getByLabelText(/skip/i));
     await user.click(screen.getByRole("button", { name: /^apply$/i }));
-    expect(useStore.getState().identityConfig?.onDuplicate).toBe("keep-all");
+    expect(useStore.getState().identityConfig?.onDuplicate).toBe("skip");
   });
 
   // PR CC — button rename ("Clear" reads like "reset to default"; "Remove" is unambiguous).
