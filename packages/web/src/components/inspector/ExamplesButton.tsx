@@ -31,7 +31,9 @@ export function ExamplesButton({
       variant="ghost"
       className="text-muted-foreground"
       onClick={() => {
-        const refs = findExamples(ir, records, selectedPath, predicate, 20);
+        // Highlight every matching record — the records sidebar renders them
+        // virtualised, so the old 20-item cap no longer earns its keep.
+        const refs = findExamples(ir, records, selectedPath, predicate, records.length);
         setSelectedRecordIndices(refs.map((r) => r.index));
       }}
     >

@@ -27,7 +27,7 @@ export function MismatchEntry({ mismatch }: MismatchEntryProps) {
       records,
       mismatch.path,
       (v) => Object.is(v, target) || (target !== undefined && v === target),
-      20,
+      records.length,
     );
     setSelectedRecordIndices(refs.map((r) => r.index));
   }
