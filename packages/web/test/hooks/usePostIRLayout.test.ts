@@ -1,6 +1,6 @@
 // Persistence + validation for the post-IR three-pane layout hook.
 
-import { renderHook, act } from "@testing-library/react";
+import { act, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { DEFAULT_POST_IR_LAYOUT, usePostIRLayout } from "@/hooks/usePostIRLayout";
 
