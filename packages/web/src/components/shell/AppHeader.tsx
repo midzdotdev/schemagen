@@ -5,7 +5,6 @@ import {
   Keyboard,
   KeyRound,
   Redo2,
-  RotateCcw,
   Sliders,
   Undo2,
 } from "lucide-react";
@@ -19,7 +18,6 @@ import { WorkspaceNameField } from "./WorkspaceNameField";
 import { WorkspaceSwitcher } from "./WorkspaceSwitcher";
 
 export function AppHeader() {
-  const records = useStore((s) => s.records);
   const ir = useStore((s) => s.ir);
   const entries = useStore((s) => s.history.entries);
   const cursor = useStore((s) => s.history.cursor);
@@ -29,7 +27,6 @@ export function AppHeader() {
 
   const canUndo = cursor > 0;
   const canRedo = cursor < entries.length;
-  const hasWorkspace = ir !== null || records.length > 0;
 
   return (
     <header className="flex h-12 shrink-0 items-center gap-3 border-b border-border bg-background px-4">
@@ -111,21 +108,6 @@ export function AppHeader() {
             </Button>
           </TooltipTrigger>
           <TooltipContent>Inference options</TooltipContent>
-        </Tooltip>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              size="icon"
-              variant="ghost"
-              className="size-8"
-              aria-label="Reset workspace"
-              disabled={!hasWorkspace}
-              onClick={() => openModal("reset")}
-            >
-              <RotateCcw className="size-3.5" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>Reset workspace</TooltipContent>
         </Tooltip>
         <Tooltip>
           <TooltipTrigger asChild>
