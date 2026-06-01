@@ -15,7 +15,8 @@ export interface ExamplesButtonProps {
   // Predicate description shown in the records-filter chip beside the path.
   // Defaults to "is present" to explain the no-predicate ("has this field")
   // case. Pass an English phrase when supplying a predicate function — e.g.
-  // 'matches format "email"'.
+  // 'is an email', '= 42', 'satisfies /^abc/'. Avoid "match/mismatch" stems
+  // here — that's reserved for schema-validation copy.
   predicateDescription?: string;
   size?: "default" | "sm" | "xs";
 }

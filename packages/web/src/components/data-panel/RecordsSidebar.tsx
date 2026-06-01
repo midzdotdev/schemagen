@@ -60,7 +60,7 @@ export function RecordsSidebar({ collapsed, onToggle }: RecordsSidebarProps) {
         icon={<Database className="size-3.5" />}
         description={
           filter
-            ? `${filteredCount.toLocaleString()} of ${count.toLocaleString()} matched`
+            ? `Showing ${filteredCount.toLocaleString()} of ${count.toLocaleString()}`
             : `${count.toLocaleString()} stored`
         }
         actions={
