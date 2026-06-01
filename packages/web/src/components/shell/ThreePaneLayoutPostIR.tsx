@@ -9,6 +9,7 @@
 
 import type { ReactNode } from "react";
 import { Group, Panel, Separator } from "react-resizable-panels";
+import { usePostIRLayout } from "@/hooks/usePostIRLayout";
 
 export interface ThreePaneLayoutPostIRProps {
   records: ReactNode;
@@ -30,10 +31,6 @@ const MIN_RECORDS = 14;
 const MIN_SCHEMA = 35;
 const MIN_INSPECTOR = 16;
 
-const DEFAULT_RECORDS = 22;
-const DEFAULT_SCHEMA = 56;
-const DEFAULT_INSPECTOR = 22;
-
 // Collapsed mode: strip is rendered by the parent (records prop's collapsed
 // branch). We use the same panel ratios as TwoPaneLayout for schema/inspector.
 const COLLAPSED_SCHEMA = 70;
@@ -45,6 +42,7 @@ export function ThreePaneLayoutPostIR({
   inspector,
   collapsed,
 }: ThreePaneLayoutPostIRProps) {
+  const [layout, setLayout] = usePostIRLayout();
   if (collapsed) {
     return (
       <div className="flex min-h-0 flex-1">
@@ -79,11 +77,8 @@ export function ThreePaneLayoutPostIR({
     <Group
       id="schemagen-postir-expanded"
       orientation="horizontal"
-      defaultLayout={{
-        records: DEFAULT_RECORDS,
-        schema: DEFAULT_SCHEMA,
-        inspector: DEFAULT_INSPECTOR,
-      }}
+      defaultLayout={layout}
+      onLayoutChanged={setLayout}
       className="flex min-h-0 flex-1"
     >
       <Panel id="records" minSize={MIN_RECORDS} className="flex min-h-0 flex-col bg-card/40">
