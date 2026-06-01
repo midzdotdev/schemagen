@@ -2,7 +2,9 @@
 // count, top-level shape, primitive/compound field breakdown, and the
 // first record under a collapsed disclosure.
 
+import { ChevronRight } from "lucide-react";
 import { useMemo } from "react";
+import { JsonView } from "@/components/ui/json-view";
 import { computeFieldStats } from "@/lib/field-stats";
 import { useStore } from "@/state/store";
 
@@ -75,14 +77,6 @@ export function StepData(_props: StepDataProps) {
   const compoundFields = stats.length - primitiveFields;
 
   const firstRecord = records[0];
-  const firstRecordJson = useMemo(() => {
-    if (firstRecord === undefined) return "";
-    try {
-      return JSON.stringify(firstRecord, null, 2);
-    } catch {
-      return "<could not stringify>";
-    }
-  }, [firstRecord]);
 
   return (
     <>
@@ -99,12 +93,20 @@ export function StepData(_props: StepDataProps) {
 
       {firstRecord !== undefined && (
         <details className="group rounded-lg border border-border bg-card/40">
-          <summary className="cursor-pointer list-none px-3 py-2 text-xs font-medium text-foreground transition-colors hover:bg-accent/40 group-open:border-b group-open:border-border">
-            Show first record
+          <summary className="flex cursor-pointer list-none items-center gap-1.5 px-3 py-2 text-xs font-medium text-foreground transition-colors hover:bg-accent/40 group-open:border-b group-open:border-border">
+            <ChevronRight
+              className="size-3.5 text-muted-foreground transition-transform group-open:rotate-90"
+              aria-hidden
+            />
+            <span>First record</span>
           </summary>
-          <pre className="max-h-96 overflow-auto bg-background px-3 py-3 font-mono text-[11px] leading-relaxed text-foreground">
-            {firstRecordJson}
-          </pre>
+          <div className="max-h-96 overflow-auto p-2">
+            <JsonView
+              value={firstRecord}
+              aria-label="First record"
+              className="rounded-md border-0 bg-transparent p-1 text-[11px]"
+            />
+          </div>
         </details>
       )}
     </>

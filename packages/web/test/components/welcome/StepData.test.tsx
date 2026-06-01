@@ -28,7 +28,7 @@ describe("StepData", () => {
       useStore.getState().setRecords([{ id: 1, title: "Hi" }]);
     });
     render(<StepData onContinue={() => {}} />);
-    const details = screen.getByText(/show first record/i).closest("details");
+    const details = screen.getByText(/^first record$/i).closest("details");
     expect(details).not.toBeNull();
     expect(details?.hasAttribute("open")).toBe(false);
   });
