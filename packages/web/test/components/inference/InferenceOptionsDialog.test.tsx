@@ -19,14 +19,14 @@ describe("InferenceOptionsDialog", () => {
       useStore.getState().setInferenceOptions({ literals: { maxCardinality: 25 } });
     });
     render(<InferenceOptionsDialog open onOpenChange={() => {}} />);
-    expect(screen.getByLabelText(/max cardinality/i)).toHaveValue(25);
+    expect(screen.getByLabelText(/maximum distinct values/i)).toHaveValue(25);
   });
 
   // Plan: § "Persistence" — Apply commits. Interpretation #2.
   it("Z-D2: Apply writes form state into the store", async () => {
     const user = userEvent.setup();
     render(<InferenceOptionsDialog open onOpenChange={() => {}} />);
-    const input = screen.getByLabelText(/max cardinality/i);
+    const input = screen.getByLabelText(/maximum distinct values/i);
     await user.clear(input);
     await user.type(input, "30");
     await user.click(screen.getByRole("button", { name: /^apply$/i }));
@@ -37,7 +37,7 @@ describe("InferenceOptionsDialog", () => {
   it("Z-D3: Cancel discards form changes; store unchanged", async () => {
     const user = userEvent.setup();
     render(<InferenceOptionsDialog open onOpenChange={() => {}} />);
-    const input = screen.getByLabelText(/max cardinality/i);
+    const input = screen.getByLabelText(/maximum distinct values/i);
     await user.clear(input);
     await user.type(input, "30");
     await user.click(screen.getByRole("button", { name: /cancel/i }));
@@ -53,7 +53,7 @@ describe("InferenceOptionsDialog", () => {
     render(<InferenceOptionsDialog open onOpenChange={() => {}} />);
     await user.click(screen.getByRole("button", { name: /reset to defaults/i }));
     expect(useStore.getState().inferenceOptions).toBeNull();
-    expect(screen.getByLabelText(/max cardinality/i)).toHaveValue(20);
+    expect(screen.getByLabelText(/maximum distinct values/i)).toHaveValue(20);
   });
 
   // Plan: § "Tests" — "Dialog shows notice + disables inputs when `ir !== null`." Interpretation #3.
@@ -63,7 +63,7 @@ describe("InferenceOptionsDialog", () => {
     });
     render(<InferenceOptionsDialog open onOpenChange={() => {}} />);
     expect(screen.getByText(/schema already exists/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/max cardinality/i)).toBeDisabled();
+    expect(screen.getByLabelText(/maximum distinct values/i)).toBeDisabled();
     expect(screen.queryByRole("button", { name: /^apply$/i })).toBeNull();
   });
 
@@ -71,8 +71,8 @@ describe("InferenceOptionsDialog", () => {
   // Collapses original catalog T18 (banner copy verbatim): the cold-start variant is checked here.
   it("Z-D6: when no IR, the cold-start helper banner is shown and inputs are enabled", () => {
     render(<InferenceOptionsDialog open onOpenChange={() => {}} />);
-    expect(screen.getByText(/tune how schemagen builds the initial schema/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/max cardinality/i)).toBeEnabled();
+    expect(screen.getByText(/apply only to a new workspace/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/maximum distinct values/i)).toBeEnabled();
   });
 
   // Plan: § "Surfaces" — "Each row shows its default value next to the input as muted text."
@@ -85,7 +85,9 @@ describe("InferenceOptionsDialog", () => {
   it("Z-D8: discriminators section has an enable toggle and no fields picker", () => {
     render(<InferenceOptionsDialog open onOpenChange={() => {}} />);
     const discSection = screen.getByRole("group", { name: /discriminators/i });
-    expect(within(discSection).getByRole("checkbox", { name: /enable/i })).toBeInTheDocument();
+    expect(
+      within(discSection).getByRole("checkbox", { name: /detect discriminators/i }),
+    ).toBeInTheDocument();
     expect(within(discSection).queryByRole("textbox")).toBeNull();
   });
 });
