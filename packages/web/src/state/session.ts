@@ -8,7 +8,7 @@
 // a process-wide singleton instance for production code while letting tests
 // construct their own.
 
-import type { SessionBundle } from "@/lib/session-bundle";
+import type { WorkspaceBundle } from "@/lib/workspace-bundle";
 import type { WorkspaceAdapter } from "@/persistence/adapter";
 import { attachPersistence } from "@/persistence/dexie-adapter";
 import type { useStore as UseStore } from "@/state/store";
@@ -58,10 +58,10 @@ export class WorkspaceSession {
     await adapter.deleteWorkspace(workspaceId);
   }
 
-  // Materialize a session bundle into a brand-new workspace and switch to it.
+  // Materialize a workspace bundle into a brand-new workspace and switch to it.
   // Bundle import is intentionally non-overwriting: it mints a fresh workspace
   // so the user's current one is untouched.
-  async loadBundle(bundle: SessionBundle): Promise<{ workspaceId: string }> {
+  async loadBundle(bundle: WorkspaceBundle): Promise<{ workspaceId: string }> {
     const adapter = this.requireAdapter("loadBundle");
     const workspace = await adapter.createWorkspace(bundle.workspaceName || "Imported session");
     if (bundle.ir !== null) await adapter.setIR(workspace.id, bundle.ir);

@@ -1,6 +1,6 @@
 import { emit } from "@schemagen/core";
 import { useState } from "react";
-import { buildSessionBundle, bundleSizeBytes } from "@/lib/session-bundle";
+import { buildWorkspaceBundle, bundleSizeBytes } from "@/lib/workspace-bundle";
 import { getClientId } from "@/persistence/client-id";
 import { useStore } from "@/state/store";
 import { Button } from "../ui/button";
@@ -40,7 +40,7 @@ export function ExportModal({ open, onOpenChange }: ExportModalProps) {
   const bundleName = workspaceName.trim() || `Workspace ${workspaceId.slice(0, 8)}`;
 
   function handleDownloadSession(): void {
-    const bundle = buildSessionBundle({
+    const bundle = buildWorkspaceBundle({
       workspaceName: bundleName,
       originClientId: getClientId(),
       ir,
@@ -58,7 +58,7 @@ export function ExportModal({ open, onOpenChange }: ExportModalProps) {
 
   const sessionSize = ir
     ? bundleSizeBytes(
-        buildSessionBundle({
+        buildWorkspaceBundle({
           workspaceName: bundleName,
           originClientId: getClientId(),
           ir,
@@ -75,13 +75,13 @@ export function ExportModal({ open, onOpenChange }: ExportModalProps) {
         <DialogHeader>
           <DialogTitle>Export</DialogTitle>
           <DialogDescription>
-            Download the schema for downstream tools, or the full session bundle to move workspaces.
+            Download the schema for downstream tools, or the full workspace bundle to move workspaces.
           </DialogDescription>
         </DialogHeader>
         <Tabs defaultValue="schema">
           <TabsList>
             <TabsTrigger value="schema">Schema only</TabsTrigger>
-            <TabsTrigger value="session">Session bundle</TabsTrigger>
+            <TabsTrigger value="session">Workspace bundle</TabsTrigger>
           </TabsList>
           <TabsContent value="schema">
             <JsonView

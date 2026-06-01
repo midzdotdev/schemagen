@@ -1,4 +1,4 @@
-// Session bundle: a portable snapshot of a whole workspace.
+// Workspace bundle: a portable snapshot of a whole workspace.
 // Distinct from records import — records import takes raw JSON and runs
 // infer() to derive a schema; session import takes a previously-exported
 // bundle and restores everything (IR with all tweaks, records, history,
@@ -7,7 +7,7 @@
 import type { IdentityConfig, IR } from "@schemagen/core";
 import type { HistoryEntry } from "../state/types";
 
-export interface SessionBundle {
+export interface WorkspaceBundle {
   version: 1;
   exportedAt: number;
   originClientId: string;
@@ -28,7 +28,7 @@ export interface BuildBundleInput {
   exportedAt?: number;
 }
 
-export function buildSessionBundle(input: BuildBundleInput): SessionBundle {
+export function buildWorkspaceBundle(input: BuildBundleInput): WorkspaceBundle {
   return {
     version: 1,
     exportedAt: input.exportedAt ?? Date.now(),
@@ -41,37 +41,37 @@ export function buildSessionBundle(input: BuildBundleInput): SessionBundle {
   };
 }
 
-export type ParseResult = { ok: true; bundle: SessionBundle } | { ok: false; error: string };
+export type ParseResult = { ok: true; bundle: WorkspaceBundle } | { ok: false; error: string };
 
-export function parseSessionBundle(value: unknown): ParseResult {
+export function parseWorkspaceBundle(value: unknown): ParseResult {
   if (value === null || typeof value !== "object" || Array.isArray(value)) {
-    return { ok: false, error: "session bundle must be a JSON object" };
+    return { ok: false, error: "workspace bundle must be a JSON object" };
   }
   const o = value as Record<string, unknown>;
   if (o.version !== 1) {
     return {
       ok: false,
-      error: `unsupported session bundle version: ${String(o.version)}; this build understands version 1`,
+      error: `unsupported workspace bundle version: ${String(o.version)}; this build understands version 1`,
     };
   }
   if (!Array.isArray(o.records)) {
-    return { ok: false, error: "session bundle is missing 'records'" };
+    return { ok: false, error: "workspace bundle is missing 'records'" };
   }
   if (!Array.isArray(o.history)) {
-    return { ok: false, error: "session bundle is missing 'history'" };
+    return { ok: false, error: "workspace bundle is missing 'history'" };
   }
   if (typeof o.workspaceName !== "string") {
-    return { ok: false, error: "session bundle is missing 'workspaceName'" };
+    return { ok: false, error: "workspace bundle is missing 'workspaceName'" };
   }
   if (typeof o.exportedAt !== "number") {
-    return { ok: false, error: "session bundle is missing 'exportedAt'" };
+    return { ok: false, error: "workspace bundle is missing 'exportedAt'" };
   }
   if (typeof o.originClientId !== "string") {
-    return { ok: false, error: "session bundle is missing 'originClientId'" };
+    return { ok: false, error: "workspace bundle is missing 'originClientId'" };
   }
-  return { ok: true, bundle: value as SessionBundle };
+  return { ok: true, bundle: value as WorkspaceBundle };
 }
 
-export function bundleSizeBytes(bundle: SessionBundle): number {
+export function bundleSizeBytes(bundle: WorkspaceBundle): number {
   return new Blob([JSON.stringify(bundle)]).size;
 }

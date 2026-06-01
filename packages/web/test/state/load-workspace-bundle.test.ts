@@ -2,7 +2,7 @@ import type { IR } from "@schemagen/core";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { createDb, type SchemaGenDB } from "@/persistence/db";
 import { createDexieAdapter } from "@/persistence/dexie-adapter";
-import { initWorkspace, loadSessionBundle } from "@/state/init";
+import { initWorkspace, loadWorkspaceBundle } from "@/state/init";
 import { useStore } from "@/state/store";
 
 let db: SchemaGenDB;
@@ -24,14 +24,14 @@ const ir: IR = {
   additional: false,
 };
 
-describe("loadSessionBundle", () => {
+describe("loadWorkspaceBundle", () => {
   // Spec: docs/frontend-spec.md § "Export panel" — session import creates a new workspace
   it("X4-LS1: creates a new workspace, persists state under it, switches store", async () => {
     const adapter = createDexieAdapter({ db });
     await initWorkspace(adapter);
     const originalWorkspaceId = useStore.getState().workspaceId;
 
-    const { workspaceId } = await loadSessionBundle({
+    const { workspaceId } = await loadWorkspaceBundle({
       version: 1,
       exportedAt: 1000,
       originClientId: "origin",

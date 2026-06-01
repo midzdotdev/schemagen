@@ -46,7 +46,7 @@ export function StorageBanner() {
             </p>
             <p className="mt-0.5 text-muted-foreground">
               Some browsers (notably Safari) evict non-persistent IndexedDB after a week of
-              inactivity. Export your work as a session bundle if you can't grant persistence.
+              inactivity. Export your work as a workspace bundle if you can't grant persistence.
               {granted === false && (
                 <span className="ml-1 text-warning">Browser declined the request.</span>
               )}
