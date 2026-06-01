@@ -14,7 +14,7 @@ import {
 } from "@schemagen/core";
 import { create } from "zustand";
 import { getClientId } from "../persistence/client-id";
-import type { ApplyChangeOptions, AppState, HistoryEntry } from "./types";
+import type { ApplyChangeOptions, AppState, HistoryEntry, RecordsFilter } from "./types";
 
 export interface StoreActions {
   setIR: (ir: IR | null) => void;
@@ -32,8 +32,8 @@ export interface StoreActions {
   setIdentityProposal: (proposal: IdentityProposal | null) => void;
   setIdentityConfig: (config: IdentityConfig | null) => { droppedCount: number };
   dismissIdentitySuggestion: () => void;
-  // X3: selected records (findExamples result)
-  setSelectedRecordIndices: (indices: number[]) => void;
+  // Records sidebar filter (label + indices). null = clear.
+  setRecordsFilter: (filter: RecordsFilter | null) => void;
   // Z: cold-start inference overrides
   setInferenceOptions: (options: InferOptions | null) => void;
   // AA: explicit cold-start infer. No-op if an IR exists or records are empty.
@@ -55,7 +55,7 @@ export const INITIAL_STATE: AppState = {
   identityConfig: null,
   identityProposal: null,
   identityProposalDismissed: false,
-  selectedRecordIndices: [],
+  recordsFilter: null,
   inferenceOptions: null,
 };
 
@@ -81,9 +81,12 @@ export const useStore = create<Store>((set, get) => ({
       workspaceName: s.workspaceName,
     })),
 
-  addRecords: (records) => set((s) => ({ records: [...s.records, ...records] })),
+  // Clear the filter when the record list changes — stale indices would
+  // either point at the wrong rows or drop newly imported ones silently.
+  addRecords: (records) =>
+    set((s) => ({ records: [...s.records, ...records], recordsFilter: null })),
 
-  setRecords: (records) => set({ records }),
+  setRecords: (records) => set({ records, recordsFilter: null }),
 
   applyChange: (change, options) => {
     const { ir, history } = get();
@@ -151,7 +154,7 @@ export const useStore = create<Store>((set, get) => ({
 
   dismissIdentitySuggestion: () => set({ identityProposalDismissed: true }),
 
-  setSelectedRecordIndices: (indices) => set({ selectedRecordIndices: indices }),
+  setRecordsFilter: (filter) => set({ recordsFilter: filter }),
 
   setInferenceOptions: (options) => set({ inferenceOptions: options }),
 

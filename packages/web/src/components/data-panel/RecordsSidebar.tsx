@@ -2,15 +2,10 @@
 //
 // 1. Collapsed (default): a thin vertical strip — Database icon + record
 //    count. The whole strip is clickable and expands the panel.
-// 2. Expanded: pane header + virtualised RecordList. The header's chevron
-//    collapses the panel back to a strip.
-//
-// Renders the strip OR the full body — never both. The parent layout
-// (ThreePaneLayoutPostIR + App) swaps between a strip-prefixed two-pane
-// layout and a three-pane resizable group based on the same UIPref this
-// component reads.
+// 2. Expanded: pane header + (optional) active-filter chip + virtualised
+//    RecordList. The header's chevron collapses back to a strip.
 
-import { ChevronLeft, ChevronRight, Database } from "lucide-react";
+import { ChevronLeft, ChevronRight, Database, Filter, X } from "lucide-react";
 import { useStore } from "@/state/store";
 import { PaneHeader } from "../shell/PaneHeader";
 import { Button } from "../ui/button";
@@ -23,7 +18,10 @@ export interface RecordsSidebarProps {
 
 export function RecordsSidebar({ collapsed, onToggle }: RecordsSidebarProps) {
   const records = useStore((s) => s.records);
+  const filter = useStore((s) => s.recordsFilter);
+  const setRecordsFilter = useStore((s) => s.setRecordsFilter);
   const count = records.length;
+  const filteredCount = filter?.indices.length ?? count;
 
   if (collapsed) {
     return (
@@ -41,6 +39,12 @@ export function RecordsSidebar({ collapsed, onToggle }: RecordsSidebarProps) {
         <span className="font-mono text-[10px] tabular-nums text-muted-foreground group-hover:text-foreground">
           {count.toLocaleString()}
         </span>
+        {filter && (
+          <Filter
+            className="size-3 text-primary"
+            aria-label="Filter active"
+          />
+        )}
         <ChevronRight
           className="mt-auto size-3 text-muted-foreground/60 group-hover:text-foreground"
           aria-hidden
@@ -54,7 +58,11 @@ export function RecordsSidebar({ collapsed, onToggle }: RecordsSidebarProps) {
       <PaneHeader
         title="Records"
         icon={<Database className="size-3.5" />}
-        description={`${count.toLocaleString()} stored`}
+        description={
+          filter
+            ? `${filteredCount.toLocaleString()} of ${count.toLocaleString()} matched`
+            : `${count.toLocaleString()} stored`
+        }
         actions={
           <Button
             variant="ghost"
@@ -68,6 +76,29 @@ export function RecordsSidebar({ collapsed, onToggle }: RecordsSidebarProps) {
           </Button>
         }
       />
+      {filter && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="flex shrink-0 items-center gap-2 border-b border-border bg-primary/5 px-3 py-1.5"
+        >
+          <Filter className="size-3 shrink-0 text-primary" aria-hidden />
+          <span className="min-w-0 flex-1 truncate font-mono text-[11px] text-foreground">
+            {filter.label}
+          </span>
+          <span className="shrink-0 font-mono text-[10px] tabular-nums text-muted-foreground">
+            {filteredCount.toLocaleString()}
+          </span>
+          <button
+            type="button"
+            onClick={() => setRecordsFilter(null)}
+            aria-label="Clear records filter"
+            className="rounded p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+          >
+            <X className="size-3" />
+          </button>
+        </div>
+      )}
       <div className="min-h-0 flex-1 overflow-hidden">
         {count === 0 ? (
           <p className="px-3 py-4 text-xs text-muted-foreground">

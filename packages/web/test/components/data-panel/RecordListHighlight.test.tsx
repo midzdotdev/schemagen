@@ -10,13 +10,27 @@ beforeEach(() => {
   Element.prototype.scrollIntoView = () => {};
 });
 
-describe("RecordList highlight", () => {
-  // Spec: docs/frontend-spec.md § "Schema tree" — selected records highlighted
-  it("X3-RL1: applies the selected-record marker to indices in the store", () => {
+describe("RecordList filter", () => {
+  // Spec: docs/frontend-spec.md § "Schema tree" — active filter narrows the
+  // visible records to those matching the filter, preserving original indices.
+  it("X3-RL1: shows only filtered records when a filter is active", () => {
     act(() => {
-      useStore.getState().setSelectedRecordIndices([1, 3]);
+      useStore.getState().setRecords([{ x: "a" }, { x: "b" }, { x: "c" }, { x: "d" }]);
+      useStore.getState().setRecordsFilter({ label: "x = b/d", indices: [1, 3] });
     });
     render(<RecordList records={[{ x: "a" }, { x: "b" }, { x: "c" }, { x: "d" }]} />);
-    expect(screen.getAllByTestId("selected-record")).toHaveLength(2);
+    const list = screen.getByRole("list", { name: /records/i });
+    expect(list.children).toHaveLength(2);
+  });
+
+  it("X3-RL2: clearing the filter restores the full record list", () => {
+    act(() => {
+      useStore.getState().setRecords([{ x: "a" }, { x: "b" }, { x: "c" }]);
+      useStore.getState().setRecordsFilter({ label: "x = b", indices: [1] });
+      useStore.getState().setRecordsFilter(null);
+    });
+    render(<RecordList records={[{ x: "a" }, { x: "b" }, { x: "c" }]} />);
+    const list = screen.getByRole("list", { name: /records/i });
+    expect(list.children).toHaveLength(3);
   });
 });
