@@ -93,4 +93,25 @@ describe("SchemaPanel — explicit infer CTA", () => {
     await user.click(screen.getByRole("button", { name: /add data/i }));
     expect(screen.getByRole("dialog", { name: /add data/i })).toBeInTheDocument();
   });
+
+  // PR GG — records panel was dropped in EE; this restores read access via the header.
+  it("GG-SP1: schema header shows a 'View N records' button when IR exists", () => {
+    act(() => {
+      useStore.getState().setIR({ kind: "object", fields: {}, additional: false });
+      useStore.getState().setRecords([{ id: "a" }, { id: "b" }, { id: "c" }]);
+    });
+    renderPanel();
+    expect(screen.getByRole("button", { name: /view 3 records/i })).toBeInTheDocument();
+  });
+
+  it("GG-SP2: clicking the records button opens the RecordsModal", async () => {
+    const user = userEvent.setup();
+    act(() => {
+      useStore.getState().setIR({ kind: "object", fields: {}, additional: false });
+      useStore.getState().setRecords([{ id: "a" }]);
+    });
+    renderPanel();
+    await user.click(screen.getByRole("button", { name: /view 1 records/i }));
+    expect(screen.getByRole("dialog", { name: /records/i })).toBeInTheDocument();
+  });
 });
