@@ -20,17 +20,22 @@ describe("SampleLoader", () => {
     expect(screen.getByText(/open library/i)).toBeInTheDocument();
   });
 
-  it("fetches the sample and passes records to onRecords", async () => {
+  it("fetches the sample and opens the root picker with the candidates", async () => {
     const user = userEvent.setup();
     const records = [{ id: 1 }, { id: 2 }];
     vi.stubGlobal(
       "fetch",
       vi.fn(async () => ({ ok: true, status: 200, text: async () => JSON.stringify(records) })),
     );
-    const onRecords = vi.fn();
-    render(<SampleLoader onRecords={onRecords} onNeedsPicker={() => {}} />);
+    const onNeedsPicker = vi.fn();
+    render(<SampleLoader onRecords={() => {}} onNeedsPicker={onNeedsPicker} />);
     await user.click(screen.getByRole("button", { name: /hackernews top stories/i }));
-    await waitFor(() => expect(onRecords).toHaveBeenCalledWith(records));
+    await waitFor(() =>
+      expect(onNeedsPicker).toHaveBeenCalledWith(
+        records,
+        expect.arrayContaining([expect.objectContaining({ path: [], recordCount: 2 })]),
+      ),
+    );
   });
 
   it("surfaces a fetch error in an alert", async () => {

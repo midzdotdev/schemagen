@@ -11,55 +11,29 @@ beforeEach(() => {
 });
 
 describe("StepData", () => {
-  // Plan § "Step 1 — Your data" — record count + top-level shape stat card
-  it("HH-D1: renders the record count and top-level shape", () => {
+  // Plan § "Step 1 — Your data" — record count only (shape/field stats dropped
+  // per user feedback; signal-to-noise wasn't worth the clutter).
+  it("HH-D1: renders the record count", () => {
     act(() => {
       useStore.getState().setRecords([{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }, { id: 5 }]);
     });
     render(<StepData onContinue={() => {}} />);
-    expect(screen.getByText(/5 records/i)).toBeInTheDocument();
-    // Shape line names the top-level container shape.
-    expect(screen.getByText(/array of 5 objects/i)).toBeInTheDocument();
+    // The count + label render across two spans inside one <p> — a function
+    // matcher reads the combined text content.
+    expect(
+      screen.getByText((_content, el) => el?.textContent === "5 records imported."),
+    ).toBeInTheDocument();
   });
 
   // First record is shown unconditionally with a height cap + scroll —
   // users have asked for it always-visible to skip the click.
-  it("HH-D2: first record is rendered (height-capped, scrollable)", () => {
+  it("HH-D2: sample record is rendered (height-capped, scrollable)", () => {
     act(() => {
       useStore.getState().setRecords([{ id: 1, title: "Hi" }]);
     });
     render(<StepData onContinue={() => {}} />);
-    // Label + JsonView region both present.
-    expect(screen.getByText(/^first record$/i)).toBeInTheDocument();
-    expect(screen.getByRole("region", { name: /first record/i })).toBeInTheDocument();
-  });
-
-  // Plan § "Step 1 — Your data" — field-stats peek
-  it("HH-D3: primitive/compound field count matches computeFieldStats", () => {
-    act(() => {
-      useStore.getState().setRecords([
-        // 4 primitive fields (id, name, active, score), 1 compound (profile)
-        { id: 1, name: "Alice", active: true, score: 42, profile: { age: 30 } },
-        { id: 2, name: "Bob", active: false, score: 51, profile: { age: 25 } },
-      ]);
-    });
-    render(<StepData onContinue={() => {}} />);
-    expect(screen.getByText(/^simple fields$/i)).toBeInTheDocument();
-    expect(screen.getByText(/^4 \(string, number, boolean\)$/i)).toBeInTheDocument();
-    expect(screen.getByText(/^nested fields$/i)).toBeInTheDocument();
-    expect(screen.getByText(/^1 \(object, array\)$/i)).toBeInTheDocument();
-  });
-
-  // The field breakdown is skipped when records aren't object-shaped — there
-  // are no fields to count. Top-level shape line still renders.
-  it("HH-D3b: omits field breakdown for non-object records", () => {
-    act(() => {
-      useStore.getState().setRecords(["one", "two", "three"]);
-    });
-    render(<StepData onContinue={() => {}} />);
-    expect(screen.getByText(/array of 3 strings/i)).toBeInTheDocument();
-    expect(screen.queryByText(/simple fields/i)).toBeNull();
-    expect(screen.queryByText(/nested fields/i)).toBeNull();
+    expect(screen.getByText(/^sample record$/i)).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: /sample record/i })).toBeInTheDocument();
   });
 
   // Re-pick root affordance — only when the original parse had multiple
