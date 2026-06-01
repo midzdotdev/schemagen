@@ -4,6 +4,7 @@
 // minimal scaffold that the later phases fill in.
 
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { act } from "react";
 import { beforeEach, describe, expect, it } from "vitest";
 import { App } from "@/App";
@@ -58,5 +59,32 @@ describe("WorkspaceWizard — gate logic", () => {
     });
     render(<App />);
     expect(screen.queryByRole("region", { name: /workspace wizard/i })).toBeNull();
+  });
+});
+
+describe("WorkspaceWizard — step transitions", () => {
+  // Plan § "Step 1 — Your data"
+  it("HH-W4: Continue from Step 1 advances to Step 2", async () => {
+    const user = userEvent.setup();
+    act(() => {
+      useStore.getState().setRecords([{ id: 1 }]);
+    });
+    render(<App />);
+    expect(screen.getByRole("heading", { name: /your data/i })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /^continue$/i }));
+    expect(screen.getByRole("heading", { name: /identity key/i })).toBeInTheDocument();
+  });
+
+  // Plan § "Step 2 — Identity key" — Back returns to Step 1
+  it("HH-W5: Back from Step 2 returns to Step 1", async () => {
+    const user = userEvent.setup();
+    act(() => {
+      useStore.getState().setRecords([{ id: 1 }]);
+    });
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: /^continue$/i }));
+    expect(screen.getByRole("heading", { name: /identity key/i })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /back/i }));
+    expect(screen.getByRole("heading", { name: /your data/i })).toBeInTheDocument();
   });
 });
