@@ -8,16 +8,21 @@ import { StorageBanner } from "./components/shell/StorageBanner";
 import { ThreePaneLayoutPostIR } from "./components/shell/ThreePaneLayoutPostIR";
 import { UIShellProvider } from "./components/shell/UIShell";
 import { TooltipProvider } from "./components/ui/tooltip";
+import { WelcomeView } from "./components/welcome/WelcomeView";
 import { useUIPref } from "./hooks/useUIPrefs";
 import { useStore } from "./state/store";
 
 export function App() {
-  // Cold-start: data / schema / inspector (records are the work).
-  // Post-IR: records (collapsible) / schema / inspector (schema is the work,
-  // records are evidence).
+  // Three modes of the main content area:
+  //   - Fresh workspace (no records, no IR) → WelcomeView
+  //   - Records but no IR → cold-start 3-pane (data | schema CTA | inspector)
+  //   - IR exists → records sidebar | schema | inspector
   const ir = useStore((s) => s.ir);
+  const records = useStore((s) => s.records);
   const workspaceId = useStore((s) => s.workspaceId);
   const [collapsed, setCollapsed] = useUIPref(workspaceId, "recordsSidebarCollapsed");
+
+  const isFresh = ir === null && records.length === 0;
 
   return (
     <TooltipProvider delayDuration={300}>
@@ -26,7 +31,9 @@ export function App() {
           <AppHeader />
           <StorageBanner />
           <main className="flex min-h-0 flex-1 flex-col">
-            {ir ? (
+            {isFresh ? (
+              <WelcomeView />
+            ) : ir ? (
               <ThreePaneLayoutPostIR
                 collapsed={collapsed}
                 records={
