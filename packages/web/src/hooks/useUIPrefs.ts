@@ -15,12 +15,16 @@ export interface UIPrefs {
   mismatchCollapsedGroups: string[];
   // PR J — schema-tree filter query
   schemaFilter: string;
+  // Records sidebar — collapsed (strip) vs expanded (full pane). Defaults
+  // collapsed so the schema dominates until the user asks to see records.
+  recordsSidebarCollapsed: boolean;
 }
 
 const DEFAULT_PREFS: UIPrefs = {
   mismatchActiveKinds: [],
   mismatchCollapsedGroups: [],
   schemaFilter: "",
+  recordsSidebarCollapsed: true,
 };
 
 function storageKey(workspaceId: string): string {

@@ -18,6 +18,11 @@ export function SchemaPanel() {
   const { openModal } = useUIShell();
   // Persist the filter query per workspace so it survives reload.
   const [query, setQuery] = useUIPref(workspaceId, "schemaFilter");
+  // Records sidebar — schema header button toggles it (mirrors the strip).
+  const [recordsCollapsed, setRecordsCollapsed] = useUIPref(
+    workspaceId,
+    "recordsSidebarCollapsed",
+  );
 
   if (!ir) {
     // PR AA — once records arrive, schema inference is the user's explicit
@@ -68,8 +73,13 @@ export function SchemaPanel() {
               variant="ghost"
               size="xs"
               className="gap-1 text-muted-foreground"
-              onClick={() => openModal("records")}
-              aria-label={`View ${records.length} records`}
+              onClick={() => setRecordsCollapsed(!recordsCollapsed)}
+              aria-label={
+                recordsCollapsed
+                  ? `Show ${records.length} records`
+                  : `Hide records sidebar`
+              }
+              aria-expanded={!recordsCollapsed}
             >
               <Database className="size-3" />
               {records.length.toLocaleString()}
