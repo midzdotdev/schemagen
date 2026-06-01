@@ -3,7 +3,7 @@
 // directly (see state/session.ts); these shims exist so existing call sites
 // don't all change at once.
 
-import type { SessionBundle } from "@/lib/session-bundle";
+import type { WorkspaceBundle } from "@/lib/workspace-bundle";
 import type { WorkspaceAdapter } from "@/persistence/adapter";
 import { createDexieAdapter } from "@/persistence/dexie-adapter";
 import { WorkspaceSession } from "@/state/session";
@@ -44,6 +44,6 @@ export function getCurrentAdapter(): WorkspaceAdapter | null {
   return session.getAdapter();
 }
 
-export async function loadSessionBundle(bundle: SessionBundle): Promise<{ workspaceId: string }> {
+export async function loadWorkspaceBundle(bundle: WorkspaceBundle): Promise<{ workspaceId: string }> {
   return session.loadBundle(bundle);
 }

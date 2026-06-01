@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
-  buildSessionBundle,
+  buildWorkspaceBundle,
   bundleSizeBytes,
-  parseSessionBundle,
-  type SessionBundle,
-} from "@/lib/session-bundle";
+  parseWorkspaceBundle,
+  type WorkspaceBundle,
+} from "@/lib/workspace-bundle";
 
-const baseBundle = (over: Partial<SessionBundle> = {}): SessionBundle => ({
+const baseBundle = (over: Partial<WorkspaceBundle> = {}): WorkspaceBundle => ({
   version: 1,
   exportedAt: 1000,
   originClientId: "client-x",
@@ -18,10 +18,10 @@ const baseBundle = (over: Partial<SessionBundle> = {}): SessionBundle => ({
   ...over,
 });
 
-describe("session bundle round-trip", () => {
-  // Spec: docs/frontend-spec.md § "Export panel" — full session bundle
-  it("X4-SB1: buildSessionBundle produces the expected shape", () => {
-    const bundle = buildSessionBundle({
+describe("workspace bundle round-trip", () => {
+  // Spec: docs/frontend-spec.md § "Export panel" — full workspace bundle
+  it("X4-SB1: buildWorkspaceBundle produces the expected shape", () => {
+    const bundle = buildWorkspaceBundle({
       workspaceName: "demo",
       originClientId: "client-x",
       ir: { kind: "object", fields: {}, additional: false },
@@ -37,9 +37,9 @@ describe("session bundle round-trip", () => {
   });
 
   // Spec: same — round-trip through JSON
-  it("X4-SB2: parseSessionBundle accepts a valid bundle", () => {
+  it("X4-SB2: parseWorkspaceBundle accepts a valid bundle", () => {
     const bundle = baseBundle();
-    const result = parseSessionBundle(JSON.parse(JSON.stringify(bundle)));
+    const result = parseWorkspaceBundle(JSON.parse(JSON.stringify(bundle)));
     expect(result.ok).toBe(true);
     if (result.ok) {
       expect(result.bundle.records).toEqual([{ id: 1 }]);
@@ -47,23 +47,23 @@ describe("session bundle round-trip", () => {
   });
 
   // Spec: same — version mismatch
-  it("X4-SB3: parseSessionBundle rejects an unsupported version", () => {
-    const result = parseSessionBundle({ ...baseBundle(), version: 99 });
+  it("X4-SB3: parseWorkspaceBundle rejects an unsupported version", () => {
+    const result = parseWorkspaceBundle({ ...baseBundle(), version: 99 });
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.error).toMatch(/version/);
   });
 
   // Spec: same — malformed input
-  it("X4-SB4: parseSessionBundle rejects missing required fields", () => {
-    const result = parseSessionBundle({ version: 1 });
+  it("X4-SB4: parseWorkspaceBundle rejects missing required fields", () => {
+    const result = parseWorkspaceBundle({ version: 1 });
     expect(result.ok).toBe(false);
   });
 
   // Spec: same — invalid root
-  it("X4-SB5: parseSessionBundle rejects non-object input", () => {
-    expect(parseSessionBundle(null).ok).toBe(false);
-    expect(parseSessionBundle([1, 2, 3]).ok).toBe(false);
-    expect(parseSessionBundle("string").ok).toBe(false);
+  it("X4-SB5: parseWorkspaceBundle rejects non-object input", () => {
+    expect(parseWorkspaceBundle(null).ok).toBe(false);
+    expect(parseWorkspaceBundle([1, 2, 3]).ok).toBe(false);
+    expect(parseWorkspaceBundle("string").ok).toBe(false);
   });
 
   // Spec: docs/frontend-spec.md § "Export panel" — file size estimate

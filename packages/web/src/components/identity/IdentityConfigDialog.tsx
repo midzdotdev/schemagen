@@ -92,7 +92,7 @@ export function IdentityConfigDialog({
     if (selected.length === 0) return;
     // Each entry becomes a path. Dot-notation is interpreted at the entry level
     // so the rare "I typed nested.path" round-trip still works for stored
-    // configs hydrated from session bundles.
+    // configs hydrated from workspace bundles.
     const fields = selected.map((p) => p.split(".").filter(Boolean));
     const result = setIdentityConfig({ fields, onDuplicate: mode });
     setDroppedCount(result.droppedCount);

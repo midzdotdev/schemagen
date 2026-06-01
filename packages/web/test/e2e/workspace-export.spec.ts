@@ -36,10 +36,10 @@ test.describe("session export/import", () => {
     await expect(page.getByTestId("session-size")).toBeVisible();
   });
 
-  test("X4-E2: importing a session bundle creates a new workspace with matching state", async ({
+  test("X4-E2: importing a workspace bundle creates a new workspace with matching state", async ({
     page,
   }) => {
-    // Build a session bundle in the page's context (avoids the actual download
+    // Build a workspace bundle in the page's context (avoids the actual download
     // flow which would require interception). Then drive the import-session
     // file input with the same content.
     const bundleJson = await page.evaluate(() => {
@@ -62,7 +62,7 @@ test.describe("session export/import", () => {
 
     // PR BB — bundle import moved into the workspace switcher.
     await page.getByRole("button", { name: /switch workspace/i }).click();
-    const fileInput = page.locator('input[aria-label="Import session bundle file"]');
+    const fileInput = page.locator('input[aria-label="Import workspace bundle file"]');
     await fileInput.setInputFiles({
       name: "schemagen.session.json",
       mimeType: "application/json",

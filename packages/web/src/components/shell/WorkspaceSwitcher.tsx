@@ -1,25 +1,31 @@
 import { Check, ChevronsUpDown, FileUp, Plus, Trash2 } from "lucide-react";
 import { type ChangeEvent, useEffect, useState } from "react";
 import { cn } from "@/lib/cn";
-import { parseSessionBundle } from "@/lib/session-bundle";
+import { parseWorkspaceBundle } from "@/lib/workspace-bundle";
 import type { WorkspaceSummary } from "@/persistence/adapter";
 import type { WorkspaceRow } from "@/persistence/db";
 import {
   createAndSwitchWorkspace,
   deleteWorkspace,
   getCurrentAdapter,
-  loadSessionBundle,
+  loadWorkspaceBundle,
   switchWorkspace,
 } from "@/state/init";
 import { useStore } from "@/state/store";
 import { Button } from "../ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 
 // Switcher pill in the AppHeader. Shows the current workspace name + chevron;
 // clicking opens a popover listing every workspace with its record/edit stats
 // + a 'New workspace' shortcut.
 export function WorkspaceSwitcher() {
   const currentId = useStore((s) => s.workspaceId);
+  // 'Fresh' = the current workspace has nothing in it. Creating another would
+  // just leave the user with two empty slots; nudge them to use this one.
+  const isFreshWorkspace = useStore(
+    (s) => s.records.length === 0 && s.ir === null && s.history.entries.length === 0,
+  );
   const [open, setOpen] = useState(false);
   const [workspaces, setWorkspaces] = useState<WorkspaceRow[]>([]);
   const [summaries, setSummaries] = useState<Map<string, WorkspaceSummary>>(new Map());
@@ -70,13 +76,13 @@ export function WorkspaceSwitcher() {
         setImportError(err instanceof Error ? err.message : "could not parse bundle file");
         return;
       }
-      const result = parseSessionBundle(value);
+      const result = parseWorkspaceBundle(value);
       if (!result.ok) {
         setImportError(result.error);
         return;
       }
       try {
-        await loadSessionBundle(result.bundle);
+        await loadWorkspaceBundle(result.bundle);
         setOpen(false);
       } catch (err) {
         setImportError(err instanceof Error ? err.message : "could not import bundle");
@@ -175,30 +181,44 @@ export function WorkspaceSwitcher() {
           </ul>
         )}
         <div className="my-1 h-px bg-border" aria-hidden />
-        <Button
-          variant="ghost"
-          size="sm"
-          className="w-full justify-start gap-2 text-xs font-medium"
-          onClick={() => void handleNew()}
-        >
-          <Plus className="size-3.5" />
-          New workspace
-        </Button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            {/* Span wrapper so the disabled button still triggers the tooltip. */}
+            <span className={cn("block", isFreshWorkspace && "cursor-not-allowed")}>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full justify-start gap-2 text-xs font-medium"
+                onClick={() => void handleNew()}
+                disabled={isFreshWorkspace}
+              >
+                <Plus className="size-3.5" />
+                New workspace
+              </Button>
+            </span>
+          </TooltipTrigger>
+          {isFreshWorkspace && (
+            <TooltipContent side="right">This workspace is already empty — use it.</TooltipContent>
+          )}
+        </Tooltip>
+        {/* Match the New workspace button styling — using a <label> wrapper
+            because the file input needs a click target, but visually this
+            should be peer-of-the-button, not a muted aside. */}
         <label
           className={cn(
             "flex w-full cursor-pointer items-center gap-2 rounded-md px-3 py-1.5 text-xs font-medium",
-            "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+            "text-foreground hover:bg-accent hover:text-accent-foreground",
           )}
         >
           <input
             type="file"
-            accept=".json,.session.json,application/json"
+            accept=".json,.workspace.json,.session.json,application/json"
             onChange={handleImportBundle}
             className="sr-only"
-            aria-label="Import session bundle file"
+            aria-label="Import workspace bundle file"
           />
           <FileUp className="size-3.5" />
-          Import session bundle…
+          Import workspace bundle…
         </label>
         {importError && (
           <p
