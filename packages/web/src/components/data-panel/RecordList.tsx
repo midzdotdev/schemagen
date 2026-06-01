@@ -36,11 +36,11 @@ export function RecordList({ records }: RecordListProps) {
   });
 
   if (visible.length === 0) {
-    return (
-      <p className="px-3 py-4 text-xs text-muted-foreground">
-        {filter ? "No records in this filter." : "No records in this workspace."}
-      </p>
-    );
+    // When no filter is active, leave the empty-state to the parent so it
+    // can speak in the right voice (workspace empty vs. cold-start hint).
+    // When a filter excluded everything, the explanation belongs here.
+    if (!filter) return null;
+    return <p className="px-3 py-4 text-xs text-muted-foreground">No records in this filter.</p>;
   }
 
   return (
