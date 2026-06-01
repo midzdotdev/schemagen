@@ -1,11 +1,12 @@
 // PR HH — new-workspace wizard. See docs/plans/pr-hh-workspace-wizard.md.
 //
-// Three steps (Data → Identity → Inference → Generate). Phase 3 fills in
-// Step 1 + the shared shell; subsequent phases fill in Steps 2 & 3 and
-// the skip-wizard fast-forward.
+// Three steps (Data → Identity → Inference → Generate). Phase 5 fills in
+// Step 3 + the actual Generate action; the inference step is a placeholder
+// for now.
 
 import { useState } from "react";
 import { StepData } from "./StepData";
+import { StepIdentity } from "./StepIdentity";
 import { WizardStepShell } from "./WizardStepShell";
 
 export interface WorkspaceWizardProps {
@@ -31,14 +32,23 @@ export function WorkspaceWizard({ onSkip }: WorkspaceWizardProps) {
     );
   }
 
-  // Phases 4 / 5 — identity + inference. Render placeholders for now so the
-  // wizard remains navigable while the bodies are filled in.
+  if (step === "identity") {
+    return (
+      <StepIdentity
+        onContinue={() => setStep("inference")}
+        onBack={() => setStep("data")}
+        onSkip={onSkip}
+      />
+    );
+  }
+
+  // Phase 5 — Step 3 lands here.
   return (
     <WizardStepShell
-      step={step === "identity" ? 2 : 3}
-      title={step === "identity" ? "Identity key" : "Inference options"}
+      step={3}
+      title="Inference options"
       sub="Coming next."
-      onBack={() => setStep(step === "identity" ? "data" : "identity")}
+      onBack={() => setStep("identity")}
       onSkip={onSkip}
     >
       <p className="text-sm text-muted-foreground">Step body lands in the next phase.</p>
