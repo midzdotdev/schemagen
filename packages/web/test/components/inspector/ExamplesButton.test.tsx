@@ -24,7 +24,7 @@ describe("ExamplesButton", () => {
   });
 
   // Spec: docs/frontend-spec.md § "Schema tree"
-  it("X3-EB2: populates selectedRecordIndices with matching record indices", async () => {
+  it("X3-EB2: sets the records filter to the matching indices", async () => {
     const user = userEvent.setup();
     act(() => {
       useStore.getState().setIR(ir);
@@ -35,7 +35,7 @@ describe("ExamplesButton", () => {
     });
     render(<ExamplesButton predicate={(v) => v === "pending"} />);
     await user.click(screen.getByRole("button"));
-    expect(useStore.getState().selectedRecordIndices).toEqual([1]);
+    expect(useStore.getState().recordsFilter?.indices).toEqual([1]);
   });
 
   // Spec: docs/frontend-spec.md § "Schema tree" — no predicate matches all records where path exists
@@ -48,6 +48,19 @@ describe("ExamplesButton", () => {
     });
     render(<ExamplesButton />);
     await user.click(screen.getByRole("button"));
-    expect(useStore.getState().selectedRecordIndices).toEqual([0, 2]);
+    expect(useStore.getState().recordsFilter?.indices).toEqual([0, 2]);
+  });
+
+  // Filter label defaults to the selected path so the sidebar chip is meaningful.
+  it("X3-EB4: filter label defaults to the formatted selected path", async () => {
+    const user = userEvent.setup();
+    act(() => {
+      useStore.getState().setIR(ir);
+      useStore.getState().setRecords([{ status: "active" }]);
+      useStore.getState().setSelectedPath(["status"]);
+    });
+    render(<ExamplesButton />);
+    await user.click(screen.getByRole("button"));
+    expect(useStore.getState().recordsFilter?.label).toBe("status");
   });
 });

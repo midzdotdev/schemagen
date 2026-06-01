@@ -8,6 +8,27 @@
 
 import { useCallback, useEffect, useState } from "react";
 
+// Cross-component sync for the same key. The native `storage` event only
+// fires on OTHER tabs; this in-process pubsub keeps multiple components
+// observing the same key in lockstep within a single tab.
+const subscribers = new Map<string, Set<(raw: string | null) => void>>();
+function notify(key: string, raw: string | null): void {
+  const subs = subscribers.get(key);
+  if (!subs) return;
+  for (const cb of subs) cb(raw);
+}
+function subscribe(key: string, cb: (raw: string | null) => void): () => void {
+  let set = subscribers.get(key);
+  if (!set) {
+    set = new Set();
+    subscribers.set(key, set);
+  }
+  set.add(cb);
+  return () => {
+    set?.delete(cb);
+  };
+}
+
 export interface UseLocalStorageOptions<T> {
   // Custom serializer for non-JSON values (e.g. a plain string that shouldn't
   // be wrapped in quotes). Defaults to JSON.stringify / JSON.parse.
@@ -31,11 +52,15 @@ function readKey<T>(key: string, defaultValue: T, deserialize: (raw: string) => 
 
 function writeKey<T>(key: string, value: T, serialize: (value: T) => string): void {
   if (typeof localStorage === "undefined") return;
+  let raw: string;
   try {
-    localStorage.setItem(key, serialize(value));
+    raw = serialize(value);
+    localStorage.setItem(key, raw);
   } catch {
     // Quota / disabled storage — silently drop. Persistence is best-effort.
+    return;
   }
+  notify(key, raw);
 }
 
 export function useLocalStorage<T>(
@@ -51,6 +76,22 @@ export function useLocalStorage<T>(
   // Re-read when the key changes (e.g. workspace-scoped prefs switching workspace).
   useEffect(() => {
     setValue(readKey(key, defaultValue, deserialize));
+  }, [key, defaultValue, deserialize]);
+
+  // Subscribe to in-process writes so multiple components reading the same
+  // key stay in sync without a reload.
+  useEffect(() => {
+    return subscribe(key, (raw) => {
+      if (raw === null) {
+        setValue(defaultValue);
+        return;
+      }
+      try {
+        setValue(deserialize(raw));
+      } catch {
+        setValue(defaultValue);
+      }
+    });
   }, [key, defaultValue, deserialize]);
 
   const set = useCallback(

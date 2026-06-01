@@ -21,6 +21,14 @@ export interface HistoryEntry {
   clientId: string;
 }
 
+// Active filter on the records list. Driven from the inspector / mismatch
+// panel today; the architecture supports a user-typed filter later (same
+// shape — caller computes label + indices).
+export interface RecordsFilter {
+  label: string;
+  indices: number[];
+}
+
 export interface AppState {
   workspaceId: string;
   workspaceName: string;
@@ -32,8 +40,8 @@ export interface AppState {
   identityConfig: IdentityConfig | null;
   identityProposal: IdentityProposal | null;
   identityProposalDismissed: boolean;
-  // X3: indices of records currently highlighted by findExamples.
-  selectedRecordIndices: number[];
+  // Records sidebar filter (from inspector / mismatch panel). null = show all.
+  recordsFilter: RecordsFilter | null;
   // Z: workspace-scoped overrides for cold-start inference. Inert once `ir` is set.
   inferenceOptions: InferOptions | null;
 }

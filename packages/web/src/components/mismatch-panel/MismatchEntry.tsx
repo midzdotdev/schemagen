@@ -1,6 +1,7 @@
 import { findExamples, type Mismatch } from "@schemagen/core";
 import { Search } from "lucide-react";
 import { useState } from "react";
+import { useShowRecordsFilter } from "@/hooks/useShowRecordsFilter";
 import { cn } from "@/lib/cn";
 import { formatPath } from "@/state/selectors";
 import { useStore } from "@/state/store";
@@ -14,7 +15,7 @@ export interface MismatchEntryProps {
 export function MismatchEntry({ mismatch }: MismatchEntryProps) {
   const apply = useStore((s) => s.applyChange);
   const setSelectedPath = useStore((s) => s.setSelectedPath);
-  const setSelectedRecordIndices = useStore((s) => s.setSelectedRecordIndices);
+  const showRecords = useShowRecordsFilter();
   const ir = useStore((s) => s.ir);
   const records = useStore((s) => s.records);
   const [error, setError] = useState<string | null>(null);
@@ -29,7 +30,10 @@ export function MismatchEntry({ mismatch }: MismatchEntryProps) {
       (v) => Object.is(v, target) || (target !== undefined && v === target),
       records.length,
     );
-    setSelectedRecordIndices(refs.map((r) => r.index));
+    showRecords({
+      label: `${formatPath(mismatch.path)} = ${previewValue(target)}`,
+      indices: refs.map((r) => r.index),
+    });
   }
 
   const severity = severityFor(mismatch.kind);
@@ -169,5 +173,18 @@ function humanKind(kind: Mismatch["kind"]): string {
       return "non-int";
     case "duplicate-items":
       return "dupes";
+  }
+}
+
+function previewValue(value: unknown): string {
+  if (value === undefined) return "undefined";
+  if (typeof value === "string") {
+    const trimmed = value.length > 32 ? `${value.slice(0, 32)}…` : value;
+    return JSON.stringify(trimmed);
+  }
+  try {
+    return JSON.stringify(value);
+  } catch {
+    return String(value);
   }
 }
