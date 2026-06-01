@@ -38,9 +38,18 @@ export function WizardStepShell({
       className="mx-auto flex h-full w-full max-w-2xl flex-col gap-8 overflow-y-auto px-6 py-10"
     >
       <header className="flex flex-col gap-2">
-        <p className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-          {step} of 3
-        </p>
+        <div className="flex items-center justify-between gap-2">
+          <p className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+            {step} of 3
+          </p>
+          <button
+            type="button"
+            onClick={onSkip}
+            className="text-[11px] text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+          >
+            Skip wizard
+          </button>
+        </div>
         <h1 className="text-2xl font-semibold tracking-tight text-foreground">{title}</h1>
         <p className="text-sm text-muted-foreground">{sub}</p>
       </header>
@@ -53,20 +62,11 @@ export function WizardStepShell({
             </Button>
           )}
         </div>
-        <div className="flex flex-col items-end gap-1">
-          {onContinue && (
-            <Button size="sm" onClick={onContinue} disabled={continueDisabled}>
-              {continueLabel}
-            </Button>
-          )}
-          <button
-            type="button"
-            onClick={onSkip}
-            className="text-[11px] text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
-          >
-            Skip wizard
-          </button>
-        </div>
+        {onContinue && (
+          <Button size="sm" onClick={onContinue} disabled={continueDisabled}>
+            {continueLabel}
+          </Button>
+        )}
       </footer>
     </section>
   );
