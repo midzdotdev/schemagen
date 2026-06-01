@@ -62,6 +62,27 @@ describe("dedupeByIdentity", () => {
     expect(result.dropped.map((d) => d.record)).toEqual([{ id: "a", v: 1 }]);
   });
 
+  // Spec: docs/core-spec.md § "`dedupeByIdentity`" — null-key fallback
+  // Records that don't have the identity field can't be matched against each
+  // other by key, but byte-identical copies of those records should still
+  // collapse — a literal re-import of identity-less data must not pile up.
+  it("I_D5b: records missing identity fall back to byte-dedup", () => {
+    const samples = [
+      { id: "a", v: 1 },
+      { v: 1 }, // missing id
+      { v: 1 }, // byte-identical to the previous null-key record — dropped
+      { v: 1, extra: true }, // same v but different shape — kept
+      { id: "a", v: 2 }, // replaces { id: "a", v: 1 }
+    ];
+    const config: IdentityConfig = { fields: [["id"]] };
+    const result = dedupeByIdentity(samples, config);
+
+    expect(result.kept).toEqual([{ id: "a", v: 2 }, { v: 1 }, { v: 1, extra: true }]);
+    expect(result.dropped).toHaveLength(2);
+    const reasons = result.dropped.map((d) => d.reason).sort();
+    expect(reasons).toEqual(["duplicate-identity", "duplicate-record"]);
+  });
+
   // Spec: docs/core-spec.md § "`dedupeByIdentity`" — return type
   it("I_D6: dropped entries have reason 'duplicate-identity' and carry the dropped record", () => {
     const samples = [
