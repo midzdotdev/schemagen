@@ -1,4 +1,4 @@
-import { FileSearch, GitBranch, Plus, Search, X } from "lucide-react";
+import { Database, FileSearch, GitBranch, Plus, Search, X } from "lucide-react";
 import { useUIPref } from "@/hooks/useUIPrefs";
 import { useValidation } from "@/hooks/useValidation";
 import { useStore } from "@/state/store";
@@ -64,6 +64,16 @@ export function SchemaPanel() {
                 All records valid
               </Badge>
             ) : null}
+            <Button
+              variant="ghost"
+              size="xs"
+              className="gap-1 text-muted-foreground"
+              onClick={() => openModal("records")}
+              aria-label={`View ${records.length} records`}
+            >
+              <Database className="size-3" />
+              {records.length.toLocaleString()}
+            </Button>
             <Button
               variant="outline"
               size="xs"

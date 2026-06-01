@@ -9,6 +9,7 @@
 import { createContext, type ReactNode, useCallback, useContext, useMemo, useState } from "react";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { AddDataModal } from "../data-panel/AddDataModal";
+import { RecordsModal } from "../data-panel/RecordsModal";
 import { ExportModal } from "../export/ExportModal";
 import { IdentityConfigDialog } from "../identity/IdentityConfigDialog";
 import { InferenceOptionsDialog } from "../inference/InferenceOptionsDialog";
@@ -21,7 +22,8 @@ export type ModalName =
   | "reset"
   | "identity"
   | "inference-options"
-  | "add-data";
+  | "add-data"
+  | "records";
 
 interface UIShellContextValue {
   openModal: (name: ModalName) => void;
@@ -81,6 +83,7 @@ export function UIShellProvider({ children }: { children: ReactNode }) {
         onOpenChange={(o) => !o && closeModal()}
       />
       <AddDataModal open={current === "add-data"} onOpenChange={(o) => !o && closeModal()} />
+      <RecordsModal open={current === "records"} onOpenChange={(o) => !o && closeModal()} />
     </UIShellContext.Provider>
   );
 }
