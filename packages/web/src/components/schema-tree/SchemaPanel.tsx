@@ -49,7 +49,6 @@ export function SchemaPanel() {
       <PaneHeader
         title="Schema"
         icon={<GitBranch className="size-3.5" />}
-        description={`Inferred from ${records.length.toLocaleString()} record${records.length === 1 ? "" : "s"}`}
         actions={
           mismatches.length > 0 ? (
             <Badge variant="destructive" className="normal-case">
