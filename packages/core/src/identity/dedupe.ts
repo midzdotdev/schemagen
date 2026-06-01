@@ -35,16 +35,27 @@ export function dedupeByteIdentical(samples: unknown[]): DedupeResult {
 }
 
 // Dedup by identity key. Newest occurrence wins per identity — the later
-// record overwrites the earlier one at the same key. Records missing all of
-// the identity fields are kept verbatim (the identity has nothing to compare).
+// record overwrites the earlier one at the same key.
+//
+// Records missing any of the identity fields fall back to byte-dedup: a
+// literal re-import of an "identity-less" record still collapses. The
+// stringify cost is paid only on the null-key fall-through, so payloads
+// where every record has the key see the fast key-only path.
 export function dedupeByIdentity(samples: unknown[], config: IdentityConfig): DedupeResult {
   const kept: unknown[] = [];
   const dropped: { record: unknown; reason: DropReason }[] = [];
   const seenKeyToIndex = new Map<string, number>();
+  const seenNullKeyHash = new Set<string>();
 
   for (const s of samples) {
     const key = extractKey(s, config.fields);
     if (key === null) {
+      const hash = stringify(s) ?? "undefined";
+      if (seenNullKeyHash.has(hash)) {
+        dropped.push({ record: s, reason: "duplicate-record" });
+        continue;
+      }
+      seenNullKeyHash.add(hash);
       kept.push(s);
       continue;
     }
