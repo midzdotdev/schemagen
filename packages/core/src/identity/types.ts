@@ -4,7 +4,6 @@ import type { Path } from "../ir/types";
 
 export interface IdentityConfig {
   fields: Path[];
-  onDuplicate: "replace" | "skip";
 }
 
 export interface IdentityProposal {

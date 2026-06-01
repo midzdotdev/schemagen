@@ -27,7 +27,7 @@ describe("store.resetWorkspace", () => {
       entry: { type: { kind: "string" } },
     } as Change);
     store.setSelectedPath(["id"]);
-    store.setIdentityConfig({ fields: [["id"]], onDuplicate: "replace" });
+    store.setIdentityConfig({ fields: [["id"]] });
 
     useStore.getState().resetWorkspace();
 

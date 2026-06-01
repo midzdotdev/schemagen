@@ -32,10 +32,10 @@ describe("ingestRecords", () => {
   });
 
   it("returns identityProposal: undefined when an identityConfig is already set", () => {
-    const r = ingestRecords(
-      { ...baseState, identityConfig: { fields: [["id"]], onDuplicate: "replace" } },
-      [{ id: "a" }, { id: "b" }],
-    );
+    const r = ingestRecords({ ...baseState, identityConfig: { fields: [["id"]] } }, [
+      { id: "a" },
+      { id: "b" },
+    ]);
     expect(r.identityProposal).toBeUndefined();
   });
 
@@ -52,7 +52,7 @@ describe("ingestRecords", () => {
       {
         ...baseState,
         records: [{ id: "a", v: 1 }],
-        identityConfig: { fields: [["id"]], onDuplicate: "replace" },
+        identityConfig: { fields: [["id"]] },
       },
       [{ id: "a", v: 2 }, { id: "b" }],
     );

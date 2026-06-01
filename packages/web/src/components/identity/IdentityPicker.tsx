@@ -2,10 +2,9 @@
 // UI can render inline inside the new-workspace wizard while the dialog form
 // keeps its own modal entry point.
 //
-// Owns no decision authority: it surfaces the field stats, selection, and
-// dedup preview, then hands the user's intent up via onChange.
+// Owns no decision authority: it surfaces the field stats + selection and
+// hands the user's intent up via onSelectedChange.
 
-import type { IdentityConfig } from "@schemagen/core";
 import { useMemo } from "react";
 import { cn } from "@/lib/cn";
 import {
@@ -18,38 +17,10 @@ import { useStore } from "@/state/store";
 
 export interface IdentityPickerProps {
   selected: string[];
-  mode: IdentityConfig["onDuplicate"];
   onSelectedChange: (next: string[]) => void;
-  onModeChange: (next: IdentityConfig["onDuplicate"]) => void;
-  // Mention the right next-step copy in the helper text. The dialog says
-  // "Apply"; the wizard says "Continue".
-  applyVerb?: string;
 }
 
-export const ON_DUPLICATE_MODES: {
-  value: IdentityConfig["onDuplicate"];
-  label: string;
-  description: string;
-}[] = [
-  {
-    value: "replace",
-    label: "Replace",
-    description:
-      "Newest wins. Best for snapshot-style imports where you want the current entity set.",
-  },
-  {
-    value: "skip",
-    label: "Skip",
-    description: "First occurrence wins. Useful when you want to lock in the original version.",
-  },
-];
-
-export function IdentityPicker({
-  selected,
-  mode,
-  onSelectedChange,
-  onModeChange,
-}: IdentityPickerProps) {
+export function IdentityPicker({ selected, onSelectedChange }: IdentityPickerProps) {
   const records = useStore((s) => s.records);
 
   const allStats = useMemo(() => computeFieldStats(records), [records]);
@@ -158,40 +129,13 @@ export function IdentityPicker({
         )}
         <p className="text-[11px] text-muted-foreground">
           Toggle one field for a simple key, or several for a composite key (uniqueness of the tuple
-          is shown above).
+          is shown above). Duplicates on the identity key keep the newest version.
         </p>
         <p className="rounded-md border border-dashed border-border bg-muted/30 px-2 py-1.5 text-[11px] text-muted-foreground">
           Either way, schemagen always collapses records that are byte-identical (same fields and
           values, regardless of key order) — re-imports of the same payload won't pile up.
         </p>
       </div>
-      <fieldset className="flex flex-col gap-1.5">
-        <legend className="text-xs font-medium text-foreground">On duplicate</legend>
-        {ON_DUPLICATE_MODES.map((m) => (
-          <label
-            key={m.value}
-            className={cn(
-              "flex cursor-pointer items-start gap-2 rounded-md border p-2 text-xs transition-colors",
-              mode === m.value
-                ? "border-ring/40 bg-accent/60"
-                : "border-border hover:border-border/80 hover:bg-accent/30",
-            )}
-          >
-            <input
-              type="radio"
-              name="onDuplicate"
-              value={m.value}
-              checked={mode === m.value}
-              onChange={() => onModeChange(m.value)}
-              className="mt-0.5"
-            />
-            <span>
-              <span className="font-medium">{m.label}</span>
-              <span className="ml-1.5 text-muted-foreground">{m.description}</span>
-            </span>
-          </label>
-        ))}
-      </fieldset>
     </div>
   );
 }
