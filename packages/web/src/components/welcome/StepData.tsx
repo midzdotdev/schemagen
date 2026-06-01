@@ -69,8 +69,7 @@ export function StepData(_props: StepDataProps) {
     [records, shape.recordsAreObjects],
   );
   const primitiveFields = useMemo(
-    () =>
-      stats.filter((s) => ["string", "number", "boolean"].includes(s.kind)).length,
+    () => stats.filter((s) => ["string", "number", "boolean"].includes(s.kind)).length,
     [stats],
   );
   const compoundFields = stats.length - primitiveFields;

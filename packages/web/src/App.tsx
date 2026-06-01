@@ -40,7 +40,7 @@ export function App() {
             {isFresh ? (
               <WelcomeView />
             ) : inWizard ? (
-              <WorkspaceWizard onSkip={() => setWizardCompleted(true)} />
+              <WorkspaceWizard onComplete={() => setWizardCompleted(true)} />
             ) : ir ? (
               <ThreePaneLayoutPostIR
                 collapsed={collapsed}

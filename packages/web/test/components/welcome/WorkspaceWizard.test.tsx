@@ -87,4 +87,33 @@ describe("WorkspaceWizard — step transitions", () => {
     await user.click(screen.getByRole("button", { name: /back/i }));
     expect(screen.getByRole("heading", { name: /your data/i })).toBeInTheDocument();
   });
+
+  // Plan § "Step 3 — Inference options" — Generate runs inference and
+  // unmounts the wizard.
+  it("HH-W8: Generate schema sets the IR and unmounts the wizard", async () => {
+    const user = userEvent.setup();
+    act(() => {
+      useStore.getState().setRecords([{ id: 1, name: "Alice" }]);
+    });
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: /^continue$/i }));
+    await user.click(screen.getByRole("button", { name: /skip identity/i }));
+    await user.click(screen.getByRole("button", { name: /generate schema/i }));
+    expect(useStore.getState().ir).not.toBeNull();
+    expect(screen.queryByRole("region", { name: /workspace wizard/i })).toBeNull();
+  });
+
+  // Plan § "Resolved interpretations #5" — Skip wizard fast-forwards to
+  // Generate from any step.
+  it("HH-W9: Skip wizard runs inference and unmounts the wizard", async () => {
+    const user = userEvent.setup();
+    act(() => {
+      useStore.getState().setRecords([{ id: 1, name: "Alice" }]);
+    });
+    render(<App />);
+    expect(screen.getByRole("heading", { name: /your data/i })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /skip wizard/i }));
+    expect(useStore.getState().ir).not.toBeNull();
+    expect(screen.queryByRole("region", { name: /workspace wizard/i })).toBeNull();
+  });
 });
