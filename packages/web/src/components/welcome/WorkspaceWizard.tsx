@@ -1,29 +1,47 @@
 // PR HH — new-workspace wizard. See docs/plans/pr-hh-workspace-wizard.md.
 //
-// Phase 2 scaffold. Three steps (Data → Identity → Inference → Generate)
-// are filled in by subsequent phases. For now this is the gated container —
-// App.tsx renders it whenever a workspace has records but no IR and the
-// user hasn't already finished the wizard.
+// Three steps (Data → Identity → Inference → Generate). Phase 3 fills in
+// Step 1 + the shared shell; subsequent phases fill in Steps 2 & 3 and
+// the skip-wizard fast-forward.
+
+import { useState } from "react";
+import { StepData } from "./StepData";
+import { WizardStepShell } from "./WizardStepShell";
 
 export interface WorkspaceWizardProps {
   onSkip: () => void;
 }
 
-export function WorkspaceWizard(_props: WorkspaceWizardProps) {
+type WizardStep = "data" | "identity" | "inference";
+
+export function WorkspaceWizard({ onSkip }: WorkspaceWizardProps) {
+  const [step, setStep] = useState<WizardStep>("data");
+
+  if (step === "data") {
+    return (
+      <WizardStepShell
+        step={1}
+        title="Your data"
+        sub="Here's a quick look before you set up identity and inference."
+        onContinue={() => setStep("identity")}
+        onSkip={onSkip}
+      >
+        <StepData onContinue={() => setStep("identity")} />
+      </WizardStepShell>
+    );
+  }
+
+  // Phases 4 / 5 — identity + inference. Render placeholders for now so the
+  // wizard remains navigable while the bodies are filled in.
   return (
-    <section
-      aria-label="Workspace wizard"
-      className="mx-auto flex h-full w-full max-w-2xl flex-col gap-8 overflow-y-auto px-6 py-10"
+    <WizardStepShell
+      step={step === "identity" ? 2 : 3}
+      title={step === "identity" ? "Identity key" : "Inference options"}
+      sub="Coming next."
+      onBack={() => setStep(step === "identity" ? "data" : "identity")}
+      onSkip={onSkip}
     >
-      <header className="flex flex-col gap-2">
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-          Set up your workspace
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          Three quick steps before schemagen generates your schema.
-        </p>
-      </header>
-      {/* Phase 3+ fill in the active step body, Back/Continue/Skip controls. */}
-    </section>
+      <p className="text-sm text-muted-foreground">Step body lands in the next phase.</p>
+    </WizardStepShell>
   );
 }
