@@ -61,7 +61,11 @@ export function ThreePaneLayoutPostIR({
             </section>
           </Panel>
           <Separator className={SEPARATOR_CLASS} aria-label="Resize inspector pane" />
-          <Panel id="inspector" minSize={MIN_INSPECTOR} className="flex min-h-0 flex-col bg-card/30">
+          <Panel
+            id="inspector"
+            minSize={MIN_INSPECTOR}
+            className="flex min-h-0 flex-col bg-card/30"
+          >
             <section aria-label="Inspector" className="flex min-h-0 flex-1 flex-col">
               {inspector}
             </section>

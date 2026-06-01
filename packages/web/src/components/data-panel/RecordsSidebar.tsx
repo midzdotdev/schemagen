@@ -41,12 +41,7 @@ export function RecordsSidebar({ collapsed, onToggle }: RecordsSidebarProps) {
         <span className="font-mono text-[10px] tabular-nums text-muted-foreground group-hover:text-foreground">
           {count.toLocaleString()}
         </span>
-        {filter && (
-          <Filter
-            className="size-3 text-primary"
-            aria-label="Filter active"
-          />
-        )}
+        {filter && <Filter className="size-3 text-primary" aria-label="Filter active" />}
         <ChevronRight
           className="mt-auto size-3 text-muted-foreground/60 group-hover:text-foreground"
           aria-hidden
@@ -112,9 +107,7 @@ export function RecordsSidebar({ collapsed, onToggle }: RecordsSidebarProps) {
       )}
       <div className="min-h-0 flex-1 overflow-hidden">
         {count === 0 ? (
-          <p className="px-3 py-4 text-xs text-muted-foreground">
-            No records in this workspace.
-          </p>
+          <p className="px-3 py-4 text-xs text-muted-foreground">No records in this workspace.</p>
         ) : (
           <RecordList records={records} />
         )}

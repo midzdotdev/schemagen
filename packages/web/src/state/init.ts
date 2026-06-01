@@ -44,6 +44,8 @@ export function getCurrentAdapter(): WorkspaceAdapter | null {
   return session.getAdapter();
 }
 
-export async function loadWorkspaceBundle(bundle: WorkspaceBundle): Promise<{ workspaceId: string }> {
+export async function loadWorkspaceBundle(
+  bundle: WorkspaceBundle,
+): Promise<{ workspaceId: string }> {
   return session.loadBundle(bundle);
 }

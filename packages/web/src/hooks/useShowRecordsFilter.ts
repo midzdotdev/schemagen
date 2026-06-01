@@ -3,8 +3,8 @@
 // buttons that surface matching records.
 
 import { useCallback } from "react";
-import type { RecordsFilter } from "@/state/types";
 import { useStore } from "@/state/store";
+import type { RecordsFilter } from "@/state/types";
 import { useUIPref } from "./useUIPrefs";
 
 export function useShowRecordsFilter(): (filter: RecordsFilter) => void {

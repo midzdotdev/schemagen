@@ -57,5 +57,4 @@ describe("identity store slices", () => {
     useStore.getState().setIdentityConfig({ fields: [["id"]], onDuplicate: "skip" });
     expect(useStore.getState().records).toEqual([{ id: 1, v: "first" }]);
   });
-
 });
