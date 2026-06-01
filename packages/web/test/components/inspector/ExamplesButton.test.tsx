@@ -51,8 +51,9 @@ describe("ExamplesButton", () => {
     expect(useStore.getState().recordsFilter?.indices).toEqual([0, 2]);
   });
 
-  // Filter label defaults to the selected path so the sidebar chip is meaningful.
-  it("X3-EB4: filter label defaults to the formatted selected path", async () => {
+  // The chip's `path` segment shows the selected path so the user can see what
+  // they filtered by; the `predicate` segment explains what the filter checks.
+  it("X3-EB4: filter sets path to the formatted selected path", async () => {
     const user = userEvent.setup();
     act(() => {
       useStore.getState().setIR(ir);
@@ -61,6 +62,18 @@ describe("ExamplesButton", () => {
     });
     render(<ExamplesButton />);
     await user.click(screen.getByRole("button"));
-    expect(useStore.getState().recordsFilter?.label).toBe("status");
+    expect(useStore.getState().recordsFilter?.path).toBe("status");
+  });
+
+  it("X3-EB5: predicate defaults to 'is present' so the chip explains the no-predicate case", async () => {
+    const user = userEvent.setup();
+    act(() => {
+      useStore.getState().setIR(ir);
+      useStore.getState().setRecords([{ status: "active" }]);
+      useStore.getState().setSelectedPath(["status"]);
+    });
+    render(<ExamplesButton />);
+    await user.click(screen.getByRole("button"));
+    expect(useStore.getState().recordsFilter?.predicate).toBe("is present");
   });
 });

@@ -12,16 +12,18 @@ import { Button } from "../ui/button";
 export interface ExamplesButtonProps {
   predicate?: (value: unknown) => boolean;
   label?: string;
-  // Filter chip text when a custom predicate is in use (e.g. "format: email").
-  // Falls back to the field path alone when omitted.
-  filterLabel?: string;
+  // Predicate description shown in the records-filter chip beside the path.
+  // Defaults to "is present" to explain the no-predicate ("has this field")
+  // case. Pass an English phrase when supplying a predicate function — e.g.
+  // 'matches format "email"'.
+  predicateDescription?: string;
   size?: "default" | "sm" | "xs";
 }
 
 export function ExamplesButton({
   predicate,
   label = "Show records",
-  filterLabel,
+  predicateDescription = "is present",
   size = "xs",
 }: ExamplesButtonProps) {
   const ir = useStore((s) => s.ir);
@@ -38,9 +40,9 @@ export function ExamplesButton({
       className="text-muted-foreground"
       onClick={() => {
         const refs = findExamples(ir, records, selectedPath, predicate, records.length);
-        const path = formatPath(selectedPath);
         showRecords({
-          label: filterLabel ?? path,
+          path: formatPath(selectedPath),
+          predicate: predicateDescription,
           indices: refs.map((r) => r.index),
         });
       }}

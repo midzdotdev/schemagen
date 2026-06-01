@@ -31,7 +31,8 @@ export function MismatchEntry({ mismatch }: MismatchEntryProps) {
       records.length,
     );
     showRecords({
-      label: `${formatPath(mismatch.path)} = ${previewValue(target)}`,
+      path: formatPath(mismatch.path),
+      predicate: `= ${previewValue(target)}`,
       indices: refs.map((r) => r.index),
     });
   }

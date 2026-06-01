@@ -83,11 +83,9 @@ export function RecordsSidebar({ collapsed, onToggle }: RecordsSidebarProps) {
           className="flex shrink-0 items-center gap-2 border-b border-border bg-primary/5 px-3 py-1.5"
         >
           <Filter className="size-3 shrink-0 text-primary" aria-hidden />
-          <span className="min-w-0 flex-1 truncate font-mono text-[11px] text-foreground">
-            {filter.label}
-          </span>
-          <span className="shrink-0 font-mono text-[10px] tabular-nums text-muted-foreground">
-            {filteredCount.toLocaleString()}
+          <span className="min-w-0 flex-1 truncate text-[11px]">
+            <span className="font-mono text-foreground">{filter.path}</span>{" "}
+            <span className="text-muted-foreground">{filter.predicate}</span>
           </span>
           <button
             type="button"
