@@ -2,12 +2,15 @@
 // Plan: docs/plans/pr-z-inference-options.md
 //
 // Tunes how the initial schema is built. Applies only at cold-start (ir === null);
-// once an IR exists the dialog still opens but inputs are disabled and Apply is
+// once an IR exists the dialog still opens but inputs are disabled and Reset is
 // hidden — the schema tree is the right surface to edit per-node after that.
+//
+// Autosaves on every change — no Apply or Cancel buttons. The user closes via
+// the Radix X / Escape. "Reset to defaults" lives in the footer.
 
 import { type InferOptions, resolveOptions } from "@schemagen/core";
 import { AlertTriangle, Braces, GitBranch, Hash, ScanText, Tags } from "lucide-react";
-import { type ReactNode, useEffect, useId, useState } from "react";
+import { type ReactNode, useId } from "react";
 import { cn } from "@/lib/cn";
 import { useStore } from "@/state/store";
 import { Button } from "../ui/button";
@@ -36,8 +39,6 @@ interface FormState {
 }
 
 function seed(opts: InferOptions | null): FormState {
-  // Reuse core's resolver to fill in defaults, then project to FormState
-  // (drops `formats.detect` and `discriminators.fields` — see interpretation #1).
   const r = resolveOptions(opts ?? undefined);
   return {
     literals: r.literals,
@@ -50,9 +51,9 @@ function seed(opts: InferOptions | null): FormState {
 }
 
 // Pre-resolved defaults for the "Default: X" muted labels next to each input.
-// Drift-proof — these values come from the same source as `resolveOptions`.
 const D = resolveOptions(undefined);
 const onOff = (b: boolean): string => (b ? "on" : "off");
+const pct = (n: number): string => `${Math.round(n * 100)}%`;
 
 function rangeModeLabel(mode: "off" | "evidence-only" | "constraint"): string {
   if (mode === "off") return "Ignore";
@@ -81,24 +82,16 @@ export function InferenceOptionsDialog({ open, onOpenChange }: InferenceOptionsD
   const setInferenceOptions = useStore((s) => s.setInferenceOptions);
   const irExists = ir !== null;
 
-  const [form, setForm] = useState<FormState>(() => seed(stored));
+  // Form is derived directly from stored — autosave means there's no separate
+  // working copy to manage.
+  const form = seed(stored);
 
-  useEffect(() => {
-    if (open) setForm(seed(stored));
-  }, [open, stored]);
-
-  function handleApply(): void {
-    setInferenceOptions(commit(form));
-    onOpenChange(false);
+  function set<K extends keyof FormState>(key: K, value: FormState[K]): void {
+    setInferenceOptions(commit({ ...form, [key]: value }));
   }
 
   function handleReset(): void {
     setInferenceOptions(null);
-    setForm(seed(null));
-  }
-
-  function set<K extends keyof FormState>(key: K, value: FormState[K]): void {
-    setForm((prev) => ({ ...prev, [key]: value }));
   }
 
   return (
@@ -109,7 +102,7 @@ export function InferenceOptionsDialog({ open, onOpenChange }: InferenceOptionsD
           <DialogDescription>
             {irExists
               ? "A schema already exists for this workspace. These options apply only at first import — edit fields directly in the schema tree."
-              : "These tune how schemagen builds the initial schema from your records. They apply only to a new workspace's first import — once a schema exists, edit fields directly in the schema tree."}
+              : "These tune how schemagen builds the initial schema from your records. Changes apply immediately and only to a new workspace's first import — once a schema exists, edit fields directly in the schema tree."}
           </DialogDescription>
         </DialogHeader>
 
@@ -152,15 +145,12 @@ export function InferenceOptionsDialog({ open, onOpenChange }: InferenceOptionsD
             </Row>
             <Row
               label="Skip when too varied"
-              defaultLabel={String(D.literals.maxUniqueRatio)}
-              help="Skip the union if more than this fraction of records have a unique value. 0.5 means 'skip when over half the values are one-offs'."
+              defaultLabel={pct(D.literals.maxUniqueRatio)}
+              help="Skip the union if more than this percent of records have a unique value. 50% means 'skip when over half the values are one-offs'."
             >
               {(id) => (
-                <NumberInput
+                <PercentInput
                   id={id}
-                  min={0}
-                  max={1}
-                  step={0.05}
                   value={form.literals.maxUniqueRatio}
                   onChange={(v) => set("literals", { ...form.literals, maxUniqueRatio: v })}
                 />
@@ -268,15 +258,12 @@ export function InferenceOptionsDialog({ open, onOpenChange }: InferenceOptionsD
             </Row>
             <Row
               label="Field must be present in"
-              defaultLabel={`${(D.objects.optionalThreshold * 100).toFixed(0)}% of records`}
-              help="Fraction of records that need to contain a field for it to be 'required'. 1.0 = present in every single record; below that, the field is marked optional."
+              defaultLabel={`${pct(D.objects.optionalThreshold)} of records`}
+              help="Percent of records that need to contain a field for it to be 'required'. 100% = present in every single record; below that, the field is marked optional."
             >
               {(id) => (
-                <NumberInput
+                <PercentInput
                   id={id}
-                  min={0}
-                  max={1}
-                  step={0.05}
                   value={form.objects.optionalThreshold}
                   onChange={(v) => set("objects", { ...form.objects, optionalThreshold: v })}
                 />
@@ -329,20 +316,10 @@ export function InferenceOptionsDialog({ open, onOpenChange }: InferenceOptionsD
           </Section>
         </fieldset>
 
-        <div className="flex justify-between">
+        <div className="flex justify-start">
           <Button variant="ghost" size="sm" onClick={handleReset} disabled={!stored || irExists}>
             Reset to defaults
           </Button>
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => onOpenChange(false)}>
-              {irExists ? "Close" : "Cancel"}
-            </Button>
-            {!irExists && (
-              <Button size="sm" onClick={handleApply}>
-                Apply
-              </Button>
-            )}
-          </div>
         </div>
       </DialogContent>
     </Dialog>
@@ -383,23 +360,23 @@ function Section({
   children: ReactNode;
 }) {
   return (
-    <fieldset
+    <div
+      role="group"
+      aria-label={title}
       className={cn(
-        "flex flex-col gap-2 rounded-md border border-border border-l-2 bg-card/30 px-3 py-2.5",
+        "flex flex-col gap-2 rounded-md border border-l-2 border-border bg-card/30 px-3 py-3",
         ACCENT_BORDER[accent],
       )}
     >
-      <legend
-        className={cn("flex items-center gap-1.5 px-1.5 text-xs font-medium", ACCENT_TEXT[accent])}
-      >
+      <div className={cn("flex items-center gap-1.5 text-xs font-medium", ACCENT_TEXT[accent])}>
         {icon}
         {title}
-      </legend>
+      </div>
       {description && (
         <p className="text-[11px] leading-relaxed text-muted-foreground">{description}</p>
       )}
       <div className="flex flex-col gap-1 pt-1">{children}</div>
-    </fieldset>
+    </div>
   );
 }
 
@@ -412,7 +389,7 @@ function Row({
   label: string;
   defaultLabel: string;
   help?: string;
-  children: (id: string) => React.ReactNode;
+  children: (id: string) => ReactNode;
 }) {
   const id = useId();
   return (
@@ -469,5 +446,36 @@ function NumberInput({
       className="w-20 rounded border border-border bg-card px-2 py-0.5 text-right text-xs"
       {...rest}
     />
+  );
+}
+
+// 0..1 ratio displayed as 0..100 percent. Stored as the underlying fraction
+// so the InferOptions type stays unchanged.
+function PercentInput({
+  id,
+  value,
+  onChange,
+}: {
+  id: string;
+  value: number;
+  onChange: (v: number) => void;
+}) {
+  return (
+    <div className="flex items-center gap-1">
+      <input
+        id={id}
+        type="number"
+        min={0}
+        max={100}
+        step={5}
+        value={Math.round(value * 100)}
+        onChange={(e) => {
+          const n = Number(e.target.value);
+          if (Number.isFinite(n)) onChange(Math.max(0, Math.min(100, n)) / 100);
+        }}
+        className="w-16 rounded border border-border bg-card px-2 py-0.5 text-right text-xs"
+      />
+      <span className="text-[11px] text-muted-foreground">%</span>
+    </div>
   );
 }

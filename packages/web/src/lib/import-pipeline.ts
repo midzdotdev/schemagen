@@ -25,10 +25,10 @@ export function ingestText(
   const root = checkRoot(parsed.value);
   if (!root.ok) return { ok: false, error: root.error };
   const candidates = enumerateCandidates(parsed.value);
-  if (!root.needsPicker && Array.isArray(parsed.value)) {
-    onRecords(parsed.value);
-    return { ok: true, parsed: parsed.value, candidates };
-  }
+  // Always show the picker when there's anything to pick — gives the user
+  // explicit confirmation of which array became the records. Only fall back
+  // to the wrap-as-single-record path when no candidates exist at all (e.g.
+  // pasted a single scalar).
   if (candidates.length === 0) {
     onRecords([parsed.value]);
     return { ok: true, parsed: parsed.value, candidates };

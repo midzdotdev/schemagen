@@ -11,8 +11,11 @@ function dataTransferLike(file: File): unknown {
 }
 
 describe("DropZone", () => {
-  // Spec: docs/frontend-spec.md § "Importing records" — drag-and-drop accepts JSON
-  it("X5-DZ1: dropping a .json file calls onRecords", async () => {
+  // Spec: docs/frontend-spec.md § "Importing records" — drag-and-drop accepts JSON.
+  // ingestText now always fires the picker when there's a candidate root array
+  // (even for a top-level array → one candidate), so onNeedsPicker is what's
+  // called here, not onRecords.
+  it("X5-DZ1: dropping a .json file opens the root picker with its candidates", async () => {
     const onRecords = vi.fn();
     const onNeedsPicker = vi.fn();
     render(
@@ -25,7 +28,11 @@ describe("DropZone", () => {
     fireEvent.dragOver(zone, { dataTransfer: dataTransferLike(file) });
     fireEvent.drop(zone, { dataTransfer: dataTransferLike(file) });
     await new Promise((r) => setTimeout(r, 30));
-    expect(onRecords).toHaveBeenCalledWith([{ id: 1 }, { id: 2 }]);
+    expect(onNeedsPicker).toHaveBeenCalledWith(
+      [{ id: 1 }, { id: 2 }],
+      expect.arrayContaining([expect.objectContaining({ path: [], recordCount: 2 })]),
+    );
+    expect(onRecords).not.toHaveBeenCalled();
   });
 
   // Spec: docs/frontend-spec.md § "Importing records" — non-JSON silently ignored
