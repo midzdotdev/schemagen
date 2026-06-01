@@ -1,12 +1,10 @@
-import { Database, FileSearch, GitBranch, Plus, Search, X } from "lucide-react";
+import { FileSearch, GitBranch, Search, X } from "lucide-react";
 import { useUIPref } from "@/hooks/useUIPrefs";
 import { useValidation } from "@/hooks/useValidation";
 import { useStore } from "@/state/store";
 import { EmptyState } from "../shell/EmptyState";
 import { PaneHeader } from "../shell/PaneHeader";
-import { useUIShell } from "../shell/UIShell";
 import { Badge } from "../ui/badge";
-import { Button } from "../ui/button";
 import { GenerateSchemaCard } from "./GenerateSchemaCard";
 import { SchemaTree } from "./SchemaTree";
 
@@ -15,14 +13,8 @@ export function SchemaPanel() {
   const records = useStore((s) => s.records);
   const workspaceId = useStore((s) => s.workspaceId);
   const { mismatches } = useValidation();
-  const { openModal } = useUIShell();
   // Persist the filter query per workspace so it survives reload.
   const [query, setQuery] = useUIPref(workspaceId, "schemaFilter");
-  // Records sidebar — schema header button toggles it (mirrors the strip).
-  const [recordsCollapsed, setRecordsCollapsed] = useUIPref(
-    workspaceId,
-    "recordsSidebarCollapsed",
-  );
 
   if (!ir) {
     // PR AA — once records arrive, schema inference is the user's explicit
@@ -59,41 +51,15 @@ export function SchemaPanel() {
         icon={<GitBranch className="size-3.5" />}
         description={`Inferred from ${records.length.toLocaleString()} record${records.length === 1 ? "" : "s"}`}
         actions={
-          <div className="flex items-center gap-2">
-            {mismatches.length > 0 ? (
-              <Badge variant="destructive" className="normal-case">
-                {mismatches.length} mismatch{mismatches.length === 1 ? "" : "es"}
-              </Badge>
-            ) : records.length > 0 ? (
-              <Badge variant="success" className="normal-case">
-                All records valid
-              </Badge>
-            ) : null}
-            <Button
-              variant="ghost"
-              size="xs"
-              className="gap-1 text-muted-foreground"
-              onClick={() => setRecordsCollapsed(!recordsCollapsed)}
-              aria-label={
-                recordsCollapsed
-                  ? `Show ${records.length} records`
-                  : `Hide records sidebar`
-              }
-              aria-expanded={!recordsCollapsed}
-            >
-              <Database className="size-3" />
-              {records.length.toLocaleString()}
-            </Button>
-            <Button
-              variant="outline"
-              size="xs"
-              className="gap-1"
-              onClick={() => openModal("add-data")}
-            >
-              <Plus className="size-3" />
-              Add data
-            </Button>
-          </div>
+          mismatches.length > 0 ? (
+            <Badge variant="destructive" className="normal-case">
+              {mismatches.length} mismatch{mismatches.length === 1 ? "" : "es"}
+            </Badge>
+          ) : records.length > 0 ? (
+            <Badge variant="success" className="normal-case">
+              All records valid
+            </Badge>
+          ) : null
         }
       />
       <div className="flex shrink-0 items-center gap-1.5 border-b border-border bg-background px-3 py-2">

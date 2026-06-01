@@ -5,9 +5,10 @@
 // 2. Expanded: pane header + (optional) active-filter chip + virtualised
 //    RecordList. The header's chevron collapses back to a strip.
 
-import { ChevronLeft, ChevronRight, Database, Filter, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Database, Filter, Plus, X } from "lucide-react";
 import { useStore } from "@/state/store";
 import { PaneHeader } from "../shell/PaneHeader";
+import { useUIShell } from "../shell/UIShell";
 import { Button } from "../ui/button";
 import { RecordList } from "./RecordList";
 
@@ -20,6 +21,7 @@ export function RecordsSidebar({ collapsed, onToggle }: RecordsSidebarProps) {
   const records = useStore((s) => s.records);
   const filter = useStore((s) => s.recordsFilter);
   const setRecordsFilter = useStore((s) => s.setRecordsFilter);
+  const { openModal } = useUIShell();
   const count = records.length;
   const filteredCount = filter?.indices.length ?? count;
 
@@ -64,16 +66,27 @@ export function RecordsSidebar({ collapsed, onToggle }: RecordsSidebarProps) {
             : `${count.toLocaleString()} stored`
         }
         actions={
-          <Button
-            variant="ghost"
-            size="xs"
-            className="gap-1 text-muted-foreground"
-            onClick={onToggle}
-            aria-label="Collapse records sidebar"
-            aria-expanded="true"
-          >
-            <ChevronLeft className="size-3" />
-          </Button>
+          <>
+            <Button
+              variant="outline"
+              size="xs"
+              className="gap-1"
+              onClick={() => openModal("add-data")}
+            >
+              <Plus className="size-3" />
+              Add data
+            </Button>
+            <Button
+              variant="ghost"
+              size="xs"
+              className="gap-1 text-muted-foreground"
+              onClick={onToggle}
+              aria-label="Collapse records sidebar"
+              aria-expanded="true"
+            >
+              <ChevronLeft className="size-3" />
+            </Button>
+          </>
         }
       />
       {filter && (

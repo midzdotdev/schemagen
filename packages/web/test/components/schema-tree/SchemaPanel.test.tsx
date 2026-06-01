@@ -66,52 +66,16 @@ describe("SchemaPanel — explicit infer CTA", () => {
     expect(screen.getByText(/strict defaults/i)).toBeInTheDocument();
   });
 
-  // PR EE — post-IR, the data panel is gone; importing more data uses the
-  // 'Add data' button surfaced in the schema header.
-  it("EE-SP1: schema panel renders an 'Add data' button when IR exists", () => {
+  // Records-sidebar takeover — the schema header no longer carries the
+  // 'View N records' or 'Add data' affordances. Both now live on the
+  // RecordsSidebar header (see RecordsSidebar.test.tsx).
+  it("schema header carries neither 'Add data' nor 'View records' post-IR", () => {
     act(() => {
       useStore.getState().setIR({ kind: "object", fields: {}, additional: false });
-    });
-    renderPanel();
-    expect(screen.getByRole("button", { name: /add data/i })).toBeInTheDocument();
-  });
-
-  it("EE-SP2: 'Add data' button is hidden when no IR is set", () => {
-    act(() => {
       useStore.getState().setRecords([{ id: "a" }]);
     });
     renderPanel();
     expect(screen.queryByRole("button", { name: /add data/i })).toBeNull();
-  });
-
-  it("EE-SP3: clicking 'Add data' opens the AddDataModal", async () => {
-    const user = userEvent.setup();
-    act(() => {
-      useStore.getState().setIR({ kind: "object", fields: {}, additional: false });
-    });
-    renderPanel();
-    await user.click(screen.getByRole("button", { name: /add data/i }));
-    expect(screen.getByRole("dialog", { name: /add data/i })).toBeInTheDocument();
-  });
-
-  // PR GG — records panel was dropped in EE; this restores read access via the header.
-  it("GG-SP1: schema header shows a 'View N records' button when IR exists", () => {
-    act(() => {
-      useStore.getState().setIR({ kind: "object", fields: {}, additional: false });
-      useStore.getState().setRecords([{ id: "a" }, { id: "b" }, { id: "c" }]);
-    });
-    renderPanel();
-    expect(screen.getByRole("button", { name: /view 3 records/i })).toBeInTheDocument();
-  });
-
-  it("GG-SP2: clicking the records button opens the RecordsModal", async () => {
-    const user = userEvent.setup();
-    act(() => {
-      useStore.getState().setIR({ kind: "object", fields: {}, additional: false });
-      useStore.getState().setRecords([{ id: "a" }]);
-    });
-    renderPanel();
-    await user.click(screen.getByRole("button", { name: /view 1 records/i }));
-    expect(screen.getByRole("dialog", { name: /records/i })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /view .* records/i })).toBeNull();
   });
 });
