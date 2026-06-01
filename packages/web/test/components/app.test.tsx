@@ -21,8 +21,14 @@ describe("App", () => {
 
   // PR EE — pre-IR (with records imported) shows all three regions; post-IR
   // drops the data pane. A workspace that is truly fresh (no records, no IR)
-  // shows the welcome view and is covered separately.
-  it("W0-2: pre-IR with records renders the three top-level regions", () => {
+  // shows the welcome view and is covered separately; one with records but
+  // no IR shows the wizard until the user finishes it.
+  it("W0-2: pre-IR with records (wizard done) renders the three top-level regions", () => {
+    const workspaceId = useStore.getState().workspaceId;
+    window.localStorage.setItem(
+      `schemagen.uiPrefs.${workspaceId}`,
+      JSON.stringify({ wizardCompleted: true }),
+    );
     act(() => {
       useStore.getState().setRecords([{ id: 1 }]);
     });
