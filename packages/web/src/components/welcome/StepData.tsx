@@ -1,9 +1,16 @@
 // PR HH Step 1 — Your data. A "did the import work?" reassurance: record
-// count, top-level shape, primitive/compound field breakdown, and the
-// first record under a collapsed disclosure.
+// count, top-level shape, primitive/compound field breakdown, and a
+// scrollable peek at the first record.
+//
+// When the original import had multiple candidate root paths (e.g. nested
+// objects with arrays at several levels), surfaces a "Pick a different
+// root path…" affordance — re-opens the same RootPickerModal that fired
+// during welcome-view import.
 
-import { ChevronRight } from "lucide-react";
-import { useMemo } from "react";
+import { GitFork } from "lucide-react";
+import { useMemo, useState } from "react";
+import { RootPickerModal } from "@/components/data-panel/RootPickerModal";
+import { Button } from "@/components/ui/button";
 import { JsonView } from "@/components/ui/json-view";
 import { computeFieldStats } from "@/lib/field-stats";
 import { useStore } from "@/state/store";
@@ -63,7 +70,10 @@ function pluralise(noun: string, count: number): string {
 
 export function StepData(_props: StepDataProps) {
   const records = useStore((s) => s.records);
+  const setRecords = useStore((s) => s.setRecords);
+  const pendingImport = useStore((s) => s.pendingImport);
   const count = records.length;
+  const [pickerOpen, setPickerOpen] = useState(false);
 
   const shape = useMemo(() => describeShape(records), [records]);
   const stats = useMemo(
@@ -85,29 +95,53 @@ export function StepData(_props: StepDataProps) {
         <Stat label="Shape" value={shape.label} />
         {shape.recordsAreObjects && stats.length > 0 && (
           <>
-            <Stat label="Primitive fields" value={`${primitiveFields} primitive fields`} />
-            <Stat label="Compound fields" value={`${compoundFields} compound (object/array)`} />
+            <Stat label="Simple fields" value={`${primitiveFields} (string, number, boolean)`} />
+            <Stat label="Nested fields" value={`${compoundFields} (object, array)`} />
           </>
         )}
       </div>
 
+      {pendingImport && pendingImport.candidates.length > 1 && (
+        <div className="flex items-center justify-between gap-3 rounded-md border border-dashed border-border bg-muted/30 px-3 py-2">
+          <span className="text-[11px] text-muted-foreground">
+            The original JSON had {pendingImport.candidates.length} candidate root arrays.
+          </span>
+          <Button
+            variant="outline"
+            size="xs"
+            className="gap-1.5 shrink-0"
+            onClick={() => setPickerOpen(true)}
+          >
+            <GitFork className="size-3" />
+            Pick a different root…
+          </Button>
+        </div>
+      )}
+
       {firstRecord !== undefined && (
-        <details className="group rounded-lg border border-border bg-card/40">
-          <summary className="flex cursor-pointer list-none items-center gap-1.5 px-3 py-2 text-xs font-medium text-foreground transition-colors hover:bg-accent/40 group-open:border-b group-open:border-border">
-            <ChevronRight
-              className="size-3.5 text-muted-foreground transition-transform group-open:rotate-90"
-              aria-hidden
-            />
-            <span>First record</span>
-          </summary>
-          <div className="max-h-96 overflow-auto p-2">
-            <JsonView
-              value={firstRecord}
-              aria-label="First record"
-              className="rounded-md border-0 bg-transparent p-1 text-[11px]"
-            />
-          </div>
-        </details>
+        <div className="flex flex-col gap-1">
+          <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+            First record
+          </span>
+          <JsonView
+            value={firstRecord}
+            aria-label="First record"
+            className="max-h-96 text-[11px]"
+          />
+        </div>
+      )}
+
+      {pendingImport && (
+        <RootPickerModal
+          open={pickerOpen}
+          onOpenChange={setPickerOpen}
+          parsed={pendingImport.parsed}
+          candidates={pendingImport.candidates}
+          onPick={(picked) => {
+            setRecords(picked);
+            setPickerOpen(false);
+          }}
+        />
       )}
     </>
   );
