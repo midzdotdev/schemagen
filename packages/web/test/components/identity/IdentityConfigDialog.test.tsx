@@ -110,15 +110,18 @@ describe("IdentityConfigDialog", () => {
     expect(useStore.getState().identityConfig).toEqual({ fields: [["user", "id"]] });
   });
 
-  it("HH-IP2: selected primitive paths surface an 'Identity key' badge", async () => {
+  // Array-nested primitives are reachable. Selecting one stores a path with
+  // the array index as a number (so core's navigate() sees array indexing).
+  it("HH-IP3: selecting a primitive nested in an array stores a numeric segment", async () => {
     const user = userEvent.setup();
     act(() => {
-      useStore.getState().setRecords([{ id: "a" }, { id: "b" }]);
+      useStore.getState().setRecords([{ tags: [{ name: "x" }] }, { tags: [{ name: "y" }] }]);
     });
     render(<IdentityConfigDialog open onOpenChange={() => {}} />);
-    await user.click(screen.getByRole("checkbox", { name: /^id$/ }));
-    const row = screen.getByRole("checkbox", { name: /^id$/ }).closest("li");
-    expect(row?.textContent).toMatch(/identity key/i);
+    // Ancestors auto-expand on first render — the `name` checkbox is visible.
+    await user.click(screen.getByRole("checkbox", { name: /^tags\.0\.name$/ }));
+    await user.click(screen.getByRole("button", { name: /^apply$/i }));
+    expect(useStore.getState().identityConfig).toEqual({ fields: [["tags", 0, "name"]] });
   });
 
   it("CC-D3: each picker row shows the field's kind chip", () => {

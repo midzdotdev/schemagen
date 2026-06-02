@@ -1,6 +1,7 @@
 // Settings dialog for IdentityConfig. See docs/frontend-spec.md § "Identity-key suggestion".
 
 import { useEffect, useState } from "react";
+import { pathKeyToCorePath } from "@/lib/field-stats";
 import { useStore } from "@/state/store";
 import { Button } from "../ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "../ui/dialog";
@@ -45,10 +46,9 @@ export function IdentityConfigDialog({
 
   function handleApply(): void {
     if (selected.length === 0) return;
-    // Each entry becomes a path. Dot-notation is interpreted at the entry level
-    // so the rare "I typed nested.path" round-trip still works for stored
-    // configs hydrated from workspace bundles.
-    const fields = selected.map((p) => p.split(".").filter(Boolean));
+    // Each entry becomes a Path. Numeric segments (array indices) get
+    // converted to numbers so core's navigate() treats them as array steps.
+    const fields = selected.map(pathKeyToCorePath);
     const result = setIdentityConfig({ fields });
     setDroppedCount(result.droppedCount);
     if (result.droppedCount === 0) onOpenChange(false);

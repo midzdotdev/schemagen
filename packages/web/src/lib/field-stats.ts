@@ -61,14 +61,22 @@ export function computeFieldStats(records: unknown[]): FieldStat[] {
 
 // Tree node returned by computeFieldTree. Primitive leaves are selectable as
 // identity keys; container nodes are browsable but can't be picked.
+//
+// Path segments are stored as strings (object keys) or strings of digits
+// (array indices). The dialog's apply step converts `"0"` back to `0` so
+// core's navigate() sees a number for array indexing.
 export interface FieldTreeNode {
-  segment: string; // last path segment
-  path: string[]; // full path from root
+  segment: string; // last path segment — display form ("[0]" for arrays)
+  path: string[]; // full path from root, stringified segments
   pathKey: string; // dot-joined; matches the selection format used by setIdentityConfig
   kind: FieldKind;
   presence: number; // fraction of records where the path resolves to non-null
   uniqueness: number; // fraction of records whose value at this path is unique
   children: FieldTreeNode[];
+  // True when this row represents an array's element-0 step. The picker
+  // styles it differently (label as `[0]`, dimmed) since it's a structural
+  // hop rather than a user-visible key.
+  isArrayIndex: boolean;
 }
 
 interface Bucket {
@@ -77,9 +85,10 @@ interface Bucket {
   kinds: Set<Exclude<FieldKind, "mixed" | "null">>;
   presentCount: number;
   childSegs: Set<string>;
+  isArrayIndex: boolean; // true if this bucket represents an array's element-0 step
 }
 
-const DEFAULT_MAX_DEPTH = 5;
+const DEFAULT_MAX_DEPTH = 6;
 
 export function computeFieldTree(
   records: unknown[],
@@ -89,38 +98,60 @@ export function computeFieldTree(
   const buckets = new Map<string, Bucket>();
   const rootChildren = new Set<string>();
 
+  function ensureBucket(path: string[], isArrayIndex: boolean): Bucket {
+    const key = path.join(".");
+    let bucket = buckets.get(key);
+    if (!bucket) {
+      bucket = {
+        path,
+        values: [],
+        kinds: new Set(),
+        presentCount: 0,
+        childSegs: new Set(),
+        isArrayIndex,
+      };
+      buckets.set(key, bucket);
+    }
+    return bucket;
+  }
+
   function visit(value: unknown, path: string[], depth: number): void {
     if (depth > maxDepth) return;
-    if (!isRecord(value)) return;
-    const parentKey = path.join(".");
-    const parentBucket = path.length === 0 ? null : buckets.get(parentKey);
-    for (const [k, v] of Object.entries(value)) {
-      const childPath = [...path, k];
-      const childKey = childPath.join(".");
-      let bucket = buckets.get(childKey);
-      if (!bucket) {
-        bucket = {
-          path: childPath,
-          values: [],
-          kinds: new Set(),
-          presentCount: 0,
-          childSegs: new Set(),
-        };
-        buckets.set(childKey, bucket);
+    if (isRecord(value)) {
+      const parentBucket = path.length === 0 ? null : buckets.get(path.join("."));
+      for (const [k, v] of Object.entries(value)) {
+        if (parentBucket) parentBucket.childSegs.add(k);
+        else rootChildren.add(k);
+        const childPath = [...path, k];
+        const bucket = ensureBucket(childPath, false);
+        record(bucket, v, childPath, depth);
       }
-      if (parentBucket) parentBucket.childSegs.add(k);
-      else rootChildren.add(k);
+      return;
+    }
+    if (Array.isArray(value)) {
+      // Walk element-0 only — represents "the first element" semantics. The
+      // user picks a path that goes through arrays at their own risk; for
+      // most records the first element is the representative shape.
+      if (value.length === 0) return;
+      const parentKey = path.join(".");
+      const parentBucket = buckets.get(parentKey);
+      if (parentBucket) parentBucket.childSegs.add("0");
+      const childPath = [...path, "0"];
+      const bucket = ensureBucket(childPath, true);
+      const v0 = value[0];
+      record(bucket, v0, childPath, depth);
+    }
+  }
 
-      if (v === null || v === undefined) continue;
-      bucket.presentCount += 1;
-      const kind = classify(v);
-      bucket.kinds.add(kind);
-      if (kind === "object") {
-        visit(v, childPath, depth + 1);
-      } else if (kind === "string" || kind === "number" || kind === "boolean") {
-        bucket.values.push(canonical(v));
-      }
-      // Arrays: opaque. Recorded as kind=array on the bucket, not traversed.
+  function record(bucket: Bucket, value: unknown, path: string[], depth: number): void {
+    if (value === null || value === undefined) return;
+    bucket.presentCount += 1;
+    const kind = classify(value);
+    bucket.kinds.add(kind);
+    if (kind === "object" || kind === "array") {
+      visit(value, path, depth + 1);
+    } else {
+      bucket.values.push(canonical(value));
     }
   }
 
@@ -146,14 +177,16 @@ export function computeFieldTree(
       const seen = new Map<string, number>();
       for (const v of bucket.values) seen.set(v, (seen.get(v) ?? 0) + 1);
       const uniqueRecords = bucket.values.filter((v) => seen.get(v) === 1).length;
+      const displaySegment = bucket.isArrayIndex ? "[0]" : seg;
       nodes.push({
-        segment: seg,
+        segment: displaySegment,
         path: childPath,
         pathKey: childKey,
         kind,
         presence: bucket.presentCount / records.length,
         uniqueness: uniqueRecords / records.length,
-        children: kind === "object" ? build(childPath) : [],
+        children: kind === "object" || kind === "array" ? build(childPath) : [],
+        isArrayIndex: bucket.isArrayIndex,
       });
     }
     // Best-candidates-first ordering: primitives before containers; among
@@ -174,14 +207,24 @@ export function computeFieldTree(
   return build([]);
 }
 
+// Convert a dot-joined pathKey to core's Path shape. Numeric-string segments
+// become numbers so navigate() treats them as array indices.
+export function pathKeyToCorePath(pathKey: string): (string | number)[] {
+  return pathKey
+    .split(".")
+    .filter(Boolean)
+    .map((seg) => (/^\d+$/.test(seg) ? Number(seg) : seg));
+}
+
 // Composite-key uniqueness — uniqueness of the tuple (path1, path2, ...).
-// Paths are dot-joined strings, supporting nested fields (e.g. "user.id").
+// Paths are dot-joined strings, supporting nested fields and array indices
+// (e.g. "user.id", "tags.0.name").
 export function compositeUniqueness(records: unknown[], paths: string[]): number {
   if (records.length === 0 || paths.length === 0) return 0;
-  const pathArrays = paths.map((p) => p.split(".").filter(Boolean));
+  const pathArrays = paths.map(pathKeyToCorePath);
   const keys: string[] = [];
   for (const r of records) {
-    if (!isRecord(r)) continue;
+    if (r === null || r === undefined) continue;
     const parts = pathArrays.map((p) => canonical(navigate(r, p)));
     keys.push(parts.join(" "));
   }
@@ -218,12 +261,17 @@ function isRecord(v: unknown): v is Record<string, unknown> {
   return v !== null && typeof v === "object" && !Array.isArray(v);
 }
 
-function navigate(value: unknown, path: string[]): unknown {
+function navigate(value: unknown, path: (string | number)[]): unknown {
   let cur: unknown = value;
   for (const seg of path) {
+    if (cur === null || cur === undefined) return undefined;
+    if (typeof seg === "number") {
+      if (!Array.isArray(cur)) return undefined;
+      cur = cur[seg];
+      continue;
+    }
     if (!isRecord(cur)) return undefined;
     cur = cur[seg];
-    if (cur === undefined) return undefined;
   }
   return cur;
 }

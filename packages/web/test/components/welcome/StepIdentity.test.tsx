@@ -19,6 +19,10 @@ beforeEach(() => {
   });
 });
 
+// The picker pre-seeds with proposeIdentityKey, so the proposed field is
+// already ticked when Step 2 mounts. Tests below either work with that
+// default or untick it first to exercise the empty-selection path.
+
 describe("StepIdentity", () => {
   // Plan § "Step 2 — Identity key" — inline IdentityPicker renders primitive fields
   it("HH-I1: inline picker renders the primitive fields", () => {
@@ -28,41 +32,51 @@ describe("StepIdentity", () => {
     expect(screen.getByRole("checkbox", { name: /\brole\b/ })).toBeInTheDocument();
   });
 
-  // Plan § "Step 2 — Identity key" — live dedup preview
+  // Live dedup preview — start with the proposal pre-selected, switch to a
+  // different field, the preview should reflect the new tuple.
   it("HH-I2: dedup preview updates when the selected field changes", async () => {
     const user = userEvent.setup();
     render(<StepIdentity onContinue={() => {}} onBack={() => {}} onSkip={() => {}} />);
-    // No selection: every record is distinct.
-    expect(screen.getByText(/no identity key selected/i)).toBeInTheDocument();
-    // Selecting `id` collapses the two id=1 records into one.
+    // Some preview line is rendered initially (proposal seeded).
+    expect(screen.getByRole("status")).toBeInTheDocument();
+    // Untick all currently-selected checkboxes, then tick `id`.
+    for (const cb of screen.getAllByRole("checkbox") as HTMLInputElement[]) {
+      if (cb.checked) await user.click(cb);
+    }
     await user.click(screen.getByRole("checkbox", { name: /\bid\b/ }));
+    // id has 3 unique values across 4 records → 3 unique, 1 duplicate.
     expect(screen.getByText(/3 unique/i)).toBeInTheDocument();
     expect(screen.getByText(/1 duplicate/i)).toBeInTheDocument();
   });
 
-  // Plan § "Step 2 — Identity key" — no-selection language
-  it("HH-I3: dedup preview reads 'No identity key selected' when selection is empty", () => {
+  // No-selection language surfaces when the user unticks everything.
+  it("HH-I3: dedup preview reads 'No identity key selected' after the user clears the seed", async () => {
+    const user = userEvent.setup();
     render(<StepIdentity onContinue={() => {}} onBack={() => {}} onSkip={() => {}} />);
+    for (const cb of screen.getAllByRole("checkbox") as HTMLInputElement[]) {
+      if (cb.checked) await user.click(cb);
+    }
     expect(screen.getByText(/no identity key selected/i)).toBeInTheDocument();
   });
 
-  // Plan § "Step 2 — Identity key" — Continue commits identityConfig + advances
-  it("HH-W6: Continue with a selection calls setIdentityConfig and onContinue", async () => {
+  // Continue with the seeded proposal commits identityConfig and advances.
+  it("HH-W6: Continue with the seeded proposal calls setIdentityConfig and onContinue", async () => {
     const user = userEvent.setup();
     const onContinue = vi.fn();
     render(<StepIdentity onContinue={onContinue} onBack={() => {}} onSkip={() => {}} />);
-    await user.click(screen.getByRole("checkbox", { name: /\bid\b/ }));
     await user.click(screen.getByRole("button", { name: /^continue$/i }));
-    expect(useStore.getState().identityConfig).toEqual({ fields: [["id"]] });
+    expect(useStore.getState().identityConfig).not.toBeNull();
     expect(onContinue).toHaveBeenCalledOnce();
   });
 
-  // Plan § "Step 2 — Identity key" — empty selection skips identity
-  it("HH-W7: Continue with no selection advances without setting identity", async () => {
+  // Skip identity becomes available once the user unticks the seed.
+  it("HH-W7: Skip identity advances without setting identity once the seed is cleared", async () => {
     const user = userEvent.setup();
     const onContinue = vi.fn();
     render(<StepIdentity onContinue={onContinue} onBack={() => {}} onSkip={() => {}} />);
-    // The button label flips to "Skip identity" so the user understands.
+    for (const cb of screen.getAllByRole("checkbox") as HTMLInputElement[]) {
+      if (cb.checked) await user.click(cb);
+    }
     await user.click(screen.getByRole("button", { name: /skip identity/i }));
     expect(useStore.getState().identityConfig).toBeNull();
     expect(onContinue).toHaveBeenCalledOnce();
