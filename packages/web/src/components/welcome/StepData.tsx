@@ -78,7 +78,10 @@ export function StepData(_props: StepDataProps) {
           <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
             Records root
           </span>
-          <div className="flex items-center justify-between gap-3 rounded-md border border-border bg-card/40 px-3 py-2">
+          <p className="text-[11px] text-muted-foreground">
+            The path within the imported JSON where your records live.
+          </p>
+          <div className="mt-1 flex items-center justify-between gap-3 rounded-md border border-border bg-card/40 px-3 py-2">
             <div className="flex min-w-0 flex-1 items-baseline gap-2">
               <code className="truncate font-mono text-sm text-foreground">
                 {selectedPath ? formatPath(selectedPath) : "(root)"}
