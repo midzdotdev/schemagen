@@ -1,24 +1,21 @@
-// PR HH Step 1 — Your data.
+// PR II — Data section of the onboarding review page (was StepData under the
+// PR HH wizard).
 //
 // Shows the currently-selected records root (path + count) as a compact
-// summary card with a 'Change root…' button that opens the existing
-// RootPickerModal. The auto-pick from welcome-view ingest is shown as the
-// initial selection; the user only sees the tree if they explicitly open
-// the modal.
+// summary card with a 'Change' button that opens the existing RootPickerModal,
+// plus a sample record rendered as an expandable JsonTree. The auto-pick from
+// welcome-view ingest is shown as the initial selection; the user only sees the
+// tree if they explicitly open the modal.
+//
+// See docs/plans/pr-ii-onboarding-review-page.md.
 
 import { GitFork } from "lucide-react";
 import { useMemo, useState } from "react";
 import { RootPickerModal } from "@/components/data-panel/RootPickerModal";
 import { Button } from "@/components/ui/button";
 import { JsonTree } from "@/components/ui/json-tree";
-import { WizardStepShell } from "@/components/welcome/WizardStepShell";
 import { formatPath, type PickerCandidate, type PickerPath } from "@/lib/root-picker";
 import { useStore } from "@/state/store";
-
-export interface StepDataProps {
-  onContinue: () => void;
-  onSkip: () => void;
-}
 
 // Find which candidate path the current records came from. Uses reference
 // equality first (cheap, common case) and falls back to length-matching.
@@ -55,7 +52,7 @@ function atPath(value: unknown, path: PickerPath): unknown {
   return cur;
 }
 
-export function StepData({ onContinue, onSkip }: StepDataProps) {
+export function DataSection() {
   const records = useStore((s) => s.records);
   const setRecords = useStore((s) => s.setRecords);
   const pendingImport = useStore((s) => s.pendingImport);
@@ -74,16 +71,17 @@ export function StepData({ onContinue, onSkip }: StepDataProps) {
   const canChangeRoot = pendingImport !== null && pendingImport.candidates.length > 0;
 
   return (
-    <WizardStepShell
-      step={1}
-      title="Your data"
-      sub="Check the right records came through."
-      onContinue={onContinue}
-      onSkip={onSkip}
-    >
+    <section aria-labelledby="data-h" className="flex flex-col gap-3">
+      <div className="flex flex-col gap-0.5">
+        <h2 id="data-h" className="font-semibold text-foreground text-sm uppercase tracking-wider">
+          Data
+        </h2>
+        <p className="text-muted-foreground text-xs">Check the right records came through.</p>
+      </div>
+
       {pendingImport ? (
         <div className="flex flex-col gap-1">
-          <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+          <span className="font-medium text-[10px] text-muted-foreground uppercase tracking-wider">
             Records root
           </span>
           <p className="text-[11px] text-muted-foreground">
@@ -91,7 +89,7 @@ export function StepData({ onContinue, onSkip }: StepDataProps) {
           </p>
           <div className="mt-1 flex items-center justify-between gap-3 rounded-md border border-border bg-card/40 px-3 py-2">
             <div className="flex min-w-0 flex-1 items-baseline gap-2">
-              <code className="truncate font-mono text-sm text-foreground">
+              <code className="truncate font-mono text-foreground text-sm">
                 {selectedPath ? formatPath(selectedPath) : "(root)"}
               </code>
               <span className="shrink-0 text-[11px] text-muted-foreground">
@@ -111,7 +109,7 @@ export function StepData({ onContinue, onSkip }: StepDataProps) {
           </div>
         </div>
       ) : (
-        <p className="text-sm text-foreground">
+        <p className="text-foreground text-sm">
           <span className="font-semibold">{count.toLocaleString()}</span> record
           {count === 1 ? "" : "s"} imported.
         </p>
@@ -119,10 +117,12 @@ export function StepData({ onContinue, onSkip }: StepDataProps) {
 
       {firstRecord !== undefined && (
         <div className="flex flex-col gap-1">
-          <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+          <span className="font-medium text-[10px] text-muted-foreground uppercase tracking-wider">
             Sample record
           </span>
-          <JsonTree value={firstRecord} ariaLabel="Sample record" className="mt-1" />
+          <div className="mt-1 overflow-x-auto">
+            <JsonTree value={firstRecord} ariaLabel="Sample record" />
+          </div>
         </div>
       )}
 
@@ -138,6 +138,6 @@ export function StepData({ onContinue, onSkip }: StepDataProps) {
           }}
         />
       )}
-    </WizardStepShell>
+    </section>
   );
 }
