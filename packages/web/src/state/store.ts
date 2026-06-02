@@ -40,7 +40,7 @@ export interface StoreActions {
   dismissIdentitySuggestion: () => void;
   // Records sidebar filter (label + indices). null = clear.
   setRecordsFilter: (filter: RecordsFilter | null) => void;
-  // Z: cold-start inference overrides
+  // Z: persistent per-workspace inference overrides (initial + re-infer)
   setInferenceOptions: (options: InferOptions | null) => void;
   // AA: explicit cold-start infer. No-op if an IR exists or records are empty.
   inferSchema: () => void;

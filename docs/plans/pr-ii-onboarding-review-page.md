@@ -8,7 +8,7 @@ PR HH ships a three-step wizard (Data → Identity → Inference) inside a `Wiza
 
 - The `WizardStepShell` chrome (sticky-header/body/footer) is exactly the layout primitive a single-page review wants — minus the `N of 3` counter and the Skip link.
 - `IdentityPicker` is already extracted and computes its own live dedup preview locally via `dedupeByIdentity`.
-- `AppHeader`'s Sliders button (`components/shell/AppHeader.tsx`) is unconditionally mounted and opens `InferenceOptionsDialog` via the existing `UIShell` modal slot. The dialog is fully editable pre-IR and read-only post-IR (disabled fieldset); we inherit this contract.
+- `AppHeader`'s Sliders button (`components/shell/AppHeader.tsx`) is unconditionally mounted and opens `InferenceOptionsDialog` via the existing `UIShell` modal slot. (Superseded note: the dialog used to be read-only post-IR via a disabled fieldset; it is now editable in all states — inference options are a persistent setting feeding initial inference and re-inference, not cold-start-only.)
 - **`store.setIdentityConfig` is destructive**: it runs `dedupeByIdentity(records, config)` and writes `records: kept` synchronously, returning `droppedCount`. Any commit-on-every-keystroke wiring would silently destroy records on the first toggle. (This reverses an earlier draft's commit-on-change plan.)
 - `useUIPref`'s setter closes over a stale `bag` snapshot. Two chained setters from the same handler clobber each other — multi-key writes need a single merged write.
 - **`DEFAULT_PREFS.recordsSidebarCollapsed` is `true`** (collapsed) — not `false` as an earlier draft assumed. Force-expand on first Generate is a real override, not a no-op.

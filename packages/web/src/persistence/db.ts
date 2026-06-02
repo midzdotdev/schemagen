@@ -45,7 +45,7 @@ export interface MetaRow {
   // X2: identity-key configuration + per-workspace dismissal of the suggestion banner.
   identityConfig?: IdentityConfig;
   identityProposalDismissed?: boolean;
-  // Z: cold-start inference overrides. Absent on pre-v3 workspaces; hydrates to null.
+  // Z: persistent inference overrides (initial + re-infer). Absent on pre-v3 workspaces; hydrates to null.
   // `| undefined` lets the subscription pass `undefined` through patchMeta to clear
   // the field — required under exactOptionalPropertyTypes.
   inferenceOptions?: InferOptions | undefined;

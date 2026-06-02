@@ -1,9 +1,10 @@
 // PR Z — workspace-scoped inference options.
 // Plan: docs/plans/pr-z-inference-options.md
 //
-// Tunes how the initial schema is built. Applies only at cold-start (ir === null);
-// once an IR exists the dialog still opens but inputs are disabled and Reset is
-// hidden — the schema tree is the right surface to edit per-node after that.
+// A persistent per-workspace setting for how schemagen infers types from
+// records. It feeds the initial inference and re-inference alike (PR FF re-runs
+// `infer(records, inferenceOptions)`), so the options stay editable whether or
+// not a schema exists yet — they are NOT cold-start-only.
 //
 // Autosaves on every change — no Apply or Cancel buttons. The user closes via
 // the Radix X / Escape. "Reset to defaults" lives in the footer.
@@ -78,9 +79,7 @@ function commit(f: FormState): InferOptions {
 
 export function InferenceOptionsDialog({ open, onOpenChange }: InferenceOptionsDialogProps) {
   const stored = useStore((s) => s.inferenceOptions);
-  const ir = useStore((s) => s.ir);
   const setInferenceOptions = useStore((s) => s.setInferenceOptions);
-  const irExists = ir !== null;
 
   // Form is derived directly from stored — autosave means there's no separate
   // working copy to manage.
@@ -100,16 +99,12 @@ export function InferenceOptionsDialog({ open, onOpenChange }: InferenceOptionsD
         <DialogHeader>
           <DialogTitle>Inference options</DialogTitle>
           <DialogDescription>
-            {irExists
-              ? "A schema already exists for this workspace. These options apply only at first import — edit fields directly in the schema tree."
-              : "These tune how schemagen builds the initial schema from your records. Changes apply immediately and only to a new workspace's first import — once a schema exists, edit fields directly in the schema tree."}
+            Control how schemagen infers types from your records — strict by default. Changes save
+            as you go and apply the next time a schema is inferred from this workspace's records.
           </DialogDescription>
         </DialogHeader>
 
-        <fieldset
-          disabled={irExists}
-          className="flex max-h-[60vh] flex-col gap-4 overflow-y-auto pr-1"
-        >
+        <fieldset className="flex max-h-[60vh] flex-col gap-4 overflow-y-auto pr-1">
           <Section
             title="Literal unions"
             icon={<Tags className="size-4" />}
@@ -317,7 +312,7 @@ export function InferenceOptionsDialog({ open, onOpenChange }: InferenceOptionsD
         </fieldset>
 
         <div className="flex justify-start">
-          <Button variant="ghost" size="sm" onClick={handleReset} disabled={!stored || irExists}>
+          <Button variant="ghost" size="sm" onClick={handleReset} disabled={!stored}>
             Reset to defaults
           </Button>
         </div>
