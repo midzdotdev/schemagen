@@ -1,6 +1,7 @@
 // PR HH Phase 3 — Step 1 (Your data). See docs/plans/pr-hh-workspace-wizard.md.
 
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { act } from "react";
 import { beforeEach, describe, expect, it } from "vitest";
 import { StepData } from "@/components/welcome/StepData";
@@ -36,19 +37,18 @@ describe("StepData", () => {
     expect(screen.getByRole("region", { name: /sample record/i })).toBeInTheDocument();
   });
 
-  // Records root tree — rendered whenever pendingImport has any candidates
-  // (even a single one), so the user can see the structure of what was
-  // imported. Hidden only when pendingImport is null or has zero candidates.
-  it("HH-D4: tree picker hidden when pendingImport is null", () => {
+  // Records-root summary card — always visible when pendingImport exists,
+  // shows the current root path + record count. Tree only opens via modal.
+  it("HH-D4: root summary hidden when pendingImport is null (fallback line shown)", () => {
     act(() => {
       useStore.getState().setRecords([{ id: 1 }]);
     });
     render(<StepData onContinue={() => {}} />);
-    expect(screen.queryByRole("list", { name: /json tree/i })).toBeNull();
-    expect(screen.queryByText(/records root/i)).toBeNull();
+    expect(screen.queryByText(/^records root$/i)).toBeNull();
+    expect(screen.queryByRole("button", { name: /change root/i })).toBeNull();
   });
 
-  it("HH-D5a: tree picker renders inline for a single-candidate import", () => {
+  it("HH-D5a: root summary surfaces the selected path + count for single-candidate import", () => {
     act(() => {
       useStore.getState().setRecords([{ id: 1 }]);
       useStore.getState().setPendingImport({
@@ -57,11 +57,13 @@ describe("StepData", () => {
       });
     });
     render(<StepData onContinue={() => {}} />);
-    expect(screen.getByRole("list", { name: /json tree/i })).toBeInTheDocument();
-    expect(screen.getByText(/only one array of objects found/i)).toBeInTheDocument();
+    expect(screen.getByText(/^records root$/i)).toBeInTheDocument();
+    expect(screen.getByText(/\(root\)/i)).toBeInTheDocument();
+    expect(screen.getByText(/1 record/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /change root/i })).toBeInTheDocument();
   });
 
-  it("HH-D5b: tree picker renders inline when pendingImport has 2+ candidates", () => {
+  it("HH-D5b: root summary surfaces the selected sub-path for nested imports", () => {
     act(() => {
       useStore.getState().setRecords([{ id: 1 }]);
       useStore.getState().setPendingImport({
@@ -73,7 +75,24 @@ describe("StepData", () => {
       });
     });
     render(<StepData onContinue={() => {}} />);
-    expect(screen.getByRole("list", { name: /json tree/i })).toBeInTheDocument();
-    expect(screen.getByText(/2 candidate arrays/i)).toBeInTheDocument();
+    expect(screen.getByText(/^items$/)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /change root/i })).toBeInTheDocument();
+  });
+
+  it("HH-D6: clicking 'Change root…' opens the RootPickerModal with the tree", async () => {
+    const user = userEvent.setup();
+    act(() => {
+      useStore.getState().setRecords([{ id: 1 }]);
+      useStore.getState().setPendingImport({
+        parsed: { items: [{ id: 1 }], extras: [{ name: "x" }] },
+        candidates: [
+          { path: ["items"], recordCount: 1, preview: { id: 1 } },
+          { path: ["extras"], recordCount: 1, preview: { name: "x" } },
+        ],
+      });
+    });
+    render(<StepData onContinue={() => {}} />);
+    await user.click(screen.getByRole("button", { name: /change root/i }));
+    expect(screen.getByRole("dialog", { name: /pick the records path/i })).toBeInTheDocument();
   });
 });
