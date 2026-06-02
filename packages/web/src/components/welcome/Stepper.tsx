@@ -22,7 +22,7 @@ export interface StepperProps {
 
 export function Stepper({ steps, current, maxVisited, onStepSelect, idPrefix }: StepperProps) {
   return (
-    <ol aria-label="Onboarding steps" className="flex items-center gap-2">
+    <ol aria-label="Onboarding steps" className="flex items-center gap-3">
       {steps.map((label, i) => {
         const isDone = i < current;
         const isCurrent = i === current;
@@ -31,11 +31,11 @@ export function Stepper({ steps, current, maxVisited, onStepSelect, idPrefix }: 
         const status = isDone ? "completed" : isCurrent ? "current step" : "not yet reached";
 
         return (
-          <li key={label} className="flex flex-1 items-center gap-2 last:flex-none">
+          <li key={label} className="flex items-center gap-3">
             {i > 0 && (
               <span
                 aria-hidden
-                className={cn("h-px flex-1", i <= current ? "bg-primary" : "bg-border")}
+                className={cn("h-px w-10", i <= current ? "bg-primary" : "bg-border")}
               />
             )}
             <button
