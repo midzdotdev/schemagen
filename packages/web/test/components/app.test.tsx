@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { act } from "react";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { App } from "@/App";
@@ -48,8 +49,28 @@ describe("App", () => {
     });
     render(<App />);
     expect(screen.getByRole("heading", { name: /review your data/i })).toBeInTheDocument();
-    // Not the records-only cold-start, not post-IR.
-    expect(screen.queryByRole("region", { name: /^data$/i })).toBeNull();
+    // Not post-IR / not the records-only cold-start: neither has a schema region.
+    expect(screen.queryByRole("region", { name: /schema/i })).toBeNull();
+  });
+
+  // Plan § "Resolved interpretations #6/#7" — Generate flips onboardingCompleted
+  // and force-expands the records sidebar in one write.
+  it("II-A2: clicking Generate sets the IR, completes onboarding, and expands the sidebar", async () => {
+    const user = userEvent.setup();
+    const workspaceId = useStore.getState().workspaceId;
+    window.localStorage.setItem(
+      `schemagen.uiPrefs.${workspaceId}`,
+      JSON.stringify({ recordsSidebarCollapsed: true }),
+    );
+    act(() => {
+      useStore.getState().setRecords([{ id: 1, name: "a" }]);
+    });
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: /generate schema/i }));
+    expect(useStore.getState().ir).not.toBeNull();
+    const bag = JSON.parse(window.localStorage.getItem(`schemagen.uiPrefs.${workspaceId}`) ?? "{}");
+    expect(bag.onboardingCompleted).toBe(true);
+    expect(bag.recordsSidebarCollapsed).toBe(false);
   });
 
   // Plan § "State + action surface" — ingest does not seed onboardingCompleted.
