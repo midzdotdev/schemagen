@@ -1,8 +1,11 @@
-// Identity-key picker — tree of record fields (top-level + nested), with
-// per-leaf stats and an "Identity key" badge on selected paths.
+// Identity-key picker — flat-rendered tree of record fields (top-level +
+// nested + array-element). Each visible row indents via padding-left based
+// on its depth, so the type / uniqueness / presence columns stay aligned
+// in one grid.
 //
-// Selection is stored as dot-joined strings (e.g. "user.id") to match the
-// shape `setIdentityConfig` expects after splitting on dots.
+// Selection is stored as dot-joined strings (e.g. "user.id" or "tags.0.name");
+// the dialog converts numeric segments to numbers before writing the Path
+// to the store.
 
 import { ChevronRight } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -13,6 +16,7 @@ import {
   type FieldTreeNode,
   isPrimitiveKind,
 } from "@/lib/field-stats";
+import { TYPE_BG, TYPE_TEXT } from "@/lib/type-colors";
 import { useStore } from "@/state/store";
 
 export interface IdentityPickerProps {
@@ -29,9 +33,8 @@ export function IdentityPicker({ selected, onSelectedChange }: IdentityPickerPro
     [records, selected],
   );
 
-  // Auto-expand the root + every ancestor of a primitive leaf at first
-  // render so the user sees candidates without drilling in. New paths
-  // discovered after first render aren't auto-expanded.
+  // Auto-expand containers whose subtree has a primitive leaf so candidates
+  // surface without drilling in.
   const [expanded, setExpanded] = useState<Set<string>>(() => initialExpanded(tree));
 
   function toggleExpanded(pathKey: string): void {
@@ -52,6 +55,7 @@ export function IdentityPicker({ selected, onSelectedChange }: IdentityPickerPro
   const noRecords = records.length === 0;
   const noFields = !noRecords && tree.length === 0;
   const selectedSet = useMemo(() => new Set(selected), [selected]);
+  const visibleRows = useMemo(() => flatten(tree, 0, expanded), [tree, expanded]);
 
   return (
     <div className="flex flex-col gap-3">
@@ -80,14 +84,15 @@ export function IdentityPicker({ selected, onSelectedChange }: IdentityPickerPro
         ) : (
           <ul
             aria-label="Available identity fields"
-            className="flex max-h-64 flex-col gap-0.5 overflow-y-auto rounded-md border border-border bg-card/40 p-1.5 font-mono text-xs"
+            className="flex max-h-72 flex-col gap-0.5 overflow-y-auto rounded-md border border-border bg-card/40 p-1 font-mono text-xs"
           >
-            {tree.map((node) => (
+            {visibleRows.map(({ node, depth }) => (
               <FieldRow
                 key={node.pathKey}
                 node={node}
-                selectedSet={selectedSet}
-                expanded={expanded}
+                depth={depth}
+                isSelected={selectedSet.has(node.pathKey)}
+                isOpen={expanded.has(node.pathKey)}
                 onToggleSelected={toggleSelected}
                 onToggleExpanded={toggleExpanded}
               />
@@ -109,23 +114,26 @@ export function IdentityPicker({ selected, onSelectedChange }: IdentityPickerPro
 
 interface FieldRowProps {
   node: FieldTreeNode;
-  selectedSet: Set<string>;
-  expanded: Set<string>;
+  depth: number;
+  isSelected: boolean;
+  isOpen: boolean;
   onToggleSelected: (pathKey: string) => void;
   onToggleExpanded: (pathKey: string) => void;
 }
 
+// Indent step per level — tuned so deeply-nested rows stay readable.
+const INDENT_PX = 14;
+
 function FieldRow({
   node,
-  selectedSet,
-  expanded,
+  depth,
+  isSelected,
+  isOpen,
   onToggleSelected,
   onToggleExpanded,
 }: FieldRowProps) {
   const selectable = isPrimitiveKind(node.kind);
-  const isSelected = selectedSet.has(node.pathKey);
   const hasChildren = node.children.length > 0;
-  const isOpen = expanded.has(node.pathKey);
   const isUnique = node.uniqueness >= 0.95;
   const isPresent = node.presence >= 0.95;
 
@@ -133,9 +141,10 @@ function FieldRow({
     <li>
       <div
         className={cn(
-          "flex items-center gap-1.5 rounded px-1.5 py-1 transition-colors hover:bg-accent/40",
+          "flex items-center gap-1.5 rounded px-1 py-1 transition-colors hover:bg-accent/40",
           isSelected && "bg-info/10 hover:bg-info/15",
         )}
+        style={{ paddingLeft: 4 + depth * INDENT_PX }}
       >
         {hasChildren ? (
           <button
@@ -161,61 +170,64 @@ function FieldRow({
           </label>
         ) : (
           <span className="flex min-w-0 flex-1 items-center gap-1.5">
-            {/* Spacer to align with the checkbox column on primitive rows */}
             <span className="size-3.5 shrink-0" aria-hidden />
-            <code className="min-w-0 flex-1 truncate text-muted-foreground">{node.segment}</code>
+            <code
+              className={cn(
+                "min-w-0 flex-1 truncate",
+                node.isArrayIndex ? "text-muted-foreground" : "text-muted-foreground",
+              )}
+            >
+              {node.segment}
+            </code>
           </span>
         )}
         <span
           title="Field type"
-          className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground"
+          className={cn(
+            "inline-block w-16 shrink-0 rounded px-1.5 py-0.5 text-center text-[10px] font-medium uppercase tracking-wide",
+            TYPE_BG[node.kind],
+            TYPE_TEXT[node.kind],
+          )}
         >
           {node.kind}
         </span>
-        {selectable && (
-          <>
-            <span
-              title="Uniqueness"
-              className={cn(
-                "shrink-0 tabular-nums",
-                isUnique ? "text-success" : "text-muted-foreground",
-              )}
-            >
-              {(node.uniqueness * 100).toFixed(0)}% unique
-            </span>
-            <span
-              title="Presence"
-              className={cn(
-                "shrink-0 tabular-nums",
-                isPresent ? "text-foreground" : "text-warning",
-              )}
-            >
-              {(node.presence * 100).toFixed(0)}% present
-            </span>
-          </>
-        )}
-        {isSelected && (
-          <span className="shrink-0 rounded bg-emerald-500/20 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
-            Identity key
-          </span>
-        )}
+        <span
+          title="Uniqueness"
+          className={cn(
+            "inline-block w-24 shrink-0 text-right tabular-nums",
+            selectable ? (isUnique ? "text-success" : "text-muted-foreground") : "text-transparent",
+          )}
+        >
+          {selectable ? `${(node.uniqueness * 100).toFixed(0)}% unique` : "—"}
+        </span>
+        <span
+          title="Presence"
+          className={cn(
+            "inline-block w-24 shrink-0 text-right tabular-nums",
+            isPresent ? "text-foreground" : "text-warning",
+          )}
+        >
+          {(node.presence * 100).toFixed(0)}% present
+        </span>
       </div>
-      {isOpen && hasChildren && (
-        <ul className="ml-3 border-l border-border/60 pl-1">
-          {node.children.map((child) => (
-            <FieldRow
-              key={child.pathKey}
-              node={child}
-              selectedSet={selectedSet}
-              expanded={expanded}
-              onToggleSelected={onToggleSelected}
-              onToggleExpanded={onToggleExpanded}
-            />
-          ))}
-        </ul>
-      )}
     </li>
   );
+}
+
+interface FlatRow {
+  node: FieldTreeNode;
+  depth: number;
+}
+
+function flatten(nodes: FieldTreeNode[], depth: number, expanded: Set<string>): FlatRow[] {
+  const out: FlatRow[] = [];
+  for (const n of nodes) {
+    out.push({ node: n, depth });
+    if (n.children.length > 0 && expanded.has(n.pathKey)) {
+      out.push(...flatten(n.children, depth + 1, expanded));
+    }
+  }
+  return out;
 }
 
 // Auto-expand any container whose subtree has at least one primitive leaf

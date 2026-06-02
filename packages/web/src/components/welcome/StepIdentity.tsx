@@ -2,10 +2,11 @@
 // live dedup preview underneath. Continue commits the choice and advances;
 // with no selection the primary button flips to "Skip identity".
 
-import { dedupeByIdentity, dedupeByteIdentical } from "@schemagen/core";
+import { dedupeByIdentity, dedupeByteIdentical, proposeIdentityKey } from "@schemagen/core";
 import { useMemo, useState } from "react";
 import { IdentityPicker } from "@/components/identity/IdentityPicker";
 import { WizardStepShell } from "@/components/welcome/WizardStepShell";
+import { pathKeyToCorePath } from "@/lib/field-stats";
 import { useStore } from "@/state/store";
 
 export interface StepIdentityProps {
@@ -33,14 +34,20 @@ export function StepIdentity({ onContinue, onBack, onSkip }: StepIdentityProps) 
   const records = useStore((s) => s.records);
   const setIdentityConfig = useStore((s) => s.setIdentityConfig);
 
-  const [selected, setSelected] = useState<string[]>([]);
+  // Pre-seed with core's proposeIdentityKey result — users hit Continue if
+  // the suggestion is correct; otherwise they uncheck and pick something else.
+  const [selected, setSelected] = useState<string[]>(() => {
+    const proposal = proposeIdentityKey(records);
+    if (!proposal) return [];
+    return proposal.fields.map((p) => p.join("."));
+  });
 
   // Dedup preview — recomputes on every selection change. dedupeByIdentity
   // already returns the kept + dropped split we need; for the no-selection
   // case we fall back to the byte-dedup floor that the ingest pipeline runs.
   const preview = useMemo(() => {
     if (selected.length === 0) return null;
-    const fields = selected.map((p) => p.split(".").filter(Boolean));
+    const fields = selected.map(pathKeyToCorePath);
     return dedupeByIdentity(records, { fields });
   }, [records, selected]);
   const byteFloor = useMemo(
@@ -50,7 +57,7 @@ export function StepIdentity({ onContinue, onBack, onSkip }: StepIdentityProps) 
 
   function handleContinue() {
     if (selected.length > 0) {
-      const fields = selected.map((p) => p.split(".").filter(Boolean));
+      const fields = selected.map(pathKeyToCorePath);
       setIdentityConfig({ fields });
     }
     onContinue();

@@ -89,7 +89,8 @@ describe("WorkspaceWizard — step transitions", () => {
   });
 
   // Plan § "Step 3 — Inference options" — Generate runs inference and
-  // unmounts the wizard.
+  // unmounts the wizard. Step 2 pre-seeds with proposeIdentityKey, so the
+  // primary button reads 'Continue' (not 'Skip identity').
   it("HH-W8: Generate schema sets the IR and unmounts the wizard", async () => {
     const user = userEvent.setup();
     act(() => {
@@ -97,7 +98,7 @@ describe("WorkspaceWizard — step transitions", () => {
     });
     render(<App />);
     await user.click(screen.getByRole("button", { name: /^continue$/i }));
-    await user.click(screen.getByRole("button", { name: /skip identity/i }));
+    await user.click(screen.getByRole("button", { name: /^continue$/i }));
     await user.click(screen.getByRole("button", { name: /generate schema/i }));
     expect(useStore.getState().ir).not.toBeNull();
     expect(screen.queryByRole("region", { name: /workspace wizard/i })).toBeNull();
