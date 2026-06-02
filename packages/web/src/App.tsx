@@ -34,8 +34,9 @@ export function App() {
         <div className="flex h-screen flex-col bg-background text-foreground">
           <AppHeader />
           {/* Storage banner only when there's actual workspace state at risk.
-              On a fresh workspace the warning is noise — nothing to lose yet. */}
-          {!isFresh && <StorageBanner />}
+              On the welcome view and wizard the warning is noise — the user
+              is still onboarding. */}
+          {!isFresh && !inWizard && <StorageBanner />}
           <main className="flex min-h-0 flex-1 flex-col">
             {isFresh ? (
               <WelcomeView />

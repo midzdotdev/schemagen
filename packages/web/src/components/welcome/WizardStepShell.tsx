@@ -35,9 +35,9 @@ export function WizardStepShell({
   return (
     <section
       aria-label="Workspace wizard"
-      className="mx-auto flex h-full w-full max-w-2xl flex-col gap-8 overflow-y-auto px-6 py-10"
+      className="mx-auto flex h-full w-full max-w-2xl flex-col"
     >
-      <header className="flex flex-col gap-2">
+      <header className="flex shrink-0 flex-col gap-2 px-6 pb-4 pt-10">
         <div className="flex items-center justify-between gap-2">
           <p className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
             {step} of 3
@@ -53,8 +53,10 @@ export function WizardStepShell({
         <h1 className="text-2xl font-semibold tracking-tight text-foreground">{title}</h1>
         <p className="text-sm text-muted-foreground">{sub}</p>
       </header>
-      <div className="flex flex-col gap-4">{children}</div>
-      <footer className="mt-auto flex items-center justify-between gap-2 pt-4">
+      <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-6 py-4">
+        {children}
+      </div>
+      <footer className="flex shrink-0 items-center justify-between gap-2 border-t border-border bg-background px-6 py-3">
         <div>
           {onBack && (
             <Button variant="ghost" size="sm" onClick={onBack}>
