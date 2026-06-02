@@ -2,6 +2,7 @@
 
 import type { Change, IdentityConfig, InferOptions, IR } from "@schemagen/core";
 import Dexie, { type Table } from "dexie";
+import type { PendingImport } from "@/state/types";
 import { getClientId } from "./client-id";
 
 export interface WorkspaceRow {
@@ -48,6 +49,10 @@ export interface MetaRow {
   // `| undefined` lets the subscription pass `undefined` through patchMeta to clear
   // the field — required under exactOptionalPropertyTypes.
   inferenceOptions?: InferOptions | undefined;
+  // HH: parsed JSON + candidate root arrays from the most recent ingest.
+  // Persists so the wizard's root-picker tree survives a refresh.
+  // Cleared on inferSchema() — workspaces with an IR never need it.
+  pendingImport?: PendingImport | undefined;
 }
 
 export interface SchemaGenDB extends Dexie {
@@ -121,6 +126,16 @@ export function createDb(name = "schemagen"): SchemaGenDB {
   // string change, no upgrade function needed. The version bump tags the change
   // so future migrations can anchor against it.
   db.version(3).stores({
+    workspaces: "id, updatedAt",
+    records: "id, workspaceId",
+    changes: "[workspaceId+seq], workspaceId, seq",
+    irs: "workspaceId",
+    meta: "workspaceId",
+  });
+
+  // v4: MetaRow gains optional `pendingImport` (parsed JSON + candidates for
+  // the wizard's root-picker tree). Additive.
+  db.version(4).stores({
     workspaces: "id, updatedAt",
     records: "id, workspaceId",
     changes: "[workspaceId+seq], workspaceId, seq",

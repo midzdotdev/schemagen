@@ -94,6 +94,7 @@ export function createDexieAdapter(opts: DexieAdapterOptions = {}): WorkspaceAda
         identityConfig: meta?.identityConfig ?? null,
         identityProposalDismissed: meta?.identityProposalDismissed ?? false,
         inferenceOptions: meta?.inferenceOptions ?? null,
+        pendingImport: meta?.pendingImport ?? null,
       };
       return snapshot;
     },
@@ -194,6 +195,7 @@ export function attachPersistence(
   let lastIdentityConfig = useStore.getState().identityConfig;
   let lastDismissed = useStore.getState().identityProposalDismissed;
   let lastInferenceOptions = useStore.getState().inferenceOptions;
+  let lastPendingImport = useStore.getState().pendingImport;
   let lastName = useStore.getState().workspaceName;
   const initial = useStore.getState();
 
@@ -262,6 +264,14 @@ export function attachPersistence(
       // null → undefined so patchMeta clears the meta field (Reset semantics).
       void adapter.patchMeta(workspaceId, {
         inferenceOptions: state.inferenceOptions ?? undefined,
+      });
+    }
+
+    if (state.pendingImport !== lastPendingImport) {
+      lastPendingImport = state.pendingImport;
+      // null → undefined so inferSchema's clear actually removes the meta field.
+      void adapter.patchMeta(workspaceId, {
+        pendingImport: state.pendingImport ?? undefined,
       });
     }
 
