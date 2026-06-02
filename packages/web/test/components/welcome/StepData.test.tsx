@@ -36,9 +36,9 @@ describe("StepData", () => {
     expect(screen.getByRole("region", { name: /sample record/i })).toBeInTheDocument();
   });
 
-  // Re-pick root affordance — only when the original parse had multiple
-  // candidate root paths (e.g. nested objects with arrays at several levels).
-  it("HH-D4: 'Pick a different root' is hidden when pendingImport has 0 or 1 candidates", () => {
+  // Records root tree — only rendered when pendingImport has 2+ candidates;
+  // single-candidate imports skip the picker (nothing to re-pick).
+  it("HH-D4: tree picker hidden when pendingImport has 0 or 1 candidates", () => {
     act(() => {
       useStore.getState().setRecords([{ id: 1 }]);
       useStore.getState().setPendingImport({
@@ -47,10 +47,11 @@ describe("StepData", () => {
       });
     });
     render(<StepData onContinue={() => {}} />);
-    expect(screen.queryByRole("button", { name: /pick a different root/i })).toBeNull();
+    expect(screen.queryByRole("list", { name: /json tree/i })).toBeNull();
+    expect(screen.queryByText(/records root/i)).toBeNull();
   });
 
-  it("HH-D5: 'Pick a different root' surfaces when pendingImport has 2+ candidates", () => {
+  it("HH-D5: tree picker renders inline when pendingImport has 2+ candidates", () => {
     act(() => {
       useStore.getState().setRecords([{ id: 1 }]);
       useStore.getState().setPendingImport({
@@ -62,6 +63,7 @@ describe("StepData", () => {
       });
     });
     render(<StepData onContinue={() => {}} />);
-    expect(screen.getByRole("button", { name: /pick a different root/i })).toBeInTheDocument();
+    expect(screen.getByRole("list", { name: /json tree/i })).toBeInTheDocument();
+    expect(screen.getByText(/records root/i)).toBeInTheDocument();
   });
 });

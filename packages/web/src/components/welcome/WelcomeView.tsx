@@ -23,12 +23,11 @@ import { type ChangeEvent, useState } from "react";
 import { shouldRenameWorkspace, workspaceNameFromFile } from "@/lib/filename";
 import { ingestText } from "@/lib/import-pipeline";
 import { ingestAsync } from "@/lib/ingest-async";
-import type { PickerCandidate } from "@/lib/root-picker";
+import { getAtPath, type PickerCandidate } from "@/lib/root-picker";
 import { parseWorkspaceBundle } from "@/lib/workspace-bundle";
 import { loadWorkspaceBundle } from "@/state/init";
 import { useStore } from "@/state/store";
 import { DropZone } from "../data-panel/DropZone";
-import { RootPickerModal } from "../data-panel/RootPickerModal";
 import { Button } from "../ui/button";
 import { Textarea } from "../ui/textarea";
 
@@ -68,12 +67,6 @@ const SAMPLES: Sample[] = [
   },
 ];
 
-interface PickerState {
-  open: boolean;
-  parsed: unknown;
-  candidates: PickerCandidate[];
-}
-
 export function WelcomeView() {
   const records = useStore((s) => s.records);
   const setRecords = useStore((s) => s.setRecords);
@@ -92,11 +85,6 @@ export function WelcomeView() {
   const [bundleError, setBundleError] = useState<string | null>(null);
   const [busySample, setBusySample] = useState<string | null>(null);
   const [ingesting, setIngesting] = useState(false);
-  const [picker, setPicker] = useState<PickerState>({
-    open: false,
-    parsed: null,
-    candidates: [],
-  });
 
   async function commitRecords(newRecords: unknown[]): Promise<void> {
     if (ingesting) return;
@@ -120,13 +108,14 @@ export function WelcomeView() {
     }
   }
 
+  // Auto-pick the first enumerated candidate. The user can re-pick in the
+  // wizard's Step 1 — the tree picker is shown there inline. No modal at
+  // import time keeps the welcome → wizard transition snappy.
   function handleNeedsPicker(parsed: unknown, candidates: PickerCandidate[]): void {
-    setPicker({ open: true, parsed, candidates });
-  }
-
-  function handlePick(picked: unknown[]): void {
-    setPicker((p) => ({ ...p, open: false }));
-    void commitRecords(picked);
+    const first = candidates[0];
+    if (!first) return;
+    const records = getAtPath(parsed, first.path) as unknown[];
+    void commitRecords(records);
   }
 
   const onRecords = (rs: unknown[]): void => {
@@ -350,13 +339,6 @@ export function WelcomeView() {
           </section>
         </div>
       </div>
-      <RootPickerModal
-        open={picker.open}
-        onOpenChange={(open) => setPicker((p) => ({ ...p, open }))}
-        parsed={picker.parsed}
-        candidates={picker.candidates}
-        onPick={handlePick}
-      />
     </DropZone>
   );
 }
