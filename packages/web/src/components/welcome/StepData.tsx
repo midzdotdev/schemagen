@@ -1,17 +1,58 @@
-// PR HH Step 1 — Your data. A "did the import work?" reassurance: record
-// count, a scrollable peek at the first record, and a "Pick a different
-// root path…" affordance when the original JSON had multiple candidate
-// root arrays.
+// PR HH Step 1 — Your data.
+//
+// When the import had multiple candidate root paths, render the JSON tree
+// picker inline so the user can change which array became the records.
+// The currently-selected path is highlighted in the tree.
+//
+// Below the picker (or alone, for single-candidate imports), show the
+// sample record JSON for a "did the import work?" reassurance.
 
-import { GitFork } from "lucide-react";
-import { useState } from "react";
-import { RootPickerModal } from "@/components/data-panel/RootPickerModal";
-import { Button } from "@/components/ui/button";
+import { useMemo } from "react";
+import { RootPickerTree } from "@/components/data-panel/RootPickerTree";
 import { JsonView } from "@/components/ui/json-view";
+import type { PickerCandidate, PickerPath } from "@/lib/root-picker";
 import { useStore } from "@/state/store";
 
 export interface StepDataProps {
   onContinue: () => void;
+}
+
+// Reverse-lookup of the selected path: find the candidate whose value matches
+// the current records (by reference). Falls back to deep-equality on length
+// if reference identity changed (unlikely but defensive).
+function findSelectedPath(
+  parsed: unknown,
+  candidates: PickerCandidate[],
+  records: unknown[],
+): PickerPath | undefined {
+  for (const c of candidates) {
+    const v = atPath(parsed, c.path);
+    if (v === records) return c.path;
+  }
+  // Fallback: match by recordCount; the first candidate whose count matches
+  // is good enough for highlighting.
+  for (const c of candidates) {
+    if (c.recordCount === records.length) {
+      const v = atPath(parsed, c.path);
+      if (Array.isArray(v) && v.length === records.length) return c.path;
+    }
+  }
+  return undefined;
+}
+
+function atPath(value: unknown, path: PickerPath): unknown {
+  let cur: unknown = value;
+  for (const seg of path) {
+    if (cur === null || cur === undefined) return undefined;
+    if (typeof seg === "number") {
+      if (!Array.isArray(cur)) return undefined;
+      cur = cur[seg];
+      continue;
+    }
+    if (typeof cur !== "object" || Array.isArray(cur)) return undefined;
+    cur = (cur as Record<string, unknown>)[seg];
+  }
+  return cur;
 }
 
 export function StepData(_props: StepDataProps) {
@@ -19,9 +60,17 @@ export function StepData(_props: StepDataProps) {
   const setRecords = useStore((s) => s.setRecords);
   const pendingImport = useStore((s) => s.pendingImport);
   const count = records.length;
-  const [pickerOpen, setPickerOpen] = useState(false);
+
+  const selectedPath = useMemo(
+    () =>
+      pendingImport
+        ? findSelectedPath(pendingImport.parsed, pendingImport.candidates, records)
+        : undefined,
+    [pendingImport, records],
+  );
 
   const firstRecord = records[0];
+  const hasMultipleCandidates = pendingImport !== null && pendingImport.candidates.length > 1;
 
   return (
     <>
@@ -30,20 +79,23 @@ export function StepData(_props: StepDataProps) {
         {count === 1 ? "" : "s"} imported.
       </p>
 
-      {pendingImport && pendingImport.candidates.length > 1 && (
-        <div className="flex items-center justify-between gap-3 rounded-md border border-dashed border-border bg-muted/30 px-3 py-2">
-          <span className="text-[11px] text-muted-foreground">
-            The original JSON had {pendingImport.candidates.length} candidate root arrays.
-          </span>
-          <Button
-            variant="outline"
-            size="xs"
-            className="shrink-0 gap-1.5"
-            onClick={() => setPickerOpen(true)}
-          >
-            <GitFork className="size-3" />
-            Pick a different root…
-          </Button>
+      {hasMultipleCandidates && pendingImport && (
+        <div className="flex flex-col gap-1.5">
+          <div className="flex items-baseline justify-between gap-2">
+            <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+              Records root
+            </span>
+            <span className="text-[11px] text-muted-foreground">
+              {pendingImport.candidates.length} candidate arrays — pick the one to use.
+            </span>
+          </div>
+          <RootPickerTree
+            parsed={pendingImport.parsed}
+            candidates={pendingImport.candidates}
+            selectedPath={selectedPath}
+            onPick={(picked) => setRecords(picked)}
+            className="max-h-72"
+          />
         </div>
       )}
 
@@ -58,19 +110,6 @@ export function StepData(_props: StepDataProps) {
             className="max-h-96 text-[11px]"
           />
         </div>
-      )}
-
-      {pendingImport && (
-        <RootPickerModal
-          open={pickerOpen}
-          onOpenChange={setPickerOpen}
-          parsed={pendingImport.parsed}
-          candidates={pendingImport.candidates}
-          onPick={(picked) => {
-            setRecords(picked);
-            setPickerOpen(false);
-          }}
-        />
       )}
     </>
   );
