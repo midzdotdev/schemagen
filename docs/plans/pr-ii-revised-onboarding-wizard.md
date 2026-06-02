@@ -1,6 +1,6 @@
 # PR II (revised) — stepped onboarding wizard + inference rework
 
-> Status: **proposed**. Supersedes the single-page review-page approach from `docs/plans/pr-ii-onboarding-review-page.md` (resolved interpretation #1, "single scrolling page, no stepper"). Builds on the same branch and reuses everything PR #71 already landed: `useUIPrefs`/`writeUIPrefBag`, `OrientationHint`, the `WelcomeView` restructure, `DataSection`, and `IdentitySection` — none of those are rebuilt. It **replaces** `ReviewPage` (the single scrolling host) with a stepped `WizardHost` driven by a visual 1·2·3 `Stepper` (Data · Identity · Inference), and **reworks** the inference options into a shared, less-dense `InferenceOptionsForm` that renders inline in step 3 (pre-IR, editable) and inside the header Sliders modal (post-IR, read-only). The load-bearing Generate ordering and double-commit guards move out of `ReviewPage` verbatim. Per MEMORY.md (TDD-with-spec-traceability), this is its own plan file with citation IDs and failing-tests-first phasing — reversing PR II's no-stepper interpretation requires a plan-restart, not a test patch.
+> Status: **proposed**. Supersedes the single-page review-page approach from `docs/plans/pr-ii-onboarding-review-page.md` (resolved interpretation #1, "single scrolling page, no stepper"). Builds on the same branch and reuses everything PR #71 already landed: `useUIPrefs`/`writeUIPrefBag`, `OrientationHint`, the `WelcomeView` restructure, `DataSection`, and `IdentitySection` — none of those are rebuilt. It **replaces** `ReviewPage` (the single scrolling host) with a stepped `WizardHost` driven by a visual 1·2·3 `Stepper` (Data · Identity · Inference), and **reworks** the inference options into a shared, less-dense `InferenceOptionsForm` that renders inline in step 3 and inside the header Sliders modal — editable in both, since inference options are a persistent setting (not cold-start-only). The load-bearing Generate ordering and double-commit guards move out of `ReviewPage` verbatim. Per MEMORY.md (TDD-with-spec-traceability), this is its own plan file with citation IDs and failing-tests-first phasing — reversing PR II's no-stepper interpretation requires a plan-restart, not a test patch.
 
 ## Context
 
@@ -9,7 +9,7 @@ PR II replaced the PR HH three-step wizard with a single scrolling `ReviewPage`:
 1. A **visual** numbered 1·2·3 stepper (done / current / upcoming, visited steps clickable to jump back), explicitly **not** PR HH's vague "{step} of 3" text eyebrow.
 2. Inference shown **inline** in step 3 — no modal hop during onboarding — and reorganized so the panel is calmer: a handful of plain-language common toggles up front, the rare/numeric knobs behind a single "Advanced" disclosure.
 
-Alongside that, the header Sliders modal's post-IR state (`ir !== null`) looks broken: the whole control set is already inert (it sits in `<fieldset disabled={irExists}>`), but the input primitives carry no disabled styling, so they render at full opacity and *look* editable. The user reads this as "shows editable inputs even with an IR."
+Alongside that, the header Sliders modal used to lock its controls once a schema existed (`<fieldset disabled={irExists}>` + "applies only at first import" copy) — which was both visually broken (inputs at full opacity but inert) and *wrong*: inference options feed re-inference (PR FF), so they must stay editable. That cold-start-only lockout has been **removed as a precursor on this branch** (the options are now editable in all states); this plan builds on that corrected baseline (interpretation #8).
 
 **Reused as-is (PR #71, do not rebuild):** `DataSection.tsx` (store-driven, step-1 body), `IdentitySection.tsx` (controlled, step-2 body), `IdentityPicker.tsx`, `OrientationHint.tsx`, `WelcomeView.tsx`, `useUIPrefs.ts` (`onboardingCompleted` + `writeUIPrefBag` + `recordsSidebarCollapsed`), `field-stats.ts` (`fieldCountLabel`, `pathKeyToCorePath`, `seedSelection` logic), the `App.tsx` routing predicate, and the core `InferOptions` universe in `packages/core/src/infer/options.ts`.
 
@@ -45,7 +45,7 @@ Locked in based on the user's direction and the adversarial pass. Each is a deli
 
 12. **Generate fires only from the step-3 footer button, with the existing ordering and guards verbatim.** Moved from `ReviewPage.handleGenerate`: (1) `inferSchema()` first (a throw rolls back before any commit); (2) `setIdentityConfig({ fields: selected.map(pathKeyToCorePath) })` only if `(touched || selected.length > 0)`; (3) one `writeUIPrefBag(workspaceId, { onboardingCompleted: true, recordsSidebarCollapsed: false })`. Guards: early-return on `generatingRef.current`, on `ir !== null`, on `records.length === 0`; `generatingRef` set in `try`, reset in `finally`; errors caught into `generateError` shown in a `role="alert"`.
 
-13. **No presets; strict-by-default preserved.** Defaults come exclusively from `resolveOptions(undefined)` (`const D` at module scope). The store stays `null` until a user overrides. Autosave (no Apply/Cancel) and Reset-to-defaults (`setInferenceOptions(null)`) semantics are unchanged. The reorg is purely visual (whitespace, three plain-language groups, Advanced disclosure, read-only render). `formats.detect` and `discriminators.fields` stay out of the UI (type-only today; Z-D8 asserts no discriminators field picker).
+13. **No presets; strict-by-default preserved.** Defaults come exclusively from `resolveOptions(undefined)` (`const D` at module scope). The store stays `null` until a user overrides. Autosave (no Apply/Cancel) and Reset-to-defaults (`setInferenceOptions(null)`) semantics are unchanged. The reorg is purely visual (whitespace, three plain-language groups, Advanced disclosure). `formats.detect` and `discriminators.fields` stay out of the UI (type-only today; Z-D8 asserts no discriminators field picker).
 
 ## Stepper + wizard layout
 
@@ -97,7 +97,7 @@ upcoming   ○  bg-transparent border-border, number muted-foreground, label mut
 Step 3 body — calm inference default (Advanced collapsed):
 
 ```
-<InferenceStep/>  ->  <InferenceOptionsForm value={stored} onChange readOnly={false}/>
+<InferenceStep/>  ->  <InferenceOptionsForm value={stored} onChange={setInferenceOptions}/>
 
   Tune how schemagen reads your records. Defaults are strict.
 
@@ -191,12 +191,12 @@ Internals moved verbatim out of `InferenceOptionsDialog`: `FormState`, `seed()`,
 
 - `packages/web/src/components/welcome/WizardHost.tsx` — stepped onboarding host replacing `ReviewPage`. Owns `step`/`maxVisited`, `selected`/`touched`, `generateError`, `generatingRef`, `recordsRef`, the records-change re-seed effect, navigation handlers, and the verbatim Generate finish handler. No props; rendered `<WizardHost key={workspaceId}/>`.
 - `packages/web/src/components/welcome/Stepper.tsx` — presentational, controlled 1·2·3 stepper. Props `{ steps, current, maxVisited, onStepSelect, idPrefix? }`. No store access, no `@schemagen/core` import.
-- `packages/web/src/components/welcome/InferenceStep.tsx` — thin store-driven wrapper mounting `InferenceOptionsForm` editable (`readOnly={false}`) + the wrapper-owned Reset button. The step-3 body.
-- `packages/web/src/components/inference/InferenceOptionsForm.tsx` — shared presentational form extracted from `InferenceOptionsDialog`. Dialog-free; `readOnly` two-mode render; Advanced disclosure.
+- `packages/web/src/components/welcome/InferenceStep.tsx` — thin store-driven wrapper mounting the editable `InferenceOptionsForm` + the wrapper-owned Reset button. The step-3 body.
+- `packages/web/src/components/inference/InferenceOptionsForm.tsx` — shared presentational form extracted from `InferenceOptionsDialog`. Dialog-free; always editable; Advanced disclosure.
 - `packages/web/test/components/welcome/WizardHost.test.tsx` — host orchestration + finish-ordering suite (carries the moved II-R3/R4/R5/R7/I5/I6).
 - `packages/web/test/components/welcome/Stepper.test.tsx` — stepper states, click-to-jump, forward gate, keyboard.
 - `packages/web/test/components/welcome/InferenceStep.test.tsx` — inline editable step + Reset wrapper.
-- `packages/web/test/components/inference/InferenceOptionsForm.test.tsx` — the extracted form (editable + readOnly modes, sections, Advanced, percent round-trip).
+- `packages/web/test/components/inference/InferenceOptionsForm.test.tsx` — the extracted form (always editable, sections, Advanced disclosure, percent round-trip).
 
 ### Modified
 
@@ -318,7 +318,7 @@ Each phase is failing-tests-first → minimum code → green; each starts from n
 - `pnpm typecheck` clean.
 - `pnpm test --filter @schemagen/web` green; new test files present; rewritten Z-D and II-A suites pass; `DataSection`/`IdentitySection`/`OrientationHint`/`useUIPrefs` suites still green as guards.
 - `pnpm lint` clean (Biome `noRestrictedImports` — intra-package `@/` alias for two-plus-level climbs).
-- Manual run: fresh workspace → paste a sample → **step 1 Data** (record count, collapsed first record) → Continue → **step 2 Identity** (proposed key pre-checked, dedup preview live; toggle, then jump back to Data via the stepper, re-pick root, return — selection reset) → Continue → **step 3 Inference** (four common toggles, Advanced collapsed; expand, change a knob; Back does not roll back; Reset restores defaults) → `Generate schema (N fields)` → IR appears, wizard unmounts, sidebar expands. Reload → wizard does not re-show. Post-IR: header Sliders → modal opens **read-only** (static values, no editable inputs, Advanced auto-open if any knob ≠ default).
+- Manual run: fresh workspace → paste a sample → **step 1 Data** (record count, collapsed first record) → Continue → **step 2 Identity** (proposed key pre-checked, dedup preview live; toggle, then jump back to Data via the stepper, re-pick root, return — selection reset) → Continue → **step 3 Inference** (four common toggles, Advanced collapsed; expand, change a knob; Back does not roll back; Reset restores defaults) → `Generate schema (N fields)` → IR appears, wizard unmounts, sidebar expands. Reload → wizard does not re-show. Post-IR: header Sliders → modal opens **editable** (options stay tunable after a schema exists; Advanced auto-open if any knob ≠ default).
 - README walk-through updated in the same commit as the App swap (CLAUDE.md).
 
 ## Out of scope
