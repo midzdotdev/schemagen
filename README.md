@@ -7,7 +7,7 @@ A developer tool for generating, visualizing, and iterating on data schemas from
 `@schemagen/core` and `@schemagen/web` are in `main`. JSON Schema emits today; Zod and TypeScript follow. No npm release yet.
 
 - `@schemagen/core` — pure TypeScript. Inference, validation, mutation (`applyChange` + inverse), JSON Schema emission. Strict typing (`exactOptionalPropertyTypes`, `noUncheckedIndexedAccess`). Vitest + fast-check.
-- `@schemagen/web` — local-first React app. Welcome view for fresh workspaces, three-step onboarding wizard (data → identity → inference → generate), resizable post-IR layout with a collapsible records sidebar, full op editor, mismatch panel with filter and grouped collapse, rolled-up mismatch counts, identity-key auto-suggest, workspace-scoped inference tuning, workspace bundle export/import, JSON syntax highlighting, sample loader, undo/redo, keyboard shortcuts. Persists to IndexedDB via Dexie.
+- `@schemagen/web` — local-first React app. Welcome view for fresh workspaces, single-page onboarding review (inspect the records + pick an identity key, then generate), resizable post-IR layout with a collapsible records sidebar, full op editor, mismatch panel with filter and grouped collapse, rolled-up mismatch counts, identity-key auto-suggest (pre-selected on the review page), workspace-scoped inference tuning, workspace bundle export/import, JSON syntax highlighting, sample loader, undo/redo, keyboard shortcuts. Persists to IndexedDB via Dexie.
 
 Specs in [`docs/`](./docs/):
 
@@ -15,7 +15,7 @@ Specs in [`docs/`](./docs/):
 - [`core-spec.md`](./docs/core-spec.md) — library API.
 - [`frontend-spec.md`](./docs/frontend-spec.md) — web UI.
 
-Active plans live in [`docs/plans/`](./docs/plans/) — design-locked PR specs (PR FF for re-infer + reconcile, PR HH for the workspace wizard, etc.).
+Active plans live in [`docs/plans/`](./docs/plans/) — design-locked PR specs (PR FF for re-infer + reconcile, PR II for the onboarding review page, etc.).
 
 ## Capabilities
 
@@ -31,7 +31,7 @@ Active plans live in [`docs/plans/`](./docs/plans/) — design-locked PR specs (
 
 Build a schema for user records from an analytics API.
 
-**1. Start.** Open schemagen. The welcome view greets you with sample datasets, paste/upload, and a workspace-bundle import. Paste a JSON response:
+**1. Start.** Open schemagen. The welcome view leads with a paste box (sample datasets sit just below; file upload and workspace-bundle import are tucked under "More ways to start"). Paste a JSON response:
 
 ```json
 {
@@ -43,15 +43,15 @@ Build a schema for user records from an analytics API.
 }
 ```
 
-The root picker offers `.users`. Select it. schemagen dedupes the 200 records by canonical hash and stores them.
+schemagen auto-selects `.users` (you can re-pick on the review page), dedupes the 200 records by canonical hash, and stores them.
 
-**2. Wizard.** The new-workspace wizard kicks in. Three steps before the schema is generated:
+**2. Review.** Instead of a stepper, schemagen drops you on a single review page — everything visible at once, nothing gated behind a "Next":
 
-- **Your data** — 200 records, "Array of 200 objects", 8 primitive fields + 1 compound. Expand "Show first record" if you want to see what shape made it through. Continue.
-- **Identity key** — schemagen highlights `id` (100% unique, 100% present). The live dedup preview reads "Using `id`, your 200 records would yield 200 unique (0 duplicates)." Continue.
-- **Inference options** — defaults are usually right. Glance at the summary (literal unions up to 20, format detection on, numeric ranges evidence-only). Click **Generate schema**.
+- **Data** — the records root (`.users`, 200 records) with a sample record you can expand. A **Change** button reopens the root picker if schemagen guessed wrong.
+- **Identity (optional)** — `id` is pre-ticked (100% unique, 100% present). The live dedup preview reads "Using `id`, your 200 records would yield 200 unique (0 duplicates)." Untick it, or tick several for a composite key, if you disagree.
+- **Inference** — a one-line summary ("strict defaults") with an **Adjust** link to the options dialog, also reachable any time from the **Sliders** button in the header.
 
-You can also **Skip wizard** from any step — schemagen fast-forwards to Generate with sensible defaults.
+Click **Generate schema (8 fields)** in the sticky footer.
 
 **3. Inference.** schemagen produces a first cut:
 
