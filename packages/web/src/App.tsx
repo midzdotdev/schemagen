@@ -9,15 +9,15 @@ import { ThreePaneLayoutPostIR } from "./components/shell/ThreePaneLayoutPostIR"
 import { UIShellProvider } from "./components/shell/UIShell";
 import { TooltipProvider } from "./components/ui/tooltip";
 import { OrientationHint } from "./components/welcome/OrientationHint";
-import { ReviewPage } from "./components/welcome/ReviewPage";
 import { WelcomeView } from "./components/welcome/WelcomeView";
+import { WizardHost } from "./components/welcome/WizardHost";
 import { useUIPref } from "./hooks/useUIPrefs";
 import { useStore } from "./state/store";
 
 export function App() {
   // Four modes of the main content area:
   //   - Fresh workspace (no records, no IR) → WelcomeView
-  //   - Records but no IR + not onboarded → ReviewPage
+  //   - Records but no IR + not onboarded → WizardHost (stepped onboarding)
   //   - Records but no IR + onboarded → cold-start 3-pane (data | schema CTA | inspector)
   //   - IR exists → records sidebar | schema | inspector
   const ir = useStore((s) => s.ir);
@@ -42,7 +42,7 @@ export function App() {
             {isFresh ? (
               <WelcomeView />
             ) : inReview ? (
-              <ReviewPage key={workspaceId} />
+              <WizardHost key={workspaceId} />
             ) : ir ? (
               <ThreePaneLayoutPostIR
                 collapsed={collapsed}

@@ -1,5 +1,5 @@
 // PR II — Identity section of the onboarding review page (was StepIdentity).
-// IdentitySection is a controlled component: ReviewPage owns `selected` and
+// IdentitySection is a controlled component: WizardHost owns `selected` and
 // commits it on Generate, so this section never touches setIdentityConfig.
 // Seeding and the Generate-commit semantics (plan II-I3/I5/I6) are exercised
 // in ReviewPage.test.tsx. II-I7 (rich picker row labels) is deferred to the
@@ -26,7 +26,7 @@ beforeEach(() => {
   });
 });
 
-// Drives IdentitySection like ReviewPage will — local state lifted up.
+// Drives IdentitySection like WizardHost does — local state lifted up.
 function Harness({ initial = [] as string[] }) {
   const [selected, setSelected] = useState<string[]>(initial);
   return <IdentitySection selected={selected} onSelectedChange={setSelected} />;

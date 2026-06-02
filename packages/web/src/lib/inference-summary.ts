@@ -1,8 +1,7 @@
-// Human-readable summaries of the workspace InferOptions overrides.
-//
-// Extracted from GenerateSchemaCard so both that card (until it's retired) and
-// the onboarding ReviewPage can describe the active inference settings without
-// duplicating the knob-by-knob logic.
+// Human-readable summaries of the workspace InferOptions overrides + a
+// defaults check. Used by GenerateSchemaCard's cold-start panel (the full
+// sentence) and the inference dialog (hasNonDefaultOptions, to auto-open the
+// Advanced disclosure).
 
 import { type InferOptions, resolveOptions } from "@schemagen/core";
 
@@ -34,13 +33,6 @@ export function inferenceOverrideCount(opts: InferOptions | null): number {
   if (opts.discriminators?.enable === false) n += 1;
   if (opts.onTypeConflict === "unknown") n += 1;
   return n;
-}
-
-// Compact one-liner for the ReviewPage inline "Inference: …" line.
-export function inferenceSummaryShort(opts: InferOptions | null): string {
-  const n = inferenceOverrideCount(opts);
-  if (n === 0) return "strict defaults";
-  return `${n} override${n === 1 ? "" : "s"}`;
 }
 
 // Full sentence used by GenerateSchemaCard's cold-start panel.

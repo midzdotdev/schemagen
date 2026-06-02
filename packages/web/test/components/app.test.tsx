@@ -41,21 +41,22 @@ describe("App", () => {
     expect(screen.getByRole("region", { name: /inspector/i })).toBeInTheDocument();
   });
 
-  // PR II — onboarding review page. See docs/plans/pr-ii-onboarding-review-page.md.
-  // Plan § "Trigger"
-  it("II-A1: records + no IR + not onboarded renders the review page", () => {
+  // PR II (revised) — stepped onboarding wizard.
+  // See docs/plans/pr-ii-revised-onboarding-wizard.md § "Trigger".
+  it("II-A1: records + no IR + not onboarded renders the onboarding wizard", () => {
     act(() => {
       useStore.getState().setRecords([{ id: 1 }]);
     });
     render(<App />);
-    expect(screen.getByRole("heading", { name: /review your data/i })).toBeInTheDocument();
-    // Not post-IR / not the records-only cold-start: neither has a schema region.
-    expect(screen.queryByRole("region", { name: /schema/i })).toBeNull();
+    expect(screen.getByRole("heading", { name: /set up your schema/i })).toBeInTheDocument();
+    expect(screen.getByRole("list", { name: /onboarding steps/i })).toBeInTheDocument();
+    // Not post-IR / not the records-only cold-start: neither has the Schema pane.
+    expect(screen.queryByRole("region", { name: /^schema$/i })).toBeNull();
   });
 
-  // Plan § "Resolved interpretations #6/#7" — Generate flips onboardingCompleted
-  // and force-expands the records sidebar in one write.
-  it("II-A2: clicking Generate sets the IR, completes onboarding, and expands the sidebar", async () => {
+  // Plan § "State + action surface" — Generate (from step 3) flips
+  // onboardingCompleted and force-expands the records sidebar in one write.
+  it("II-A2: Generating on step 3 sets the IR, completes onboarding, and expands the sidebar", async () => {
     const user = userEvent.setup();
     const workspaceId = useStore.getState().workspaceId;
     window.localStorage.setItem(
@@ -66,6 +67,8 @@ describe("App", () => {
       useStore.getState().setRecords([{ id: 1, name: "a" }]);
     });
     render(<App />);
+    await user.click(screen.getByRole("button", { name: /^continue$/i }));
+    await user.click(screen.getByRole("button", { name: /^continue$/i }));
     await user.click(screen.getByRole("button", { name: /generate schema/i }));
     expect(useStore.getState().ir).not.toBeNull();
     const bag = JSON.parse(window.localStorage.getItem(`schemagen.uiPrefs.${workspaceId}`) ?? "{}");
@@ -74,13 +77,13 @@ describe("App", () => {
   });
 
   // Plan § "State + action surface" — ingest does not seed onboardingCompleted.
-  it("II-A5: importing records leaves onboardingCompleted unset and routes to review", () => {
+  it("II-A5: importing records leaves onboardingCompleted unset and routes to the wizard", () => {
     const workspaceId = useStore.getState().workspaceId;
     act(() => {
       useStore.getState().setRecords([{ id: 1 }]);
     });
     render(<App />);
-    expect(screen.getByRole("heading", { name: /review your data/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /set up your schema/i })).toBeInTheDocument();
     const bag = JSON.parse(window.localStorage.getItem(`schemagen.uiPrefs.${workspaceId}`) ?? "{}");
     expect(bag.onboardingCompleted).toBeUndefined();
   });
