@@ -96,7 +96,6 @@ export function StepData(_props: StepDataProps) {
             candidates={pendingImport.candidates}
             selectedPath={selectedPath}
             onPick={(picked) => setRecords(picked)}
-            className="max-h-72"
           />
         </div>
       )}
@@ -106,11 +105,7 @@ export function StepData(_props: StepDataProps) {
           <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
             Sample record
           </span>
-          <JsonView
-            value={firstRecord}
-            aria-label="Sample record"
-            className="max-h-96 text-[11px]"
-          />
+          <JsonView value={firstRecord} aria-label="Sample record" className="text-[11px]" />
         </div>
       )}
     </>

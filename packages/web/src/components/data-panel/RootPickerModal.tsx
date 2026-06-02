@@ -32,7 +32,12 @@ export function RootPickerModal({
             records. Arrays of objects are highlighted as pickable.
           </DialogDescription>
         </DialogHeader>
-        <RootPickerTree parsed={parsed} candidates={candidates} onPick={onPick} />
+        <RootPickerTree
+          parsed={parsed}
+          candidates={candidates}
+          onPick={onPick}
+          className="max-h-[60vh] overflow-y-auto"
+        />
         <div className="flex justify-end">
           <Button variant="outline" size="sm" onClick={() => onOpenChange(false)}>
             Cancel
