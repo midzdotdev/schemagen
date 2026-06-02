@@ -53,9 +53,7 @@ export function WizardStepShell({
         <h1 className="text-2xl font-semibold tracking-tight text-foreground">{title}</h1>
         <p className="text-sm text-muted-foreground">{sub}</p>
       </header>
-      <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-6 py-4">
-        {children}
-      </div>
+      <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-6 py-4">{children}</div>
       <footer className="flex shrink-0 items-center justify-between gap-2 border-t border-border bg-background px-6 py-3">
         <div>
           {onBack && (

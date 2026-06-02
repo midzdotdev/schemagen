@@ -65,10 +65,7 @@ export function RootPickerTree({
   return (
     <ul
       aria-label="JSON tree"
-      className={cn(
-        "rounded-md border border-border bg-card/40 p-2 font-mono text-xs",
-        className,
-      )}
+      className={cn("rounded-md border border-border bg-card/40 p-2 font-mono text-xs", className)}
     >
       <TreeNode
         value={parsed}
