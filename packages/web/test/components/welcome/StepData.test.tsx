@@ -36,9 +36,19 @@ describe("StepData", () => {
     expect(screen.getByRole("region", { name: /sample record/i })).toBeInTheDocument();
   });
 
-  // Records root tree — only rendered when pendingImport has 2+ candidates;
-  // single-candidate imports skip the picker (nothing to re-pick).
-  it("HH-D4: tree picker hidden when pendingImport has 0 or 1 candidates", () => {
+  // Records root tree — rendered whenever pendingImport has any candidates
+  // (even a single one), so the user can see the structure of what was
+  // imported. Hidden only when pendingImport is null or has zero candidates.
+  it("HH-D4: tree picker hidden when pendingImport is null", () => {
+    act(() => {
+      useStore.getState().setRecords([{ id: 1 }]);
+    });
+    render(<StepData onContinue={() => {}} />);
+    expect(screen.queryByRole("list", { name: /json tree/i })).toBeNull();
+    expect(screen.queryByText(/records root/i)).toBeNull();
+  });
+
+  it("HH-D5a: tree picker renders inline for a single-candidate import", () => {
     act(() => {
       useStore.getState().setRecords([{ id: 1 }]);
       useStore.getState().setPendingImport({
@@ -47,11 +57,11 @@ describe("StepData", () => {
       });
     });
     render(<StepData onContinue={() => {}} />);
-    expect(screen.queryByRole("list", { name: /json tree/i })).toBeNull();
-    expect(screen.queryByText(/records root/i)).toBeNull();
+    expect(screen.getByRole("list", { name: /json tree/i })).toBeInTheDocument();
+    expect(screen.getByText(/only one array of objects found/i)).toBeInTheDocument();
   });
 
-  it("HH-D5: tree picker renders inline when pendingImport has 2+ candidates", () => {
+  it("HH-D5b: tree picker renders inline when pendingImport has 2+ candidates", () => {
     act(() => {
       useStore.getState().setRecords([{ id: 1 }]);
       useStore.getState().setPendingImport({
@@ -64,6 +74,6 @@ describe("StepData", () => {
     });
     render(<StepData onContinue={() => {}} />);
     expect(screen.getByRole("list", { name: /json tree/i })).toBeInTheDocument();
-    expect(screen.getByText(/records root/i)).toBeInTheDocument();
+    expect(screen.getByText(/2 candidate arrays/i)).toBeInTheDocument();
   });
 });

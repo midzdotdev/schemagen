@@ -70,7 +70,7 @@ export function StepData(_props: StepDataProps) {
   );
 
   const firstRecord = records[0];
-  const hasMultipleCandidates = pendingImport !== null && pendingImport.candidates.length > 1;
+  const showTree = pendingImport !== null && pendingImport.candidates.length > 0;
 
   return (
     <>
@@ -79,14 +79,16 @@ export function StepData(_props: StepDataProps) {
         {count === 1 ? "" : "s"} imported.
       </p>
 
-      {hasMultipleCandidates && pendingImport && (
+      {showTree && pendingImport && (
         <div className="flex flex-col gap-1.5">
           <div className="flex items-baseline justify-between gap-2">
             <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
               Records root
             </span>
             <span className="text-[11px] text-muted-foreground">
-              {pendingImport.candidates.length} candidate arrays — pick the one to use.
+              {pendingImport.candidates.length === 1
+                ? "Only one array of objects found."
+                : `${pendingImport.candidates.length} candidate arrays — pick the one to use.`}
             </span>
           </div>
           <RootPickerTree
