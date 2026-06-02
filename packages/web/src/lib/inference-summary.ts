@@ -4,14 +4,25 @@
 // the onboarding ReviewPage can describe the active inference settings without
 // duplicating the knob-by-knob logic.
 
-import type { InferOptions } from "@schemagen/core";
+import { type InferOptions, resolveOptions } from "@schemagen/core";
+
+// True when the stored options resolve to anything other than the strict
+// defaults. Compares the fully-resolved option objects directly (not the
+// heuristic override count) so it can't drift if a default changes in core —
+// the inference dialog uses it to auto-open the Advanced disclosure.
+export function hasNonDefaultOptions(opts: InferOptions | null): boolean {
+  if (!opts) return false;
+  return JSON.stringify(resolveOptions(opts)) !== JSON.stringify(resolveOptions(undefined));
+}
 
 // Count how many knobs deviate from schemagen's strict defaults. 0 ⇒ "strict
-// defaults"; the ReviewPage inline line uses this for "N overrides".
+// defaults"; the inline summary line uses this for "N overrides".
 export function inferenceOverrideCount(opts: InferOptions | null): number {
   if (!opts) return 0;
   let n = 0;
   if (opts.literals?.maxCardinality !== undefined) n += 1;
+  if (opts.literals?.maxUniqueRatio !== undefined) n += 1;
+  if (opts.literals?.minSamples !== undefined) n += 1;
   if (opts.literals?.enable === false) n += 1;
   if (opts.formats?.enable === false) n += 1;
   if (opts.numbers?.integerDetection === false) n += 1;
@@ -39,6 +50,12 @@ export function summariseOptions(opts: InferOptions | null): string {
   const parts: string[] = [];
   if (opts.literals?.maxCardinality !== undefined) {
     parts.push(`literals up to ${opts.literals.maxCardinality}`);
+  }
+  if (opts.literals?.maxUniqueRatio !== undefined) {
+    parts.push(`max unique ratio ${Math.round(opts.literals.maxUniqueRatio * 100)}%`);
+  }
+  if (opts.literals?.minSamples !== undefined) {
+    parts.push(`min samples ${opts.literals.minSamples}`);
   }
   if (opts.literals?.enable === false) parts.push("literals off");
   if (opts.formats?.enable === false) parts.push("formats off");
