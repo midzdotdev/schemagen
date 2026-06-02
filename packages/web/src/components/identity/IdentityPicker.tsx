@@ -8,7 +8,7 @@
 // to the store.
 
 import { ChevronRight } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useId, useMemo, useState } from "react";
 import { cn } from "@/lib/cn";
 import {
   compositeUniqueness,
@@ -136,6 +136,7 @@ function FieldRow({
   const hasChildren = node.children.length > 0;
   const isUnique = node.uniqueness >= 0.95;
   const isPresent = node.presence >= 0.95;
+  const inputId = useId();
 
   return (
     <li>
@@ -146,40 +147,36 @@ function FieldRow({
         )}
         style={{ paddingLeft: 4 + depth * INDENT_PX }}
       >
-        {hasChildren ? (
-          <button
-            type="button"
-            onClick={() => onToggleExpanded(node.pathKey)}
-            aria-label={isOpen ? "Collapse" : "Expand"}
-            className="flex size-3.5 shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"
-          >
-            <ChevronRight className={cn("size-3 transition-transform", isOpen && "rotate-90")} />
-          </button>
-        ) : (
-          <span className="size-3.5 shrink-0" aria-hidden />
-        )}
-        {selectable ? (
-          <label aria-label={node.pathKey} className="flex min-w-0 flex-1 items-center gap-1.5">
+        {/* Single leading control slot — chevron OR checkbox OR spacer.
+            Containers (objects/arrays) and primitives never coexist on the
+            same row, so one column is enough. */}
+        <span className="flex size-3.5 shrink-0 items-center justify-center">
+          {hasChildren ? (
+            <button
+              type="button"
+              onClick={() => onToggleExpanded(node.pathKey)}
+              aria-label={isOpen ? "Collapse" : "Expand"}
+              className="flex size-3.5 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"
+            >
+              <ChevronRight className={cn("size-3 transition-transform", isOpen && "rotate-90")} />
+            </button>
+          ) : selectable ? (
             <input
+              id={inputId}
               type="checkbox"
+              aria-label={node.pathKey}
               checked={isSelected}
               onChange={() => onToggleSelected(node.pathKey)}
-              className="size-3.5 shrink-0 cursor-pointer accent-info"
+              className="size-3.5 cursor-pointer accent-info"
             />
-            <code className="min-w-0 flex-1 truncate text-foreground">{node.segment}</code>
+          ) : null}
+        </span>
+        {selectable ? (
+          <label htmlFor={inputId} className="min-w-0 flex-1 cursor-pointer truncate">
+            <code className="text-foreground">{node.segment}</code>
           </label>
         ) : (
-          <span className="flex min-w-0 flex-1 items-center gap-1.5">
-            <span className="size-3.5 shrink-0" aria-hidden />
-            <code
-              className={cn(
-                "min-w-0 flex-1 truncate",
-                node.isArrayIndex ? "text-muted-foreground" : "text-muted-foreground",
-              )}
-            >
-              {node.segment}
-            </code>
-          </span>
+          <code className="min-w-0 flex-1 truncate text-muted-foreground">{node.segment}</code>
         )}
         <span
           title="Field type"
