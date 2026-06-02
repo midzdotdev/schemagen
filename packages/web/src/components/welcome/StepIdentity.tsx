@@ -73,7 +73,7 @@ export function StepIdentity({ onContinue, onBack, onSkip }: StepIdentityProps) 
     <WizardStepShell
       step={2}
       title="Identity key"
-      sub="Tell schemagen what makes a record unique. Without this, future imports pile up and the schema starts seeing duplicates as new data."
+      sub="What makes a record unique. Otherwise re-imports look like new data."
       continueLabel={continueLabel}
       onContinue={handleContinue}
       onBack={onBack}
@@ -84,8 +84,7 @@ export function StepIdentity({ onContinue, onBack, onSkip }: StepIdentityProps) 
           Fields
         </span>
         <p className="text-[11px] text-muted-foreground">
-          Pick a field (or fields) that identifies the same record across imports — schemagen uses
-          it to merge duplicates so the schema stays accurate as your data grows.
+          A field (or composite) that identifies the same record across imports.
         </p>
         <label className="mt-1 flex w-fit cursor-pointer items-center gap-1.5 text-[11px] text-muted-foreground hover:text-foreground">
           <input
@@ -97,11 +96,7 @@ export function StepIdentity({ onContinue, onBack, onSkip }: StepIdentityProps) 
           Show nested fields
         </label>
         <div className="mt-1">
-          <IdentityPicker
-            selected={selected}
-            onSelectedChange={setSelected}
-            showAll={showNested}
-          />
+          <IdentityPicker selected={selected} onSelectedChange={setSelected} showAll={showNested} />
         </div>
       </div>
 
@@ -141,9 +136,7 @@ export function StepIdentity({ onContinue, onBack, onSkip }: StepIdentityProps) 
       </div>
 
       <p className="rounded-md border border-dashed border-border bg-muted/30 px-2 py-1.5 text-[11px] text-muted-foreground">
-        Even without an identity key, schemagen always collapses records that are byte-identical
-        (same fields and values, regardless of key order) — re-imports of the same payload won't
-        pile up.
+        Byte-identical records always collapse, even without an identity key.
       </p>
     </WizardStepShell>
   );

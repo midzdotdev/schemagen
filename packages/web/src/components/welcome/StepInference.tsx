@@ -85,7 +85,7 @@ export function StepInference({ onGenerate, onBack, onSkip }: StepInferenceProps
     <WizardStepShell
       step={3}
       title="Inference options"
-      sub="Tune how schemagen reads your records. Tighter rules catch more issues; looser rules let more variation through."
+      sub="How schemagen reads your records. Tighter rules catch more; looser let more through."
       continueLabel="Generate schema"
       onContinue={handleGenerate}
       onBack={onBack}
@@ -96,8 +96,7 @@ export function StepInference({ onGenerate, onBack, onSkip }: StepInferenceProps
           Options
         </span>
         <p className="text-[11px] text-muted-foreground">
-          Each row controls one part of how the schema gets built. Adjust if you need something
-          other than the default.
+          Each row controls one part of how the schema gets built.
         </p>
         <ul className="mt-1 flex flex-col gap-1 rounded-lg border border-border bg-card/40 p-1">
           {rows.map((row) => (
