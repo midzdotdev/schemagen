@@ -81,8 +81,14 @@ export function WelcomeView() {
   const setPendingImport = useStore((s) => s.setPendingImport);
 
   const [pasteText, setPasteText] = useState("");
-  const [importError, setImportError] = useState<string | null>(null);
+  // Errors are split by on-ramp so each renders next to the control that
+  // produced it; file/bundle errors live inside the "More ways to start"
+  // disclosure and force it open.
+  const [pasteError, setPasteError] = useState<string | null>(null);
+  const [sampleError, setSampleError] = useState<string | null>(null);
+  const [fileError, setFileError] = useState<string | null>(null);
   const [bundleError, setBundleError] = useState<string | null>(null);
+  const [moreOpen, setMoreOpen] = useState(false);
   const [busySample, setBusySample] = useState<string | null>(null);
   const [ingesting, setIngesting] = useState(false);
 
@@ -124,7 +130,7 @@ export function WelcomeView() {
 
   async function handleSample(sample: Sample): Promise<void> {
     setBusySample(sample.id);
-    setImportError(null);
+    setSampleError(null);
     try {
       const r = await fetch(`/samples/${sample.filename}`);
       if (!r.ok) throw new Error(`fetch failed (${r.status})`);
@@ -138,17 +144,17 @@ export function WelcomeView() {
         setPendingImport({ parsed: result.parsed, candidates: result.candidates });
       }
     } catch (e) {
-      setImportError(e instanceof Error ? e.message : "failed to load sample");
+      setSampleError(e instanceof Error ? e.message : "failed to load sample");
     } finally {
       setBusySample(null);
     }
   }
 
   function handlePaste(): void {
-    setImportError(null);
+    setPasteError(null);
     const result = ingestText(pasteText, onRecords, handleNeedsPicker);
     if (!result.ok) {
-      setImportError(result.error ?? "could not import");
+      setPasteError(result.error ?? "could not import");
       return;
     }
     if (result.parsed !== undefined && result.candidates) {
@@ -160,14 +166,15 @@ export function WelcomeView() {
   function handleFile(e: ChangeEvent<HTMLInputElement>): void {
     const file = e.target.files?.[0];
     if (!file) return;
-    setImportError(null);
+    setFileError(null);
     if (shouldRenameWorkspace(workspaceName)) {
       setWorkspaceName(workspaceNameFromFile(file.name));
     }
     void file.text().then((text) => {
       const result = ingestText(text, onRecords, handleNeedsPicker);
       if (!result.ok) {
-        setImportError(result.error ?? "could not import");
+        setFileError(result.error ?? "could not import");
+        setMoreOpen(true);
         return;
       }
       if (result.parsed !== undefined && result.candidates) {
@@ -186,17 +193,20 @@ export function WelcomeView() {
         value = JSON.parse(raw);
       } catch (err) {
         setBundleError(err instanceof Error ? err.message : "could not parse bundle file");
+        setMoreOpen(true);
         return;
       }
       const result = parseWorkspaceBundle(value);
       if (!result.ok) {
         setBundleError(result.error);
+        setMoreOpen(true);
         return;
       }
       try {
         await loadWorkspaceBundle(result.bundle);
       } catch (err) {
         setBundleError(err instanceof Error ? err.message : "could not import bundle");
+        setMoreOpen(true);
       }
     });
   }
@@ -207,19 +217,60 @@ export function WelcomeView() {
         <div className="mx-auto flex w-full max-w-2xl flex-col gap-8 px-6 py-10">
           {/* Hero */}
           <header className="flex flex-col gap-2">
-            <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+            <h1 className="font-semibold text-2xl text-foreground tracking-tight">
               Welcome to your workspace
             </h1>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-muted-foreground text-sm">
               Schemagen infers a JSON schema from a sample of your data, then lets you refine it by
               hand. Start by giving it some records.
             </p>
+            {/* Global drag hint — applies to the whole page (the DropZone), so it
+                lives outside any single on-ramp. */}
+            <p className="text-[11px] text-muted-foreground">
+              Tip: drag a <code className="font-mono">.json</code> or{" "}
+              <code className="font-mono">.ndjson</code> file anywhere on this page to import it.
+            </p>
           </header>
 
-          {/* Sample datasets */}
+          {/* Primary on-ramp: paste */}
           <section className="flex flex-col gap-3">
-            <h2 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Try a sample dataset
+            <h2 className="flex items-center gap-2 font-semibold text-[11px] text-muted-foreground uppercase tracking-wider">
+              <ClipboardPaste className="size-3.5" />
+              Paste your JSON
+            </h2>
+            <div className="flex flex-col gap-2 rounded-lg border border-border bg-card/40 p-3">
+              <Textarea
+                rows={8}
+                value={pasteText}
+                onChange={(e) => setPasteText(e.target.value)}
+                placeholder='Paste an array of objects, e.g. [{ "id": "a", "status": "active" }, …]'
+                aria-label="Paste JSON"
+                className="resize-none text-xs leading-relaxed"
+              />
+              <Button
+                size="sm"
+                onClick={handlePaste}
+                disabled={!pasteText.trim() || ingesting}
+                className="self-start"
+              >
+                <FileJson className="size-3.5" />
+                Import
+              </Button>
+            </div>
+            {pasteError && (
+              <p
+                role="alert"
+                className="rounded-md bg-destructive/10 px-2 py-1.5 text-destructive text-xs"
+              >
+                {pasteError}
+              </p>
+            )}
+          </section>
+
+          {/* Secondary on-ramp: sample datasets */}
+          <section className="flex flex-col gap-3">
+            <h2 className="font-semibold text-[11px] text-muted-foreground uppercase tracking-wider">
+              Or try a sample dataset
             </h2>
             <ul className="grid grid-cols-1 gap-2 sm:grid-cols-3">
               {SAMPLES.map((sample) => (
@@ -236,107 +287,99 @@ export function WelcomeView() {
                         {busySample === sample.id ? "Loading…" : sample.blurb}
                       </span>
                     </span>
-                    <span className="text-sm font-medium text-foreground">{sample.name}</span>
-                    <span className="text-[11px] leading-snug text-muted-foreground">
+                    <span className="font-medium text-foreground text-sm">{sample.name}</span>
+                    <span className="text-[11px] text-muted-foreground leading-snug">
                       {sample.detail}
                     </span>
                   </button>
                 </li>
               ))}
             </ul>
+            {sampleError && (
+              <p
+                role="alert"
+                className="rounded-md bg-destructive/10 px-2 py-1.5 text-destructive text-xs"
+              >
+                {sampleError}
+              </p>
+            )}
           </section>
 
-          {/* Bring your own */}
-          <section className="flex flex-col gap-3">
-            <h2 className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-              <ClipboardPaste className="size-3.5" />
-              Bring your own data
-            </h2>
-            <div className="flex flex-col gap-2 rounded-lg border border-border bg-card/40 p-3">
-              <Textarea
-                rows={5}
-                value={pasteText}
-                onChange={(e) => setPasteText(e.target.value)}
-                placeholder='Paste an array of objects, e.g. [{ "id": "a", "status": "active" }, …]'
-                aria-label="Paste JSON"
-                className="resize-none text-xs leading-relaxed"
-              />
-              <div className="flex items-center gap-2">
-                <Button
-                  size="sm"
-                  onClick={handlePaste}
-                  disabled={!pasteText.trim() || ingesting}
-                  className="flex-1"
-                >
-                  <FileJson className="size-3.5" />
-                  Import
-                </Button>
-                <label className="inline-flex">
-                  <input
-                    type="file"
-                    accept=".json,.ndjson,application/json"
-                    onChange={handleFile}
-                    className="sr-only"
-                    aria-label="Upload data file"
-                    disabled={ingesting}
-                  />
-                  <span className="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-md border border-input bg-background px-3 text-xs font-medium text-foreground shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground">
-                    <Upload className="size-3.5" />
-                    Upload file…
+          {/* Fallback on-ramps: file upload + bundle restore, tucked away. */}
+          <details
+            open={moreOpen}
+            onToggle={(e) => setMoreOpen(e.currentTarget.open)}
+            className="flex flex-col gap-3"
+          >
+            <summary className="w-fit cursor-pointer font-semibold text-[11px] text-muted-foreground uppercase tracking-wider hover:text-foreground">
+              More ways to start
+            </summary>
+
+            <div className="mt-3 flex flex-col gap-3">
+              <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-border bg-card/40 p-3 transition-colors hover:border-ring/50 hover:bg-accent/40">
+                <Upload className="size-5 text-muted-foreground" aria-hidden />
+                <span className="flex-1 text-sm">
+                  <span className="block font-medium text-foreground">Upload a data file</span>
+                  <span className="block text-[11px] text-muted-foreground">
+                    A <code className="font-mono">.json</code> or{" "}
+                    <code className="font-mono">.ndjson</code> file of records.
                   </span>
-                </label>
-              </div>
-              <p className="text-[11px] text-muted-foreground">
-                You can also drag a <code className="font-mono">.json</code> or{" "}
-                <code className="font-mono">.ndjson</code> file anywhere on this page.
+                </span>
+                <ChevronRight className="size-4 text-muted-foreground" aria-hidden />
+                <input
+                  type="file"
+                  accept=".json,.ndjson,application/json"
+                  onChange={handleFile}
+                  className="sr-only"
+                  aria-label="Upload data file"
+                  disabled={ingesting}
+                />
+              </label>
+              {fileError && (
+                <p
+                  role="alert"
+                  className="rounded-md bg-destructive/10 px-2 py-1.5 text-destructive text-xs"
+                >
+                  {fileError}
+                </p>
+              )}
+
+              <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-border bg-card/40 p-3 transition-colors hover:border-ring/50 hover:bg-accent/40">
+                <FileUp className="size-5 text-muted-foreground" aria-hidden />
+                <span className="flex-1 text-sm">
+                  <span className="block font-medium text-foreground">
+                    Import a workspace bundle
+                  </span>
+                  <span className="block text-[11px] text-muted-foreground">
+                    A <code className="font-mono">.workspace.json</code> exported from schemagen —
+                    restores records, schema edits, history, and identity config.
+                  </span>
+                </span>
+                <ChevronRight className="size-4 text-muted-foreground" aria-hidden />
+                <input
+                  type="file"
+                  accept=".json,.workspace.json,.session.json,application/json"
+                  onChange={handleBundleImport}
+                  className="sr-only"
+                  aria-label="Import workspace bundle file"
+                  disabled={ingesting}
+                />
+              </label>
+              {bundleError && (
+                <p
+                  role="alert"
+                  className="rounded-md bg-destructive/10 px-2 py-1.5 text-destructive text-xs"
+                >
+                  {bundleError}
+                </p>
+              )}
+
+              <p className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                <Inbox className="size-3.5" />
+                Or pick a previous workspace from the switcher in the top-left.
               </p>
             </div>
-            {importError && (
-              <p
-                role="alert"
-                className="rounded-md bg-destructive/10 px-2 py-1.5 text-xs text-destructive"
-              >
-                {importError}
-              </p>
-            )}
-          </section>
-
-          {/* Resume */}
-          <section className="flex flex-col gap-3">
-            <h2 className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-              <Inbox className="size-3.5" />
-              Resume previous work
-            </h2>
-            <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-border bg-card/40 p-3 transition-colors hover:border-ring/50 hover:bg-accent/40">
-              <FileUp className="size-5 text-muted-foreground" aria-hidden />
-              <span className="flex-1 text-sm">
-                <span className="block font-medium text-foreground">Import a workspace bundle</span>
-                <span className="block text-[11px] text-muted-foreground">
-                  A <code className="font-mono">.workspace.json</code> exported from schemagen —
-                  restores records, schema edits, history, and identity config.
-                </span>
-              </span>
-              <ChevronRight className="size-4 text-muted-foreground" aria-hidden />
-              <input
-                type="file"
-                accept=".json,.workspace.json,.session.json,application/json"
-                onChange={handleBundleImport}
-                className="sr-only"
-                aria-label="Import workspace bundle file"
-              />
-            </label>
-            {bundleError && (
-              <p
-                role="alert"
-                className="rounded-md bg-destructive/10 px-2 py-1.5 text-xs text-destructive"
-              >
-                {bundleError}
-              </p>
-            )}
-            <p className="text-[11px] text-muted-foreground">
-              Or pick a previous workspace from the switcher in the top-left.
-            </p>
-          </section>
+          </details>
         </div>
       </div>
     </DropZone>
