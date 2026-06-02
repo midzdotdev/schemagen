@@ -42,6 +42,10 @@ export function StepIdentity({ onContinue, onBack, onSkip }: StepIdentityProps) 
     return proposal.fields.map((p) => p.join("."));
   });
 
+  // Default: only top-level primitives — the common case. Power users opting
+  // for a nested or array-indexed key tick the box to expose the full tree.
+  const [showNested, setShowNested] = useState(false);
+
   // Dedup preview — recomputes on every selection change. dedupeByIdentity
   // already returns the kept + dropped split we need; for the no-selection
   // case we fall back to the byte-dedup floor that the ingest pipeline runs.
@@ -83,8 +87,21 @@ export function StepIdentity({ onContinue, onBack, onSkip }: StepIdentityProps) 
           Pick a field (or fields) that identifies the same record across imports — schemagen uses
           it to merge duplicates so the schema stays accurate as your data grows.
         </p>
+        <label className="mt-1 flex w-fit cursor-pointer items-center gap-1.5 text-[11px] text-muted-foreground hover:text-foreground">
+          <input
+            type="checkbox"
+            checked={showNested}
+            onChange={(e) => setShowNested(e.target.checked)}
+            className="size-3.5 cursor-pointer accent-info"
+          />
+          Show nested fields
+        </label>
         <div className="mt-1">
-          <IdentityPicker selected={selected} onSelectedChange={setSelected} />
+          <IdentityPicker
+            selected={selected}
+            onSelectedChange={setSelected}
+            showAll={showNested}
+          />
         </div>
       </div>
 
