@@ -26,15 +26,15 @@ describe("StepData", () => {
     ).toBeInTheDocument();
   });
 
-  // First record is shown unconditionally with a height cap + scroll —
-  // users have asked for it always-visible to skip the click.
-  it("HH-D2: sample record is rendered (height-capped, scrollable)", () => {
+  // Sample record renders as an expandable JsonTree — the eyebrow label and
+  // the tree's <ul> with aria-label="Sample record" are both present.
+  it("HH-D2: sample record renders as an interactive JSON tree", () => {
     act(() => {
       useStore.getState().setRecords([{ id: 1, title: "Hi" }]);
     });
     render(<StepData onContinue={() => {}} />);
     expect(screen.getByText(/^sample record$/i)).toBeInTheDocument();
-    expect(screen.getByRole("region", { name: /sample record/i })).toBeInTheDocument();
+    expect(screen.getByRole("list", { name: /sample record/i })).toBeInTheDocument();
   });
 
   // Records-root summary card — always visible when pendingImport exists,
@@ -58,7 +58,10 @@ describe("StepData", () => {
     });
     render(<StepData onContinue={() => {}} />);
     expect(screen.getByText(/^records root$/i)).toBeInTheDocument();
-    expect(screen.getByText(/\(root\)/i)).toBeInTheDocument();
+    // The summary card's path label is a <code>; the JsonTree root label is
+    // also '(root)' but lives inside <span> — scope to the <code>.
+    const pathCode = screen.getByText(/\(root\)/i, { selector: "code" });
+    expect(pathCode).toBeInTheDocument();
     expect(screen.getByText(/1 record/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /^change$/i })).toBeInTheDocument();
   });

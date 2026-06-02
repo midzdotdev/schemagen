@@ -10,7 +10,7 @@ import { GitFork } from "lucide-react";
 import { useMemo, useState } from "react";
 import { RootPickerModal } from "@/components/data-panel/RootPickerModal";
 import { Button } from "@/components/ui/button";
-import { JsonView } from "@/components/ui/json-view";
+import { JsonTree } from "@/components/ui/json-tree";
 import { formatPath, type PickerCandidate, type PickerPath } from "@/lib/root-picker";
 import { useStore } from "@/state/store";
 
@@ -118,7 +118,7 @@ export function StepData(_props: StepDataProps) {
           <p className="text-[11px] text-muted-foreground">
             One record from the set, for a quick shape check before continuing.
           </p>
-          <JsonView value={firstRecord} aria-label="Sample record" className="mt-1 text-[11px]" />
+          <JsonTree value={firstRecord} ariaLabel="Sample record" className="mt-1" />
         </div>
       )}
 
