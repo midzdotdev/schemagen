@@ -1,6 +1,8 @@
 # PR HH — New-workspace wizard
 
-> Status: **proposed**. Builds on the welcome view (records sidebar branch). Owns the first-import flow from "records just landed" to "schema generated", structured as three confirm-and-continue steps.
+> Status: **superseded by PR II** (`docs/plans/pr-ii-onboarding-review-page.md`) — the three-step wizard host and `WizardStepShell` were removed in favour of a single scrolling review page. The IdentityPicker extraction, the `proposeIdentityKey` seed, and the simplified identity model (resolved interpretation #8) all carried forward; the StepData/StepIdentity bodies were renamed to DataSection/IdentitySection.
+>
+> Original status: **proposed**. Builds on the welcome view (records sidebar branch). Owns the first-import flow from "records just landed" to "schema generated", structured as three confirm-and-continue steps.
 
 ## Context
 
