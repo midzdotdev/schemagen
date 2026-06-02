@@ -26,7 +26,8 @@ export interface IngestState {
   ir: IR | null;
   identityConfig: IdentityConfig | null;
   identityProposalDismissed: boolean;
-  // Z: cold-start inference overrides. Inert once `ir` is set.
+  // Z: persistent inference overrides. Used here when ingest infers an initial
+  // schema; the same setting also drives re-inference (PR FF).
   inferenceOptions: InferOptions | null;
 }
 

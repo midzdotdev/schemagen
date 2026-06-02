@@ -50,7 +50,9 @@ export interface AppState {
   identityProposalDismissed: boolean;
   // Records sidebar filter (from inspector / mismatch panel). null = show all.
   recordsFilter: RecordsFilter | null;
-  // Z: workspace-scoped overrides for cold-start inference. Inert once `ir` is set.
+  // Z: workspace-scoped overrides for schema inference. A persistent setting
+  // that feeds initial inference and re-inference (PR FF) alike — not cold-start
+  // only. null means strict defaults.
   inferenceOptions: InferOptions | null;
   // The most recent successfully-parsed import payload + its candidate roots.
   // Lets the wizard's Step 1 surface a "Pick a different root path" affordance

@@ -48,24 +48,27 @@ describe("InferenceOptionsDialog", () => {
     expect(screen.getByLabelText(/maximum distinct values/i)).toHaveValue(20);
   });
 
-  // IR-exists state: inputs disabled, Reset disabled, no Apply/Cancel buttons.
-  it("Z-D5: when an IR exists, inputs and Reset are disabled and no Apply/Cancel buttons exist", () => {
+  // Inference options are a persistent workspace setting — they feed the
+  // initial inference AND re-inference (PR FF), so they stay editable after a
+  // schema exists. No cold-start-only lockout.
+  it("Z-D5: inference options stay editable after a schema exists", () => {
     act(() => {
       useStore.getState().setIR({ kind: "object", fields: {}, additional: false });
       useStore.getState().setInferenceOptions({ literals: { maxCardinality: 30 } });
     });
     render(<InferenceOptionsDialog open onOpenChange={() => {}} />);
-    expect(screen.getByText(/schema already exists/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/maximum distinct values/i)).toBeDisabled();
-    expect(screen.getByRole("button", { name: /reset to defaults/i })).toBeDisabled();
+    expect(screen.getByLabelText(/maximum distinct values/i)).toBeEnabled();
+    expect(screen.getByRole("button", { name: /reset to defaults/i })).toBeEnabled();
+    expect(screen.queryByText(/only at first import|once a schema exists/i)).toBeNull();
     expect(screen.queryByRole("button", { name: /^apply$/i })).toBeNull();
     expect(screen.queryByRole("button", { name: /^cancel$/i })).toBeNull();
   });
 
-  // Cold-start helper copy mentions "apply immediately" + first import.
-  it("Z-D6: cold-start helper banner mentions autosave + first-import scope", () => {
+  // The helper banner describes the options without claiming a cold-start-only scope.
+  it("Z-D6: helper banner describes inference without a first-import-only scope", () => {
     render(<InferenceOptionsDialog open onOpenChange={() => {}} />);
-    expect(screen.getByText(/apply immediately/i)).toBeInTheDocument();
+    expect(screen.getByText(/infers types from your records/i)).toBeInTheDocument();
+    expect(screen.queryByText(/only at first import|once a schema exists/i)).toBeNull();
     expect(screen.getByLabelText(/maximum distinct values/i)).toBeEnabled();
   });
 
