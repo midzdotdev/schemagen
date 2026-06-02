@@ -90,14 +90,20 @@ export function IdentityPicker({
 
   return (
     <div className="flex flex-col gap-1">
-      {selected.length > 1 && (
-        <span className="self-end text-[11px] text-muted-foreground">
-          Composite uniqueness:{" "}
-          <span className={cn("font-medium", composite >= 0.95 ? "text-success" : "text-warning")}>
-            {(composite * 100).toFixed(0)}%
-          </span>
+      {/* Always rendered so the row reserves its height — toggling between a
+          single and a composite key must not shift the field list. */}
+      <span
+        className={cn(
+          "self-end text-[11px] text-muted-foreground",
+          selected.length > 1 ? undefined : "invisible",
+        )}
+        aria-hidden={selected.length > 1 ? undefined : true}
+      >
+        Composite uniqueness:{" "}
+        <span className={cn("font-medium", composite >= 0.95 ? "text-success" : "text-warning")}>
+          {(composite * 100).toFixed(0)}%
         </span>
-      )}
+      </span>
       <ul
         aria-label="Available identity fields"
         className="flex flex-col gap-0.5 rounded-md border border-border bg-card/40 p-1 font-mono text-xs"
