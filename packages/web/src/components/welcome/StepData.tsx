@@ -79,7 +79,8 @@ export function StepData(_props: StepDataProps) {
             Records root
           </span>
           <p className="text-[11px] text-muted-foreground">
-            The path within the imported JSON where your records live.
+            The path in your JSON where the records live. If schemagen is pointing at the wrong
+            array, the schema will describe the wrong thing.
           </p>
           <div className="mt-1 flex items-center justify-between gap-3 rounded-md border border-border bg-card/40 px-3 py-2">
             <div className="flex min-w-0 flex-1 items-baseline gap-2">
@@ -114,7 +115,10 @@ export function StepData(_props: StepDataProps) {
           <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
             Sample record
           </span>
-          <JsonView value={firstRecord} aria-label="Sample record" className="text-[11px]" />
+          <p className="text-[11px] text-muted-foreground">
+            One record from the set, for a quick shape check before continuing.
+          </p>
+          <JsonView value={firstRecord} aria-label="Sample record" className="mt-1 text-[11px]" />
         </div>
       )}
 

@@ -69,51 +69,74 @@ export function StepIdentity({ onContinue, onBack, onSkip }: StepIdentityProps) 
     <WizardStepShell
       step={2}
       title="Identity key"
-      sub="How schemagen recognises the same record across imports. Pick a stable primitive field so re-imports dedup correctly."
+      sub="Tell schemagen what makes a record unique. Without this, future imports pile up and the schema starts seeing duplicates as new data."
       continueLabel={continueLabel}
       onContinue={handleContinue}
       onBack={onBack}
       onSkip={onSkip}
     >
-      <IdentityPicker selected={selected} onSelectedChange={setSelected} />
-
-      <div
-        role="status"
-        aria-live="polite"
-        className="rounded-md border border-border bg-card/40 px-3 py-2 text-xs text-muted-foreground"
-      >
-        {preview ? (
-          <>
-            Using <FieldList fields={selected} />, your {records.length.toLocaleString()} records
-            would yield{" "}
-            <span className="font-medium text-foreground">
-              {preview.kept.length.toLocaleString()} unique
-            </span>{" "}
-            ({preview.dropped.length.toLocaleString()} duplicate
-            {preview.dropped.length === 1 ? "" : "s"}).
-          </>
-        ) : (
-          <>
-            <span className="text-foreground">No identity key selected.</span> Byte-identical
-            re-imports will still collapse{" "}
-            {byteFloor && byteFloor.dropped.length > 0 ? (
-              <>
-                — your {records.length.toLocaleString()} records would yield{" "}
-                <span className="font-medium text-foreground">
-                  {byteFloor.kept.length.toLocaleString()} unique
-                </span>{" "}
-                ({byteFloor.dropped.length.toLocaleString()} byte-identical duplicate
-                {byteFloor.dropped.length === 1 ? "" : "s"}).
-              </>
-            ) : (
-              <>
-                — your current {records.length.toLocaleString()} records have no exact byte
-                duplicates.
-              </>
-            )}
-          </>
-        )}
+      <div className="flex flex-col gap-1">
+        <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+          Fields
+        </span>
+        <p className="text-[11px] text-muted-foreground">
+          Pick a field (or fields) that identifies the same record across imports — schemagen uses
+          it to merge duplicates so the schema stays accurate as your data grows.
+        </p>
+        <div className="mt-1">
+          <IdentityPicker selected={selected} onSelectedChange={setSelected} />
+        </div>
       </div>
+
+      <div className="flex flex-col gap-1">
+        <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+          Dedup preview
+        </span>
+        <p className="text-[11px] text-muted-foreground">What your current choice would do.</p>
+        <div
+          role="status"
+          aria-live="polite"
+          className="mt-1 rounded-md border border-border bg-card/40 px-3 py-2 text-xs text-muted-foreground"
+        >
+          {preview ? (
+            <>
+              Using <FieldList fields={selected} />, your {records.length.toLocaleString()} records
+              would yield{" "}
+              <span className="font-medium text-foreground">
+                {preview.kept.length.toLocaleString()} unique
+              </span>{" "}
+              ({preview.dropped.length.toLocaleString()} duplicate
+              {preview.dropped.length === 1 ? "" : "s"}).
+            </>
+          ) : (
+            <>
+              <span className="text-foreground">No identity key selected.</span> Byte-identical
+              re-imports will still collapse{" "}
+              {byteFloor && byteFloor.dropped.length > 0 ? (
+                <>
+                  — your {records.length.toLocaleString()} records would yield{" "}
+                  <span className="font-medium text-foreground">
+                    {byteFloor.kept.length.toLocaleString()} unique
+                  </span>{" "}
+                  ({byteFloor.dropped.length.toLocaleString()} byte-identical duplicate
+                  {byteFloor.dropped.length === 1 ? "" : "s"}).
+                </>
+              ) : (
+                <>
+                  — your current {records.length.toLocaleString()} records have no exact byte
+                  duplicates.
+                </>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+
+      <p className="rounded-md border border-dashed border-border bg-muted/30 px-2 py-1.5 text-[11px] text-muted-foreground">
+        Even without an identity key, schemagen always collapses records that are byte-identical
+        (same fields and values, regardless of key order) — re-imports of the same payload won't
+        pile up.
+      </p>
     </WizardStepShell>
   );
 }

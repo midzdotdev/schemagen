@@ -85,38 +85,46 @@ export function StepInference({ onGenerate, onBack, onSkip }: StepInferenceProps
     <WizardStepShell
       step={3}
       title="Inference options"
-      sub="Schemagen will derive types, optionality and literal unions from your records. Defaults are usually right."
+      sub="Tune how schemagen reads your records. Tighter rules catch more issues; looser rules let more variation through."
       continueLabel="Generate schema"
       onContinue={handleGenerate}
       onBack={onBack}
       onSkip={onSkip}
     >
-      <ul className="flex flex-col gap-1 rounded-lg border border-border bg-card/40 p-1">
-        {rows.map((row) => (
-          <li
-            key={row.label}
-            className="flex items-baseline justify-between gap-3 rounded-md px-3 py-1.5"
-          >
-            <span className="text-xs font-medium text-foreground">{row.label}</span>
-            <span className="font-mono text-[11px] text-muted-foreground">
-              {row.value}
-              {row.isDefault && (
-                <span className="ml-1.5 text-[10px] text-muted-foreground/70">(default)</span>
-              )}
-            </span>
-          </li>
-        ))}
-      </ul>
-
-      <Button
-        variant="outline"
-        size="sm"
-        className="gap-1.5 self-start"
-        onClick={() => openModal("inference-options")}
-      >
-        <Sliders className="size-3" />
-        Adjust options…
-      </Button>
+      <div className="flex flex-col gap-1">
+        <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+          Options
+        </span>
+        <p className="text-[11px] text-muted-foreground">
+          Each row controls one part of how the schema gets built. Adjust if you need something
+          other than the default.
+        </p>
+        <ul className="mt-1 flex flex-col gap-1 rounded-lg border border-border bg-card/40 p-1">
+          {rows.map((row) => (
+            <li
+              key={row.label}
+              className="flex items-baseline justify-between gap-3 rounded-md px-3 py-1.5"
+            >
+              <span className="text-xs font-medium text-foreground">{row.label}</span>
+              <span className="font-mono text-[11px] text-muted-foreground">
+                {row.value}
+                {row.isDefault && (
+                  <span className="ml-1.5 text-[10px] text-muted-foreground/70">(default)</span>
+                )}
+              </span>
+            </li>
+          ))}
+        </ul>
+        <Button
+          variant="outline"
+          size="sm"
+          className="mt-1 gap-1.5 self-start"
+          onClick={() => openModal("inference-options")}
+        >
+          <Sliders className="size-3" />
+          Adjust options…
+        </Button>
+      </div>
     </WizardStepShell>
   );
 }

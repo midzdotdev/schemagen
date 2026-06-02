@@ -57,58 +57,47 @@ export function IdentityPicker({ selected, onSelectedChange }: IdentityPickerPro
   const selectedSet = useMemo(() => new Set(selected), [selected]);
   const visibleRows = useMemo(() => flatten(tree, 0, expanded), [tree, expanded]);
 
+  if (noRecords) {
+    return (
+      <p className="rounded-md border border-border bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
+        Import some records first — schemagen needs a sample to compute uniqueness per field.
+      </p>
+    );
+  }
+  if (noFields) {
+    return (
+      <p className="rounded-md border border-border bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
+        No fields available.
+      </p>
+    );
+  }
+
   return (
-    <div className="flex flex-col gap-3">
-      <div className="flex flex-col gap-1.5">
-        <div className="flex items-baseline justify-between">
-          <span className="text-xs font-medium text-foreground">Fields</span>
-          {selected.length > 1 && (
-            <span className="text-[11px] text-muted-foreground">
-              Composite uniqueness:{" "}
-              <span
-                className={cn("font-medium", composite >= 0.95 ? "text-success" : "text-warning")}
-              >
-                {(composite * 100).toFixed(0)}%
-              </span>
-            </span>
-          )}
-        </div>
-        {noRecords ? (
-          <p className="rounded-md border border-border bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
-            Import some records first — schemagen needs a sample to compute uniqueness per field.
-          </p>
-        ) : noFields ? (
-          <p className="rounded-md border border-border bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
-            No fields available.
-          </p>
-        ) : (
-          <>
-            <p className="text-[11px] text-muted-foreground">
-              Toggle one field for a simple key, or several for a composite key.
-            </p>
-            <ul
-            aria-label="Available identity fields"
-            className="flex max-h-72 flex-col gap-0.5 overflow-y-auto rounded-md border border-border bg-card/40 p-1 font-mono text-xs"
-          >
-            {visibleRows.map(({ node, depth }) => (
-              <FieldRow
-                key={node.pathKey}
-                node={node}
-                depth={depth}
-                isSelected={selectedSet.has(node.pathKey)}
-                isOpen={expanded.has(node.pathKey)}
-                onToggleSelected={toggleSelected}
-                onToggleExpanded={toggleExpanded}
-              />
-            ))}
-            </ul>
-          </>
-        )}
-        <p className="rounded-md border border-dashed border-border bg-muted/30 px-2 py-1.5 text-[11px] text-muted-foreground">
-          Either way, schemagen always collapses records that are byte-identical (same fields and
-          values, regardless of key order) — re-imports of the same payload won't pile up.
-        </p>
-      </div>
+    <div className="flex flex-col gap-1">
+      {selected.length > 1 && (
+        <span className="self-end text-[11px] text-muted-foreground">
+          Composite uniqueness:{" "}
+          <span className={cn("font-medium", composite >= 0.95 ? "text-success" : "text-warning")}>
+            {(composite * 100).toFixed(0)}%
+          </span>
+        </span>
+      )}
+      <ul
+        aria-label="Available identity fields"
+        className="flex flex-col gap-0.5 rounded-md border border-border bg-card/40 p-1 font-mono text-xs"
+      >
+        {visibleRows.map(({ node, depth }) => (
+          <FieldRow
+            key={node.pathKey}
+            node={node}
+            depth={depth}
+            isSelected={selectedSet.has(node.pathKey)}
+            isOpen={expanded.has(node.pathKey)}
+            onToggleSelected={toggleSelected}
+            onToggleExpanded={toggleExpanded}
+          />
+        ))}
+      </ul>
     </div>
   );
 }
