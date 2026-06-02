@@ -1,7 +1,7 @@
-// Identity-key picker — flat-rendered tree of record fields (top-level +
-// nested + array-element). Each visible row indents via padding-left based
-// on its depth, so the type / uniqueness / presence columns stay aligned
-// in one grid.
+// Identity-key picker — a table of record fields (top-level + nested +
+// array-element), one row per field with Field / Type / Unique / Present
+// columns (the column headers carry the labels so the rows stay terse). Tree
+// depth indents the Field cell via padding-left.
 //
 // Selection is stored as dot-joined strings (e.g. "user.id" or "tags.0.name");
 // the dialog converts numeric segments to numbers before writing the Path
@@ -111,22 +111,32 @@ export function IdentityPicker({
           </span>
         </span>
       )}
-      <ul
+      <table
         aria-label="Available identity fields"
-        className="flex flex-col gap-0.5 rounded-md border border-border bg-card/40 p-1 font-mono text-xs"
+        className="w-full overflow-hidden rounded-md border border-border bg-card/40 font-mono text-xs"
       >
-        {visibleRows.map(({ node, depth }) => (
-          <FieldRow
-            key={node.pathKey}
-            node={node}
-            depth={depth}
-            isSelected={selectedSet.has(node.pathKey)}
-            isOpen={expanded.has(node.pathKey)}
-            onToggleSelected={toggleSelected}
-            onToggleExpanded={toggleExpanded}
-          />
-        ))}
-      </ul>
+        <thead>
+          <tr className="border-border border-b text-[10px] text-muted-foreground uppercase tracking-wide">
+            <th className="w-full px-2 py-1.5 text-left font-medium">Field</th>
+            <th className="px-2 py-1.5 text-left font-medium">Type</th>
+            <th className="px-2 py-1.5 text-right font-medium">Unique</th>
+            <th className="px-2 py-1.5 text-right font-medium">Present</th>
+          </tr>
+        </thead>
+        <tbody>
+          {visibleRows.map(({ node, depth }) => (
+            <FieldRow
+              key={node.pathKey}
+              node={node}
+              depth={depth}
+              isSelected={selectedSet.has(node.pathKey)}
+              isOpen={expanded.has(node.pathKey)}
+              onToggleSelected={toggleSelected}
+              onToggleExpanded={toggleExpanded}
+            />
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
@@ -158,75 +168,81 @@ function FieldRow({
   const inputId = useId();
 
   return (
-    <li>
-      <div
-        className={cn(
-          "flex items-center gap-1.5 rounded px-1 py-1 transition-colors hover:bg-accent/40",
-          isSelected && "bg-info/10 hover:bg-info/15",
-        )}
-        style={{ paddingLeft: 4 + depth * INDENT_PX }}
-      >
-        {/* Single leading control slot — chevron OR checkbox OR spacer.
-            Containers (objects/arrays) and primitives never coexist on the
-            same row, so one column is enough. */}
-        <span className="flex size-3.5 shrink-0 items-center justify-center">
-          {hasChildren ? (
-            <button
-              type="button"
-              onClick={() => onToggleExpanded(node.pathKey)}
-              aria-label={isOpen ? "Collapse" : "Expand"}
-              className="flex size-3.5 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"
-            >
-              <ChevronRight className={cn("size-3 transition-transform", isOpen && "rotate-90")} />
-            </button>
-          ) : selectable ? (
-            <input
-              id={inputId}
-              type="checkbox"
-              aria-label={node.pathKey}
-              checked={isSelected}
-              onChange={() => onToggleSelected(node.pathKey)}
-              className="size-3.5 cursor-pointer accent-info"
-            />
-          ) : null}
-        </span>
-        {selectable ? (
-          <label htmlFor={inputId} className="min-w-0 flex-1 cursor-pointer truncate">
-            <code className="text-foreground">{node.segment}</code>
-          </label>
-        ) : (
-          <code className="min-w-0 flex-1 truncate text-muted-foreground">{node.segment}</code>
-        )}
+    <tr
+      className={cn(
+        "transition-colors hover:bg-accent/40",
+        isSelected && "bg-info/10 hover:bg-info/15",
+      )}
+    >
+      <td className="py-1 pr-2" style={{ paddingLeft: 8 + depth * INDENT_PX }}>
+        <div className="flex items-center gap-1.5">
+          {/* Single leading control slot — chevron OR checkbox OR spacer.
+              Containers (objects/arrays) and primitives never coexist on the
+              same row, so one slot is enough. */}
+          <span className="flex size-3.5 shrink-0 items-center justify-center">
+            {hasChildren ? (
+              <button
+                type="button"
+                onClick={() => onToggleExpanded(node.pathKey)}
+                aria-label={isOpen ? "Collapse" : "Expand"}
+                className="flex size-3.5 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"
+              >
+                <ChevronRight
+                  className={cn("size-3 transition-transform", isOpen && "rotate-90")}
+                />
+              </button>
+            ) : selectable ? (
+              <input
+                id={inputId}
+                type="checkbox"
+                aria-label={node.pathKey}
+                checked={isSelected}
+                onChange={() => onToggleSelected(node.pathKey)}
+                className="size-3.5 cursor-pointer accent-info"
+              />
+            ) : null}
+          </span>
+          {selectable ? (
+            <label htmlFor={inputId} className="min-w-0 cursor-pointer truncate">
+              <code className="text-foreground">{node.segment}</code>
+            </label>
+          ) : (
+            <code className="min-w-0 truncate text-muted-foreground">{node.segment}</code>
+          )}
+        </div>
+      </td>
+      <td className="px-2 py-1">
         <span
-          title="Field type"
           className={cn(
-            "inline-block w-16 shrink-0 rounded px-1.5 py-0.5 text-center text-[10px] font-medium uppercase tracking-wide",
+            "inline-block rounded px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide",
             TYPE_BG[node.kind],
             TYPE_TEXT[node.kind],
           )}
         >
           {node.kind}
         </span>
-        <span
-          title="Uniqueness"
-          className={cn(
-            "inline-block w-24 shrink-0 text-right tabular-nums",
-            selectable ? (isUnique ? "text-success" : "text-muted-foreground") : "text-transparent",
-          )}
-        >
-          {selectable ? `${(node.uniqueness * 100).toFixed(0)}% unique` : "—"}
-        </span>
-        <span
-          title="Presence"
-          className={cn(
-            "inline-block w-24 shrink-0 text-right tabular-nums",
-            isPresent ? "text-foreground" : "text-warning",
-          )}
-        >
-          {(node.presence * 100).toFixed(0)}% present
-        </span>
-      </div>
-    </li>
+      </td>
+      <td
+        className={cn(
+          "px-2 py-1 text-right tabular-nums",
+          selectable
+            ? isUnique
+              ? "text-success"
+              : "text-muted-foreground"
+            : "text-muted-foreground/40",
+        )}
+      >
+        {selectable ? `${(node.uniqueness * 100).toFixed(0)}%` : "—"}
+      </td>
+      <td
+        className={cn(
+          "px-2 py-1 text-right tabular-nums",
+          isPresent ? "text-foreground" : "text-warning",
+        )}
+      >
+        {(node.presence * 100).toFixed(0)}%
+      </td>
+    </tr>
   );
 }
 
