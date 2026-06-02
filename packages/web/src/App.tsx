@@ -23,10 +23,13 @@ export function App() {
   const records = useStore((s) => s.records);
   const workspaceId = useStore((s) => s.workspaceId);
   const [collapsed, setCollapsed] = useUIPref(workspaceId, "recordsSidebarCollapsed");
-  const [wizardCompleted, setWizardCompleted] = useUIPref(workspaceId, "wizardCompleted");
+  const [onboardingCompleted, setOnboardingCompleted] = useUIPref(
+    workspaceId,
+    "onboardingCompleted",
+  );
 
   const isFresh = ir === null && records.length === 0;
-  const inWizard = ir === null && records.length > 0 && !wizardCompleted;
+  const inWizard = ir === null && records.length > 0 && !onboardingCompleted;
 
   return (
     <TooltipProvider delayDuration={300}>
@@ -41,7 +44,7 @@ export function App() {
             {isFresh ? (
               <WelcomeView />
             ) : inWizard ? (
-              <WorkspaceWizard onComplete={() => setWizardCompleted(true)} />
+              <WorkspaceWizard onComplete={() => setOnboardingCompleted(true)} />
             ) : ir ? (
               <ThreePaneLayoutPostIR
                 collapsed={collapsed}
