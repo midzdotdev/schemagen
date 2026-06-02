@@ -42,7 +42,7 @@ export function WorkspaceWizard({ onComplete }: WorkspaceWizardProps) {
       <WizardStepShell
         step={1}
         title="Your data"
-        sub="Here's a quick look before you set up identity and inference."
+        sub="Confirm schemagen is reading the right records."
         onContinue={() => setStep("identity")}
         onSkip={handleSkip}
       >

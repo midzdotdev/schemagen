@@ -69,7 +69,15 @@ export function IdentityConfigDialog({
             piling up.
           </DialogDescription>
         </DialogHeader>
+        <p className="text-[11px] text-muted-foreground">
+          Toggle one field for a simple key, or several for a composite key.
+        </p>
         <IdentityPicker selected={selected} onSelectedChange={handleSelectedChange} />
+        <p className="rounded-md border border-dashed border-border bg-muted/30 px-2 py-1.5 text-[11px] text-muted-foreground">
+          Even without an identity key, schemagen always collapses records that are byte-identical
+          (same fields and values, regardless of key order) — re-imports of the same payload won't
+          pile up.
+        </p>
         {droppedCount !== null && droppedCount > 0 && (
           <p className="rounded-md bg-warning/15 px-2 py-1.5 text-xs text-warning">
             Applying this config would drop {droppedCount} records. Click Apply again to confirm.
