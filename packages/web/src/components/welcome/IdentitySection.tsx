@@ -1,18 +1,22 @@
-// PR HH Step 2 — Identity key. Inline IdentityPicker (no modal hop) with a
-// live dedup preview underneath. Continue commits the choice and advances;
-// with no selection the primary button flips to "Skip identity".
+// PR II — Identity section of the onboarding review page (was StepIdentity).
+//
+// Inline IdentityPicker (no modal hop) with a live dedup preview underneath.
+// This is a controlled component: `selected` is owned by ReviewPage so the
+// Generate handler can commit it exactly once via setIdentityConfig (that store
+// action destructively rewrites records, so it must not fire on every toggle).
+// The preview here is computed locally and has no store side-effects.
+//
+// See docs/plans/pr-ii-onboarding-review-page.md.
 
-import { dedupeByIdentity, dedupeByteIdentical, proposeIdentityKey } from "@schemagen/core";
+import { dedupeByIdentity, dedupeByteIdentical } from "@schemagen/core";
 import { useMemo, useState } from "react";
 import { IdentityPicker } from "@/components/identity/IdentityPicker";
-import { WizardStepShell } from "@/components/welcome/WizardStepShell";
 import { pathKeyToCorePath } from "@/lib/field-stats";
 import { useStore } from "@/state/store";
 
-export interface StepIdentityProps {
-  onContinue: () => void;
-  onBack: () => void;
-  onSkip: () => void;
+export interface IdentitySectionProps {
+  selected: string[];
+  onSelectedChange: (next: string[]) => void;
 }
 
 function FieldList({ fields }: { fields: string[] }) {
@@ -30,17 +34,8 @@ function FieldList({ fields }: { fields: string[] }) {
   );
 }
 
-export function StepIdentity({ onContinue, onBack, onSkip }: StepIdentityProps) {
+export function IdentitySection({ selected, onSelectedChange }: IdentitySectionProps) {
   const records = useStore((s) => s.records);
-  const setIdentityConfig = useStore((s) => s.setIdentityConfig);
-
-  // Pre-seed with core's proposeIdentityKey result — users hit Continue if
-  // the suggestion is correct; otherwise they uncheck and pick something else.
-  const [selected, setSelected] = useState<string[]>(() => {
-    const proposal = proposeIdentityKey(records);
-    if (!proposal) return [];
-    return proposal.fields.map((p) => p.join("."));
-  });
 
   // Default: only top-level primitives — the common case. Power users opting
   // for a nested or array-indexed key tick the box to expose the full tree.
@@ -59,28 +54,22 @@ export function StepIdentity({ onContinue, onBack, onSkip }: StepIdentityProps) 
     [records, selected.length],
   );
 
-  function handleContinue() {
-    if (selected.length > 0) {
-      const fields = selected.map(pathKeyToCorePath);
-      setIdentityConfig({ fields });
-    }
-    onContinue();
-  }
-
-  const continueLabel = selected.length > 0 ? "Continue" : "Skip identity";
-
   return (
-    <WizardStepShell
-      step={2}
-      title="Identity key"
-      sub="What makes a record unique. Otherwise re-imports look like new data."
-      continueLabel={continueLabel}
-      onContinue={handleContinue}
-      onBack={onBack}
-      onSkip={onSkip}
-    >
+    <section aria-labelledby="identity-h" className="flex flex-col gap-3">
+      <div className="flex flex-col gap-0.5">
+        <h2
+          id="identity-h"
+          className="font-semibold text-foreground text-sm uppercase tracking-wider"
+        >
+          Identity (optional)
+        </h2>
+        <p className="text-muted-foreground text-xs">
+          What makes a record unique. Otherwise re-imports look like new data.
+        </p>
+      </div>
+
       <div className="flex flex-col gap-1">
-        <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+        <span className="font-medium text-[10px] text-muted-foreground uppercase tracking-wider">
           Fields
         </span>
         <p className="text-[11px] text-muted-foreground">
@@ -96,19 +85,23 @@ export function StepIdentity({ onContinue, onBack, onSkip }: StepIdentityProps) 
           Show nested fields
         </label>
         <div className="mt-1">
-          <IdentityPicker selected={selected} onSelectedChange={setSelected} showAll={showNested} />
+          <IdentityPicker
+            selected={selected}
+            onSelectedChange={onSelectedChange}
+            showAll={showNested}
+          />
         </div>
       </div>
 
       <div className="flex flex-col gap-1">
-        <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+        <span className="font-medium text-[10px] text-muted-foreground uppercase tracking-wider">
           Dedup preview
         </span>
         <p className="text-[11px] text-muted-foreground">What your current choice would do.</p>
         <div
           role="status"
           aria-live="polite"
-          className="mt-1 rounded-md border border-border bg-card/40 px-3 py-2 text-xs text-muted-foreground"
+          className="mt-1 rounded-md border border-border bg-card/40 px-3 py-2 text-muted-foreground text-xs"
         >
           {preview ? (
             <>
@@ -135,9 +128,9 @@ export function StepIdentity({ onContinue, onBack, onSkip }: StepIdentityProps) 
         </div>
       </div>
 
-      <p className="rounded-md border border-dashed border-border bg-muted/30 px-2 py-1.5 text-[11px] text-muted-foreground">
+      <p className="rounded-md border border-border border-dashed bg-muted/30 px-2 py-1.5 text-[11px] text-muted-foreground">
         Byte-identical records always collapse, even without an identity key.
       </p>
-    </WizardStepShell>
+    </section>
   );
 }
