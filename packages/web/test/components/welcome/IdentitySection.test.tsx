@@ -7,7 +7,7 @@
 //
 // See docs/plans/pr-ii-onboarding-review-page.md.
 
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { act, useState } from "react";
 import { beforeEach, describe, expect, it } from "vitest";
@@ -53,19 +53,31 @@ describe("IdentitySection", () => {
     expect(useStore.getState().records).toHaveLength(4);
   });
 
-  // Plan § "State + action surface" — preview is local and reflects `selected`.
-  it("II-I3: dedup preview reflects the selected field", () => {
+  // Plan § "State + action surface" — the summary reports the key + its effect.
+  it("II-I3: the summary reports the single key, its uniqueness, and the dedup effect", () => {
     render(<Harness initial={["id"]} />);
-    // id has 3 unique values across 4 records → 3 unique, 1 duplicate.
-    expect(screen.getByText(/3 unique/i)).toBeInTheDocument();
-    expect(screen.getByText(/1 duplicate/i)).toBeInTheDocument();
+    const summary = screen.getByRole("status");
+    expect(within(summary).getByText(/single field/i)).toBeInTheDocument();
+    expect(within(summary).getByText(/% unique/i)).toBeInTheDocument();
+    // id has 3 distinct values across 4 records → 3 distinct, 1 duplicate dropped.
+    expect(within(summary).getByText(/3 distinct/i)).toBeInTheDocument();
+    expect(within(summary).getByText(/1 duplicate/i)).toBeInTheDocument();
+  });
+
+  // A composite key is summarised as composite, with its combined uniqueness.
+  it("II-I6: a composite key is labelled composite with its uniqueness", () => {
+    render(<Harness initial={["id", "name"]} />);
+    const summary = screen.getByRole("status");
+    expect(within(summary).getByText(/composite/i)).toBeInTheDocument();
+    expect(within(summary).getByText(/2 fields/i)).toBeInTheDocument();
+    expect(within(summary).getByText(/% unique/i)).toBeInTheDocument();
   });
 
   // Plan § "Resolved interpretations #5" — empty selection wording + byte floor.
-  it("II-I4: preview reads 'No identity key selected' when nothing is chosen", () => {
+  it("II-I4: with no key, the summary keeps records distinct (byte-floor still applies)", () => {
     render(<Harness />);
-    expect(screen.getByText(/no identity key selected/i)).toBeInTheDocument();
-    expect(screen.getByText(/byte-identical records always collapse/i)).toBeInTheDocument();
+    expect(screen.getByText(/no identity key/i)).toBeInTheDocument();
+    expect(screen.getByText(/byte-identical/i)).toBeInTheDocument();
   });
 
   // Plan § "File-level edit map — IdentitySection" — nested-fields toggle.
