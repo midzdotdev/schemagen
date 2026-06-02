@@ -125,25 +125,16 @@ export function StepIdentity({ onContinue, onBack, onSkip }: StepIdentityProps) 
               ({preview.dropped.length.toLocaleString()} duplicate
               {preview.dropped.length === 1 ? "" : "s"}).
             </>
+          ) : byteFloor && byteFloor.dropped.length > 0 ? (
+            <>
+              <span className="text-foreground">No identity key selected.</span>{" "}
+              {byteFloor.dropped.length.toLocaleString()} byte-identical duplicate
+              {byteFloor.dropped.length === 1 ? "" : "s"} would still be dropped.
+            </>
           ) : (
             <>
-              <span className="text-foreground">No identity key selected.</span> Byte-identical
-              re-imports will still collapse{" "}
-              {byteFloor && byteFloor.dropped.length > 0 ? (
-                <>
-                  — your {records.length.toLocaleString()} records would yield{" "}
-                  <span className="font-medium text-foreground">
-                    {byteFloor.kept.length.toLocaleString()} unique
-                  </span>{" "}
-                  ({byteFloor.dropped.length.toLocaleString()} byte-identical duplicate
-                  {byteFloor.dropped.length === 1 ? "" : "s"}).
-                </>
-              ) : (
-                <>
-                  — your current {records.length.toLocaleString()} records have no exact byte
-                  duplicates.
-                </>
-              )}
+              <span className="text-foreground">No identity key selected.</span> Your current{" "}
+              {records.length.toLocaleString()} records have no duplicates.
             </>
           )}
         </div>
