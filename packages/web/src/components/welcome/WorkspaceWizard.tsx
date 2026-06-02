@@ -8,7 +8,6 @@ import { useStore } from "@/state/store";
 import { StepData } from "./StepData";
 import { StepIdentity } from "./StepIdentity";
 import { StepInference } from "./StepInference";
-import { WizardStepShell } from "./WizardStepShell";
 
 export interface WorkspaceWizardProps {
   // Called when the wizard finishes — either via Generate on Step 3 or via
@@ -38,17 +37,7 @@ export function WorkspaceWizard({ onComplete }: WorkspaceWizardProps) {
   }
 
   if (step === "data") {
-    return (
-      <WizardStepShell
-        step={1}
-        title="Your data"
-        sub="Confirm schemagen is reading the right records."
-        onContinue={() => setStep("identity")}
-        onSkip={handleSkip}
-      >
-        <StepData onContinue={() => setStep("identity")} />
-      </WizardStepShell>
-    );
+    return <StepData onContinue={() => setStep("identity")} onSkip={handleSkip} />;
   }
 
   if (step === "identity") {

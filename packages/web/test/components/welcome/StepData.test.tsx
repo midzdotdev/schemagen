@@ -18,7 +18,7 @@ describe("StepData", () => {
     act(() => {
       useStore.getState().setRecords([{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }, { id: 5 }]);
     });
-    render(<StepData onContinue={() => {}} />);
+    render(<StepData onContinue={() => {}} onSkip={() => {}} />);
     // The count + label render across two spans inside one <p> — a function
     // matcher reads the combined text content.
     expect(
@@ -32,7 +32,7 @@ describe("StepData", () => {
     act(() => {
       useStore.getState().setRecords([{ id: 1, title: "Hi" }]);
     });
-    render(<StepData onContinue={() => {}} />);
+    render(<StepData onContinue={() => {}} onSkip={() => {}} />);
     expect(screen.getByText(/^sample record$/i)).toBeInTheDocument();
     expect(screen.getByRole("list", { name: /sample record/i })).toBeInTheDocument();
   });
@@ -43,7 +43,7 @@ describe("StepData", () => {
     act(() => {
       useStore.getState().setRecords([{ id: 1 }]);
     });
-    render(<StepData onContinue={() => {}} />);
+    render(<StepData onContinue={() => {}} onSkip={() => {}} />);
     expect(screen.queryByText(/^records root$/i)).toBeNull();
     expect(screen.queryByRole("button", { name: /^change$/i })).toBeNull();
   });
@@ -56,7 +56,7 @@ describe("StepData", () => {
         candidates: [{ path: [], recordCount: 1, preview: { id: 1 } }],
       });
     });
-    render(<StepData onContinue={() => {}} />);
+    render(<StepData onContinue={() => {}} onSkip={() => {}} />);
     expect(screen.getByText(/^records root$/i)).toBeInTheDocument();
     // The summary card's path label is a <code>; the JsonTree root label is
     // also '(root)' but lives inside <span> — scope to the <code>.
@@ -77,7 +77,7 @@ describe("StepData", () => {
         ],
       });
     });
-    render(<StepData onContinue={() => {}} />);
+    render(<StepData onContinue={() => {}} onSkip={() => {}} />);
     expect(screen.getByText(/^items$/)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /^change$/i })).toBeInTheDocument();
   });
@@ -94,7 +94,7 @@ describe("StepData", () => {
         ],
       });
     });
-    render(<StepData onContinue={() => {}} />);
+    render(<StepData onContinue={() => {}} onSkip={() => {}} />);
     await user.click(screen.getByRole("button", { name: /^change$/i }));
     expect(screen.getByRole("dialog", { name: /pick the records path/i })).toBeInTheDocument();
   });

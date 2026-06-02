@@ -11,11 +11,13 @@ import { useMemo, useState } from "react";
 import { RootPickerModal } from "@/components/data-panel/RootPickerModal";
 import { Button } from "@/components/ui/button";
 import { JsonTree } from "@/components/ui/json-tree";
+import { WizardStepShell } from "@/components/welcome/WizardStepShell";
 import { formatPath, type PickerCandidate, type PickerPath } from "@/lib/root-picker";
 import { useStore } from "@/state/store";
 
 export interface StepDataProps {
   onContinue: () => void;
+  onSkip: () => void;
 }
 
 // Find which candidate path the current records came from. Uses reference
@@ -53,7 +55,7 @@ function atPath(value: unknown, path: PickerPath): unknown {
   return cur;
 }
 
-export function StepData(_props: StepDataProps) {
+export function StepData({ onContinue, onSkip }: StepDataProps) {
   const records = useStore((s) => s.records);
   const setRecords = useStore((s) => s.setRecords);
   const pendingImport = useStore((s) => s.pendingImport);
@@ -72,7 +74,13 @@ export function StepData(_props: StepDataProps) {
   const canChangeRoot = pendingImport !== null && pendingImport.candidates.length > 0;
 
   return (
-    <>
+    <WizardStepShell
+      step={1}
+      title="Your data"
+      sub="Confirm schemagen is reading the right records."
+      onContinue={onContinue}
+      onSkip={onSkip}
+    >
       {pendingImport ? (
         <div className="flex flex-col gap-1">
           <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
@@ -134,6 +142,6 @@ export function StepData(_props: StepDataProps) {
           }}
         />
       )}
-    </>
+    </WizardStepShell>
   );
 }
