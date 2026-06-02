@@ -8,6 +8,7 @@ import { StorageBanner } from "./components/shell/StorageBanner";
 import { ThreePaneLayoutPostIR } from "./components/shell/ThreePaneLayoutPostIR";
 import { UIShellProvider } from "./components/shell/UIShell";
 import { TooltipProvider } from "./components/ui/tooltip";
+import { OrientationHint } from "./components/welcome/OrientationHint";
 import { ReviewPage } from "./components/welcome/ReviewPage";
 import { WelcomeView } from "./components/welcome/WelcomeView";
 import { useUIPref } from "./hooks/useUIPrefs";
@@ -48,7 +49,12 @@ export function App() {
                 records={
                   <RecordsSidebar collapsed={collapsed} onToggle={() => setCollapsed(!collapsed)} />
                 }
-                schema={<SchemaPanel />}
+                schema={
+                  <>
+                    <OrientationHint />
+                    <SchemaPanel />
+                  </>
+                }
                 inspector={<InspectorPane />}
               />
             ) : (

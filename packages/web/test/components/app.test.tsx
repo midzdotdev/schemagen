@@ -103,6 +103,18 @@ describe("App", () => {
     expect(screen.getByRole("heading", { name: /welcome to your workspace/i })).toBeInTheDocument();
   });
 
+  // Plan § "Resolved interpretations #9" — the orientation hint rides above the
+  // schema panel post-IR (until dismissed).
+  it("II-A7: post-IR renders the orientation hint above the schema", () => {
+    act(() => {
+      useStore.getState().setIR({ kind: "object", fields: {}, additional: false });
+    });
+    render(<App />);
+    expect(
+      screen.getByText(/click any field in the inspector to override its type/i),
+    ).toBeInTheDocument();
+  });
+
   it("EE-A1: post-IR drops the data region, keeps schema and inspector", () => {
     act(() => {
       useStore.getState().setIR({ kind: "object", fields: {}, additional: false });
