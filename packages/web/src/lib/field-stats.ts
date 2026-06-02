@@ -59,7 +59,7 @@ export function computeFieldStats(records: unknown[]): FieldStat[] {
   return out;
 }
 
-// Label for the ReviewPage Generate button's field-count parenthetical.
+// Label for the WizardHost Generate button's field-count parenthetical.
 // Returns null when there's nothing to count — either no records yet, or a
 // non-object root (array of primitives) with zero top-level fields — so the
 // caller drops the parenthetical entirely rather than printing "(0 fields)".

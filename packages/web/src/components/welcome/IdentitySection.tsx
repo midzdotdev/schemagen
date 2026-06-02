@@ -1,7 +1,7 @@
 // PR II — Identity section of the onboarding review page (was StepIdentity).
 //
 // Inline IdentityPicker (no modal hop) with a live dedup preview underneath.
-// This is a controlled component: `selected` is owned by ReviewPage so the
+// This is a controlled component: `selected` is owned by WizardHost so the
 // Generate handler can commit it exactly once via setIdentityConfig (that store
 // action destructively rewrites records, so it must not fire on every toggle).
 // The preview here is computed locally and has no store side-effects.

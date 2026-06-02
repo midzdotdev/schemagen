@@ -7,7 +7,7 @@ A developer tool for generating, visualizing, and iterating on data schemas from
 `@schemagen/core` and `@schemagen/web` are in `main`. JSON Schema emits today; Zod and TypeScript follow. No npm release yet.
 
 - `@schemagen/core` — pure TypeScript. Inference, validation, mutation (`applyChange` + inverse), JSON Schema emission. Strict typing (`exactOptionalPropertyTypes`, `noUncheckedIndexedAccess`). Vitest + fast-check.
-- `@schemagen/web` — local-first React app. Welcome view for fresh workspaces, single-page onboarding review (inspect the records + pick an identity key, then generate), resizable post-IR layout with a collapsible records sidebar, full op editor, mismatch panel with filter and grouped collapse, rolled-up mismatch counts, identity-key auto-suggest (pre-selected on the review page), workspace-scoped inference tuning, workspace bundle export/import, JSON syntax highlighting, sample loader, undo/redo, keyboard shortcuts. Persists to IndexedDB via Dexie.
+- `@schemagen/web` — local-first React app. Welcome view for fresh workspaces, guided three-step onboarding wizard (data → identity → inference → generate) with a visual progress stepper, resizable post-IR layout with a collapsible records sidebar, full op editor, mismatch panel with filter and grouped collapse, rolled-up mismatch counts, identity-key auto-suggest (pre-selected on the review page), workspace-scoped inference tuning, workspace bundle export/import, JSON syntax highlighting, sample loader, undo/redo, keyboard shortcuts. Persists to IndexedDB via Dexie.
 
 Specs in [`docs/`](./docs/):
 
@@ -43,15 +43,15 @@ Build a schema for user records from an analytics API.
 }
 ```
 
-schemagen auto-selects `.users` (you can re-pick on the review page), dedupes the 200 records by canonical hash, and stores them.
+schemagen auto-selects `.users` (you can re-pick on step 1), dedupes the 200 records by canonical hash, and stores them.
 
-**2. Review.** Instead of a stepper, schemagen drops you on a single review page — everything visible at once, nothing gated behind a "Next":
+**2. Set up your schema.** A guided three-step wizard with a 1·2·3 progress stepper (Data · Identity · Inference) — visited steps are clickable to jump back:
 
-- **Data** — the records root (`.users`, 200 records) with a sample record you can expand. A **Change** button reopens the root picker if schemagen guessed wrong.
-- **Identity (optional)** — `id` is pre-ticked (100% unique, 100% present). The live dedup preview reads "Using `id`, your 200 records would yield 200 unique (0 duplicates)." Untick it, or tick several for a composite key, if you disagree.
-- **Inference** — a one-line summary ("strict defaults") with an **Adjust** link to the options dialog, also reachable any time from the **Sliders** button in the header.
+- **Data** — the records root (`.users`, 200 records) with a sample record you can expand. A **Change** button reopens the root picker if schemagen guessed wrong. Continue.
+- **Identity (optional)** — `id` is pre-ticked (100% unique, 100% present). The live dedup preview reads "Using `id`, your 200 records would yield 200 unique (0 duplicates)." Untick it, or tick several for a composite key, if you disagree. Continue.
+- **Inference** — the options inline, strict by default: four plain-language toggles up front, with the rarer numeric knobs behind an **Advanced** disclosure. (The same panel opens any time from the **Sliders** button in the header — and stays editable after a schema exists, so you can re-tune it when you re-infer.)
 
-Click **Generate schema (8 fields)** in the sticky footer.
+Click **Generate schema (8 fields)** in the footer.
 
 **3. Inference.** schemagen produces a first cut:
 

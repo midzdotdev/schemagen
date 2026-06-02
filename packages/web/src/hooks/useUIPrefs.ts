@@ -84,7 +84,7 @@ export function useUIPref<K extends keyof UIPrefs>(
 // of which closes over its own (possibly stale) bag snapshot and would clobber
 // a sibling write — this reads the bag fresh from storage, merges, and writes
 // once. The shared write path notifies in-process subscribers, so any mounted
-// useUIPref hooks re-render. Used by the ReviewPage Generate handler and the
+// useUIPref hooks re-render. Used by the WizardHost Generate handler and the
 // bundle-restore path, which both need to flip multiple keys atomically.
 export function writeUIPrefBag(workspaceId: string, partial: Partial<UIPrefs>): void {
   const key = storageKey(workspaceId);
