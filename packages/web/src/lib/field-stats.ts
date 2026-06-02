@@ -59,6 +59,17 @@ export function computeFieldStats(records: unknown[]): FieldStat[] {
   return out;
 }
 
+// Label for the ReviewPage Generate button's field-count parenthetical.
+// Returns null when there's nothing to count — either no records yet, or a
+// non-object root (array of primitives) with zero top-level fields — so the
+// caller drops the parenthetical entirely rather than printing "(0 fields)".
+export function fieldCountLabel(records: unknown[]): string | null {
+  if (records.length === 0) return null;
+  const count = computeFieldStats(records).length;
+  if (count === 0) return null;
+  return `${count} field${count === 1 ? "" : "s"}`;
+}
+
 // Tree node returned by computeFieldTree. Primitive leaves are selectable as
 // identity keys; container nodes are browsable but can't be picked.
 //
