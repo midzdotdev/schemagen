@@ -132,9 +132,9 @@ describe("IdentityConfigDialog", () => {
       ]);
     });
     render(<IdentityConfigDialog open onOpenChange={() => {}} />);
-    // Row is the closest <li>; checkbox + type chip + stats all live inside.
-    const idRow = screen.getByRole("checkbox", { name: /^id$/ }).closest("li");
-    const countRow = screen.getByRole("checkbox", { name: /^count$/ }).closest("li");
+    // Row is the closest <tr>; checkbox + type chip + stats all live inside.
+    const idRow = screen.getByRole("checkbox", { name: /^id$/ }).closest("tr");
+    const countRow = screen.getByRole("checkbox", { name: /^count$/ }).closest("tr");
     expect(idRow?.textContent).toMatch(/string/i);
     expect(countRow?.textContent).toMatch(/number/i);
   });
