@@ -8,6 +8,7 @@
 // a process-wide singleton instance for production code while letting tests
 // construct their own.
 
+import { writeUIPrefBag } from "@/hooks/useUIPrefs";
 import type { WorkspaceBundle } from "@/lib/workspace-bundle";
 import type { WorkspaceAdapter } from "@/persistence/adapter";
 import { attachPersistence } from "@/persistence/dexie-adapter";
@@ -73,6 +74,9 @@ export class WorkspaceSession {
     if (bundle.identityConfig) {
       await adapter.patchMeta(workspace.id, { identityConfig: bundle.identityConfig });
     }
+    // A restored bundle is a fully-onboarded workspace — mark it before adopt
+    // so the App never flashes the review page on a records-only bundle.
+    writeUIPrefBag(workspace.id, { onboardingCompleted: true });
     await this.adopt(adapter, workspace.id);
     return { workspaceId: workspace.id };
   }
