@@ -45,7 +45,7 @@ describe("StepData", () => {
     });
     render(<StepData onContinue={() => {}} />);
     expect(screen.queryByText(/^records root$/i)).toBeNull();
-    expect(screen.queryByRole("button", { name: /change root/i })).toBeNull();
+    expect(screen.queryByRole("button", { name: /^change$/i })).toBeNull();
   });
 
   it("HH-D5a: root summary surfaces the selected path + count for single-candidate import", () => {
@@ -60,7 +60,7 @@ describe("StepData", () => {
     expect(screen.getByText(/^records root$/i)).toBeInTheDocument();
     expect(screen.getByText(/\(root\)/i)).toBeInTheDocument();
     expect(screen.getByText(/1 record/i)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /change root/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^change$/i })).toBeInTheDocument();
   });
 
   it("HH-D5b: root summary surfaces the selected sub-path for nested imports", () => {
@@ -76,7 +76,7 @@ describe("StepData", () => {
     });
     render(<StepData onContinue={() => {}} />);
     expect(screen.getByText(/^items$/)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /change root/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^change$/i })).toBeInTheDocument();
   });
 
   it("HH-D6: clicking 'Change root…' opens the RootPickerModal with the tree", async () => {
@@ -92,7 +92,7 @@ describe("StepData", () => {
       });
     });
     render(<StepData onContinue={() => {}} />);
-    await user.click(screen.getByRole("button", { name: /change root/i }));
+    await user.click(screen.getByRole("button", { name: /^change$/i }));
     expect(screen.getByRole("dialog", { name: /pick the records path/i })).toBeInTheDocument();
   });
 });

@@ -98,7 +98,7 @@ export function StepData(_props: StepDataProps) {
               disabled={!canChangeRoot}
             >
               <GitFork className="size-3" />
-              Change root…
+              Change
             </Button>
           </div>
         </div>
