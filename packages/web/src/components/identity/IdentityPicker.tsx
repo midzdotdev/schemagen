@@ -22,12 +22,28 @@ import { useStore } from "@/state/store";
 export interface IdentityPickerProps {
   selected: string[];
   onSelectedChange: (next: string[]) => void;
+  // When false, only top-level primitive fields are listed — objects, arrays,
+  // and their nested members are hidden. Defaults to true (full tree) so the
+  // existing dialog flow stays unchanged; the wizard step opts into the
+  // filtered view and exposes a 'Show nested fields' checkbox.
+  showAll?: boolean;
 }
 
-export function IdentityPicker({ selected, onSelectedChange }: IdentityPickerProps) {
+export function IdentityPicker({
+  selected,
+  onSelectedChange,
+  showAll = true,
+}: IdentityPickerProps) {
   const records = useStore((s) => s.records);
 
-  const tree = useMemo(() => computeFieldTree(records), [records]);
+  const fullTree = useMemo(() => computeFieldTree(records), [records]);
+  // When the caller asks for primitives only, drop any non-primitive top-level
+  // node — that also drops everything nested inside it since they're
+  // unreachable without their container row.
+  const tree = useMemo(
+    () => (showAll ? fullTree : fullTree.filter((n) => isPrimitiveKind(n.kind))),
+    [fullTree, showAll],
+  );
   const composite = useMemo(
     () => (selected.length > 0 ? compositeUniqueness(records, selected) : 0),
     [records, selected],
