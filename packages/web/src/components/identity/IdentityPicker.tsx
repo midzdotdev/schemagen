@@ -82,7 +82,11 @@ export function IdentityPicker({ selected, onSelectedChange }: IdentityPickerPro
             No fields available.
           </p>
         ) : (
-          <ul
+          <>
+            <p className="text-[11px] text-muted-foreground">
+              Toggle one field for a simple key, or several for a composite key.
+            </p>
+            <ul
             aria-label="Available identity fields"
             className="flex max-h-72 flex-col gap-0.5 overflow-y-auto rounded-md border border-border bg-card/40 p-1 font-mono text-xs"
           >
@@ -97,12 +101,9 @@ export function IdentityPicker({ selected, onSelectedChange }: IdentityPickerPro
                 onToggleExpanded={toggleExpanded}
               />
             ))}
-          </ul>
+            </ul>
+          </>
         )}
-        <p className="text-[11px] text-muted-foreground">
-          Toggle one field for a simple key, or several for a composite key (uniqueness of the tuple
-          is shown above). Duplicates on the identity key keep the newest version.
-        </p>
         <p className="rounded-md border border-dashed border-border bg-muted/30 px-2 py-1.5 text-[11px] text-muted-foreground">
           Either way, schemagen always collapses records that are byte-identical (same fields and
           values, regardless of key order) — re-imports of the same payload won't pile up.
