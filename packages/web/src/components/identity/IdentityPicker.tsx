@@ -1,16 +1,16 @@
-// Identity-key picker body — extracted from IdentityConfigDialog so the same
-// UI can render inline inside the new-workspace wizard while the dialog form
-// keeps its own modal entry point.
+// Identity-key picker — tree of record fields (top-level + nested), with
+// per-leaf stats and an "Identity key" badge on selected paths.
 //
-// Owns no decision authority: it surfaces the field stats + selection and
-// hands the user's intent up via onSelectedChange.
+// Selection is stored as dot-joined strings (e.g. "user.id") to match the
+// shape `setIdentityConfig` expects after splitting on dots.
 
-import { useMemo } from "react";
+import { ChevronRight } from "lucide-react";
+import { useMemo, useState } from "react";
 import { cn } from "@/lib/cn";
 import {
   compositeUniqueness,
-  computeFieldStats,
-  type FieldStat,
+  computeFieldTree,
+  type FieldTreeNode,
   isPrimitiveKind,
 } from "@/lib/field-stats";
 import { useStore } from "@/state/store";
@@ -23,27 +23,35 @@ export interface IdentityPickerProps {
 export function IdentityPicker({ selected, onSelectedChange }: IdentityPickerProps) {
   const records = useStore((s) => s.records);
 
-  const allStats = useMemo(() => computeFieldStats(records), [records]);
-  // Filter to primitives — objects/arrays/mixed values can't reliably anchor
-  // identity (JSON-string equality is fragile; mixed runtime types compare
-  // unpredictably). Null-only fields are present-zero anyway.
-  const stats = useMemo<FieldStat[]>(
-    () => allStats.filter((s) => isPrimitiveKind(s.kind)),
-    [allStats],
-  );
+  const tree = useMemo(() => computeFieldTree(records), [records]);
   const composite = useMemo(
     () => (selected.length > 0 ? compositeUniqueness(records, selected) : 0),
     [records, selected],
   );
 
-  const noRecords = records.length === 0;
-  const noPrimitiveFields = !noRecords && stats.length === 0;
+  // Auto-expand the root + every ancestor of a primitive leaf at first
+  // render so the user sees candidates without drilling in. New paths
+  // discovered after first render aren't auto-expanded.
+  const [expanded, setExpanded] = useState<Set<string>>(() => initialExpanded(tree));
 
-  function toggle(name: string): void {
+  function toggleExpanded(pathKey: string): void {
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(pathKey)) next.delete(pathKey);
+      else next.add(pathKey);
+      return next;
+    });
+  }
+
+  function toggleSelected(pathKey: string): void {
     onSelectedChange(
-      selected.includes(name) ? selected.filter((n) => n !== name) : [...selected, name],
+      selected.includes(pathKey) ? selected.filter((p) => p !== pathKey) : [...selected, pathKey],
     );
   }
+
+  const noRecords = records.length === 0;
+  const noFields = !noRecords && tree.length === 0;
+  const selectedSet = useMemo(() => new Set(selected), [selected]);
 
   return (
     <div className="flex flex-col gap-3">
@@ -65,66 +73,25 @@ export function IdentityPicker({ selected, onSelectedChange }: IdentityPickerPro
           <p className="rounded-md border border-border bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
             Import some records first — schemagen needs a sample to compute uniqueness per field.
           </p>
-        ) : noPrimitiveFields ? (
+        ) : noFields ? (
           <p className="rounded-md border border-border bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
-            No primitive fields available — identity keys must be strings, numbers, or booleans.
+            No fields available.
           </p>
         ) : (
           <ul
             aria-label="Available identity fields"
-            className="flex max-h-56 flex-col gap-1 overflow-y-auto rounded-md border border-border bg-card/40 p-1.5"
+            className="flex max-h-64 flex-col gap-0.5 overflow-y-auto rounded-md border border-border bg-card/40 p-1.5 font-mono text-xs"
           >
-            {stats.map((s) => {
-              const isSelected = selected.includes(s.name);
-              const isUnique = s.uniqueness >= 0.95;
-              const isPresent = s.presence >= 0.95;
-              return (
-                <li key={s.name}>
-                  <label
-                    aria-label={s.name}
-                    className={cn(
-                      "flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-xs transition-colors",
-                      "hover:bg-accent",
-                      isSelected && "bg-info/10 hover:bg-info/15",
-                    )}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={isSelected}
-                      onChange={() => toggle(s.name)}
-                      className="size-3.5 shrink-0 cursor-pointer accent-info"
-                    />
-                    <code className="min-w-0 flex-1 truncate font-mono text-foreground">
-                      {s.name}
-                    </code>
-                    <span
-                      title="Field type"
-                      className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground"
-                    >
-                      {s.kind}
-                    </span>
-                    <span
-                      title="Uniqueness"
-                      className={cn(
-                        "shrink-0 font-mono tabular-nums",
-                        isUnique ? "text-success" : "text-muted-foreground",
-                      )}
-                    >
-                      {(s.uniqueness * 100).toFixed(0)}% unique
-                    </span>
-                    <span
-                      title="Presence"
-                      className={cn(
-                        "shrink-0 font-mono tabular-nums",
-                        isPresent ? "text-foreground" : "text-warning",
-                      )}
-                    >
-                      {(s.presence * 100).toFixed(0)}% present
-                    </span>
-                  </label>
-                </li>
-              );
-            })}
+            {tree.map((node) => (
+              <FieldRow
+                key={node.pathKey}
+                node={node}
+                selectedSet={selectedSet}
+                expanded={expanded}
+                onToggleSelected={toggleSelected}
+                onToggleExpanded={toggleExpanded}
+              />
+            ))}
           </ul>
         )}
         <p className="text-[11px] text-muted-foreground">
@@ -138,4 +105,138 @@ export function IdentityPicker({ selected, onSelectedChange }: IdentityPickerPro
       </div>
     </div>
   );
+}
+
+interface FieldRowProps {
+  node: FieldTreeNode;
+  selectedSet: Set<string>;
+  expanded: Set<string>;
+  onToggleSelected: (pathKey: string) => void;
+  onToggleExpanded: (pathKey: string) => void;
+}
+
+function FieldRow({
+  node,
+  selectedSet,
+  expanded,
+  onToggleSelected,
+  onToggleExpanded,
+}: FieldRowProps) {
+  const selectable = isPrimitiveKind(node.kind);
+  const isSelected = selectedSet.has(node.pathKey);
+  const hasChildren = node.children.length > 0;
+  const isOpen = expanded.has(node.pathKey);
+  const isUnique = node.uniqueness >= 0.95;
+  const isPresent = node.presence >= 0.95;
+
+  return (
+    <li>
+      <div
+        className={cn(
+          "flex items-center gap-1.5 rounded px-1.5 py-1 transition-colors hover:bg-accent/40",
+          isSelected && "bg-info/10 hover:bg-info/15",
+        )}
+      >
+        {hasChildren ? (
+          <button
+            type="button"
+            onClick={() => onToggleExpanded(node.pathKey)}
+            aria-label={isOpen ? "Collapse" : "Expand"}
+            className="flex size-3.5 shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"
+          >
+            <ChevronRight className={cn("size-3 transition-transform", isOpen && "rotate-90")} />
+          </button>
+        ) : (
+          <span className="size-3.5 shrink-0" aria-hidden />
+        )}
+        {selectable ? (
+          <label aria-label={node.pathKey} className="flex min-w-0 flex-1 items-center gap-1.5">
+            <input
+              type="checkbox"
+              checked={isSelected}
+              onChange={() => onToggleSelected(node.pathKey)}
+              className="size-3.5 shrink-0 cursor-pointer accent-info"
+            />
+            <code className="min-w-0 flex-1 truncate text-foreground">{node.segment}</code>
+          </label>
+        ) : (
+          <span className="flex min-w-0 flex-1 items-center gap-1.5">
+            {/* Spacer to align with the checkbox column on primitive rows */}
+            <span className="size-3.5 shrink-0" aria-hidden />
+            <code className="min-w-0 flex-1 truncate text-muted-foreground">{node.segment}</code>
+          </span>
+        )}
+        <span
+          title="Field type"
+          className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground"
+        >
+          {node.kind}
+        </span>
+        {selectable && (
+          <>
+            <span
+              title="Uniqueness"
+              className={cn(
+                "shrink-0 tabular-nums",
+                isUnique ? "text-success" : "text-muted-foreground",
+              )}
+            >
+              {(node.uniqueness * 100).toFixed(0)}% unique
+            </span>
+            <span
+              title="Presence"
+              className={cn(
+                "shrink-0 tabular-nums",
+                isPresent ? "text-foreground" : "text-warning",
+              )}
+            >
+              {(node.presence * 100).toFixed(0)}% present
+            </span>
+          </>
+        )}
+        {isSelected && (
+          <span className="shrink-0 rounded bg-emerald-500/20 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+            Identity key
+          </span>
+        )}
+      </div>
+      {isOpen && hasChildren && (
+        <ul className="ml-3 border-l border-border/60 pl-1">
+          {node.children.map((child) => (
+            <FieldRow
+              key={child.pathKey}
+              node={child}
+              selectedSet={selectedSet}
+              expanded={expanded}
+              onToggleSelected={onToggleSelected}
+              onToggleExpanded={onToggleExpanded}
+            />
+          ))}
+        </ul>
+      )}
+    </li>
+  );
+}
+
+// Auto-expand any container whose subtree has at least one primitive leaf
+// so the user sees candidates without drilling in.
+function initialExpanded(tree: FieldTreeNode[]): Set<string> {
+  const out = new Set<string>();
+  function visit(nodes: FieldTreeNode[]): boolean {
+    let hasLeaf = false;
+    for (const n of nodes) {
+      if (isPrimitiveKind(n.kind)) {
+        hasLeaf = true;
+        continue;
+      }
+      const childHasLeaf = visit(n.children);
+      if (childHasLeaf) {
+        out.add(n.pathKey);
+        hasLeaf = true;
+      }
+    }
+    return hasLeaf;
+  }
+  visit(tree);
+  return out;
 }

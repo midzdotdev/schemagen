@@ -67,10 +67,9 @@ describe("IdentityConfigDialog", () => {
     expect(screen.getByText(/import some records first/i)).toBeInTheDocument();
   });
 
-  // PR CC — non-primitive fields are filtered out of the picker (object/array
-  // values don't make sense as identity keys; JSON.stringify of an object is
-  // fragile and the user can't reason about composite ordering).
-  it("CC-D1: picker omits object-typed fields", () => {
+  // Non-primitive fields can't be picked themselves — but their primitive
+  // descendants can (post-HH-nested tree). The container row has no checkbox.
+  it("CC-D1: object-typed fields have no checkbox; their primitive children do", () => {
     act(() => {
       useStore.getState().setRecords([
         { id: "a", profile: { name: "x" } },
@@ -78,8 +77,12 @@ describe("IdentityConfigDialog", () => {
       ]);
     });
     render(<IdentityConfigDialog open onOpenChange={() => {}} />);
-    expect(screen.getByRole("checkbox", { name: /\bid\b/ })).toBeInTheDocument();
-    expect(screen.queryByRole("checkbox", { name: /profile/ })).toBeNull();
+    // Top-level id is selectable.
+    expect(screen.getByRole("checkbox", { name: /^id$/ })).toBeInTheDocument();
+    // 'profile' is an object container — no checkbox.
+    expect(screen.queryByRole("checkbox", { name: /^profile$/ })).toBeNull();
+    // Nested 'profile.name' surfaces as its own checkbox.
+    expect(screen.getByRole("checkbox", { name: /^profile\.name$/ })).toBeInTheDocument();
   });
 
   it("CC-D2: picker omits array-typed and mixed-typed fields", () => {
@@ -90,8 +93,32 @@ describe("IdentityConfigDialog", () => {
       ]);
     });
     render(<IdentityConfigDialog open onOpenChange={() => {}} />);
-    expect(screen.queryByRole("checkbox", { name: /tags/ })).toBeNull();
-    expect(screen.queryByRole("checkbox", { name: /mixed/ })).toBeNull();
+    expect(screen.queryByRole("checkbox", { name: /^tags$/ })).toBeNull();
+    expect(screen.queryByRole("checkbox", { name: /^mixed$/ })).toBeNull();
+  });
+
+  // Nested picker — primitive children inside an object can be picked as the
+  // identity key. Selecting one writes a nested path (split on dots).
+  it("HH-IP1: ticking a nested primitive writes the dotted path to identityConfig", async () => {
+    const user = userEvent.setup();
+    act(() => {
+      useStore.getState().setRecords([{ user: { id: "a" } }, { user: { id: "b" } }]);
+    });
+    render(<IdentityConfigDialog open onOpenChange={() => {}} />);
+    await user.click(screen.getByRole("checkbox", { name: /^user\.id$/ }));
+    await user.click(screen.getByRole("button", { name: /^apply$/i }));
+    expect(useStore.getState().identityConfig).toEqual({ fields: [["user", "id"]] });
+  });
+
+  it("HH-IP2: selected primitive paths surface an 'Identity key' badge", async () => {
+    const user = userEvent.setup();
+    act(() => {
+      useStore.getState().setRecords([{ id: "a" }, { id: "b" }]);
+    });
+    render(<IdentityConfigDialog open onOpenChange={() => {}} />);
+    await user.click(screen.getByRole("checkbox", { name: /^id$/ }));
+    const row = screen.getByRole("checkbox", { name: /^id$/ }).closest("li");
+    expect(row?.textContent).toMatch(/identity key/i);
   });
 
   it("CC-D3: each picker row shows the field's kind chip", () => {
@@ -102,9 +129,9 @@ describe("IdentityConfigDialog", () => {
       ]);
     });
     render(<IdentityConfigDialog open onOpenChange={() => {}} />);
-    // The id row labels itself with the kind ("string"); count labels itself "number".
-    const idRow = screen.getByRole("checkbox", { name: /\bid\b/ }).closest("label");
-    const countRow = screen.getByRole("checkbox", { name: /count/ }).closest("label");
+    // Row is the closest <li>; checkbox + type chip + stats all live inside.
+    const idRow = screen.getByRole("checkbox", { name: /^id$/ }).closest("li");
+    const countRow = screen.getByRole("checkbox", { name: /^count$/ }).closest("li");
     expect(idRow?.textContent).toMatch(/string/i);
     expect(countRow?.textContent).toMatch(/number/i);
   });
