@@ -11,7 +11,8 @@
 import { dedupeByIdentity, dedupeByteIdentical } from "@schemagen/core";
 import { useMemo, useState } from "react";
 import { IdentityPicker } from "@/components/identity/IdentityPicker";
-import { pathKeyToCorePath } from "@/lib/field-stats";
+import { cn } from "@/lib/cn";
+import { compositeUniqueness, pathKeyToCorePath } from "@/lib/field-stats";
 import { useStore } from "@/state/store";
 
 export interface IdentitySectionProps {
@@ -53,6 +54,10 @@ export function IdentitySection({ selected, onSelectedChange }: IdentitySectionP
     () => (selected.length === 0 ? dedupeByteIdentical(records) : null),
     [records, selected.length],
   );
+  const uniqueness = useMemo(
+    () => (selected.length > 0 ? compositeUniqueness(records, selected) : 0),
+    [records, selected],
+  );
 
   return (
     <section aria-labelledby="identity-h" className="flex flex-col gap-3">
@@ -89,48 +94,70 @@ export function IdentitySection({ selected, onSelectedChange }: IdentitySectionP
             selected={selected}
             onSelectedChange={onSelectedChange}
             showAll={showNested}
+            showCompositeUniqueness={false}
           />
         </div>
       </div>
 
       <div className="flex flex-col gap-1">
         <span className="font-medium text-[10px] text-muted-foreground uppercase tracking-wider">
-          Dedup preview
+          Summary
         </span>
-        <p className="text-[11px] text-muted-foreground">What your current choice would do.</p>
         <div
           role="status"
           aria-live="polite"
-          className="mt-1 rounded-md border border-border bg-card/40 px-3 py-2 text-muted-foreground text-xs"
+          className="mt-1 flex flex-col gap-1.5 rounded-md border border-border bg-card/40 px-3 py-2 text-xs"
         >
           {preview ? (
             <>
-              Using <FieldList fields={selected} />, your {records.length.toLocaleString()} records
-              would yield{" "}
-              <span className="font-medium text-foreground">
-                {preview.kept.length.toLocaleString()} unique
-              </span>{" "}
-              ({preview.dropped.length.toLocaleString()} duplicate
-              {preview.dropped.length === 1 ? "" : "s"}).
-            </>
-          ) : byteFloor && byteFloor.dropped.length > 0 ? (
-            <>
-              <span className="text-foreground">No identity key selected.</span>{" "}
-              {byteFloor.dropped.length.toLocaleString()} byte-identical duplicate
-              {byteFloor.dropped.length === 1 ? "" : "s"} would still be dropped.
+              <div className="flex items-baseline justify-between gap-2">
+                <span className="text-foreground">
+                  Key: <FieldList fields={selected} />
+                </span>
+                <span className="shrink-0 font-medium text-[10px] text-muted-foreground uppercase tracking-wide">
+                  {selected.length === 1 ? "single field" : `composite · ${selected.length} fields`}
+                </span>
+              </div>
+              <div className="text-muted-foreground">
+                <span
+                  className={cn(
+                    "font-medium",
+                    uniqueness >= 0.95 ? "text-success" : "text-warning",
+                  )}
+                >
+                  {(uniqueness * 100).toFixed(0)}% unique
+                </span>{" "}
+                {uniqueness >= 0.95
+                  ? "— reliably tells records apart."
+                  : "— some records share key values."}
+              </div>
+              <div className="text-muted-foreground">
+                Your {records.length.toLocaleString()} records →{" "}
+                <span className="font-medium text-foreground">
+                  {preview.kept.length.toLocaleString()} distinct
+                </span>
+                {preview.dropped.length > 0
+                  ? `, ${preview.dropped.length.toLocaleString()} duplicate${
+                      preview.dropped.length === 1 ? "" : "s"
+                    } dropped (newest kept).`
+                  : ", no duplicates."}
+              </div>
             </>
           ) : (
             <>
-              <span className="text-foreground">No identity key selected.</span> Your current{" "}
-              {records.length.toLocaleString()} records have no duplicates.
+              <span className="text-foreground">No identity key.</span>
+              <span className="text-muted-foreground">
+                Re-imports stay as distinct records.{" "}
+                {byteFloor && byteFloor.dropped.length > 0
+                  ? `${byteFloor.dropped.length.toLocaleString()} byte-identical duplicate${
+                      byteFloor.dropped.length === 1 ? "" : "s"
+                    } still collapse.`
+                  : "Byte-identical records still collapse automatically."}
+              </span>
             </>
           )}
         </div>
       </div>
-
-      <p className="rounded-md border border-border border-dashed bg-muted/30 px-2 py-1.5 text-[11px] text-muted-foreground">
-        Byte-identical records always collapse, even without an identity key.
-      </p>
     </section>
   );
 }

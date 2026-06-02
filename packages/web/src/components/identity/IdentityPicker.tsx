@@ -27,12 +27,17 @@ export interface IdentityPickerProps {
   // existing dialog flow stays unchanged; the wizard step opts into the
   // filtered view and exposes a 'Show nested fields' checkbox.
   showAll?: boolean;
+  // The inline composite-uniqueness readout above the list. Defaults on (the
+  // dialog relies on it); the wizard turns it off because its IdentitySection
+  // summary reports uniqueness in fuller form.
+  showCompositeUniqueness?: boolean;
 }
 
 export function IdentityPicker({
   selected,
   onSelectedChange,
   showAll = true,
+  showCompositeUniqueness = true,
 }: IdentityPickerProps) {
   const records = useStore((s) => s.records);
 
@@ -92,18 +97,20 @@ export function IdentityPicker({
     <div className="flex flex-col gap-1">
       {/* Always rendered so the row reserves its height — toggling between a
           single and a composite key must not shift the field list. */}
-      <span
-        className={cn(
-          "self-end text-[11px] text-muted-foreground",
-          selected.length > 1 ? undefined : "invisible",
-        )}
-        aria-hidden={selected.length > 1 ? undefined : true}
-      >
-        Composite uniqueness:{" "}
-        <span className={cn("font-medium", composite >= 0.95 ? "text-success" : "text-warning")}>
-          {(composite * 100).toFixed(0)}%
+      {showCompositeUniqueness && (
+        <span
+          className={cn(
+            "self-end text-[11px] text-muted-foreground",
+            selected.length > 1 ? undefined : "invisible",
+          )}
+          aria-hidden={selected.length > 1 ? undefined : true}
+        >
+          Composite uniqueness:{" "}
+          <span className={cn("font-medium", composite >= 0.95 ? "text-success" : "text-warning")}>
+            {(composite * 100).toFixed(0)}%
+          </span>
         </span>
-      </span>
+      )}
       <ul
         aria-label="Available identity fields"
         className="flex flex-col gap-0.5 rounded-md border border-border bg-card/40 p-1 font-mono text-xs"
