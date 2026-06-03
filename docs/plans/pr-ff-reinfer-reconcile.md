@@ -1,6 +1,12 @@
 # PR FF — Re-infer schema with conflict reconciliation
 
-> Status: **proposed**. Sequencing follow-up to PRs Z / AA / EE. Owns the post-IR "the data has moved on — bring my schema back into line" flow.
+> Status: **implemented**. Owns the post-IR "the data has moved on — bring my schema back into line" flow.
+>
+> As-built deviations from this plan:
+> - **The diff lives in core** (`packages/core/src/reinfer` — `computeReinferDiff`, `changeTargetPaths`, `serializePath`), not `web/lib`. It's pure IR→Change logic, same family as `infer`/`merge`/`applyChange`. The web layer (`lib/reinfer.ts`) only maps history → touched paths and calls it. Confirmed core's `merge()` can't substitute — it only *widens* to fit samples and isn't edit-aware.
+> - **The modal is staged, not per-action.** A checkbox stages the auto batch; each conflict has Keep yours / Accept new; **Apply** commits the staged set (auto batch `source: "inferred"`, accepted conflicts `source: "manual"`), **Cancel** discards (FF-M5). The plan's FF-M2/M3 wording ("applies") is realised as staged selection.
+> - **The Re-infer trigger** sits in the schema-panel header actions slot (next to the mismatch badge), since "Add data" moved to the records sidebar after this plan was written.
+> - Leaf/kind changes use a coarse `set-node` replace (v1); object diffs are field-level (add/remove/optional/nullable + recurse).
 
 ## Context
 

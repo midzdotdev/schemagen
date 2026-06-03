@@ -66,6 +66,30 @@ describe("SchemaPanel — explicit infer CTA", () => {
     expect(screen.getByText(/strict defaults/i)).toBeInTheDocument();
   });
 
+  // PR FF — re-infer trigger.
+  it("FF-S1: Re-infer button shows only with an IR and records present", () => {
+    act(() => {
+      useStore.getState().setIR({ kind: "object", fields: {}, additional: false });
+    });
+    renderPanel();
+    expect(screen.queryByRole("button", { name: /re-infer/i })).toBeNull();
+    act(() => {
+      useStore.getState().setRecords([{ id: "a" }]);
+    });
+    expect(screen.getByRole("button", { name: /re-infer/i })).toBeInTheDocument();
+  });
+
+  it("FF-S2: clicking Re-infer opens the reconcile modal", async () => {
+    const user = userEvent.setup();
+    act(() => {
+      useStore.getState().setIR({ kind: "object", fields: {}, additional: false });
+      useStore.getState().setRecords([{ id: "a" }]);
+    });
+    renderPanel();
+    await user.click(screen.getByRole("button", { name: /re-infer/i }));
+    expect(screen.getByRole("dialog", { name: /re-infer schema/i })).toBeInTheDocument();
+  });
+
   // Records-sidebar takeover — the schema header no longer carries the
   // 'View N records' or 'Add data' affordances. Both now live on the
   // RecordsSidebar header (see RecordsSidebar.test.tsx).

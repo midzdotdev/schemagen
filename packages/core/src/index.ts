@@ -48,6 +48,9 @@ export { NODE_KINDS } from "./ir/types";
 // Merge
 export type { MergeOptions, MergeResult } from "./merge";
 export { merge } from "./merge";
+// Re-infer diff
+export type { ConflictChange, ReinferDiff } from "./reinfer";
+export { changeTargetPaths, computeReinferDiff, mergeNodes, serializePath } from "./reinfer";
 // Validate
 export type { Mismatch, MismatchKind, Suggestion, ValidationResult } from "./validate";
 export { validate } from "./validate";
