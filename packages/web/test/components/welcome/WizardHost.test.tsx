@@ -74,9 +74,7 @@ describe("WizardHost", () => {
     render(<WizardHost />);
     await user.click(continueBtn());
     await user.click(continueBtn());
-    expect(
-      screen.getByRole("checkbox", { name: /recognise repeating values/i }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("checkbox", { name: /detect literal unions/i })).toBeInTheDocument();
     expect(generateBtn()).toBeInTheDocument();
     expect(screen.queryByRole("dialog")).toBeNull();
   });

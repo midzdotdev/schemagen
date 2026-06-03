@@ -42,16 +42,10 @@ describe("InferenceOptionsForm", () => {
     expect(screen.getByRole("group", { name: /structure/i })).toBeInTheDocument();
     expect(screen.getByRole("group", { name: /numbers/i })).toBeInTheDocument();
 
-    expect(
-      screen.getByRole("checkbox", { name: /recognise repeating values/i }),
-    ).toBeInTheDocument();
-    expect(screen.getByRole("checkbox", { name: /recognise emails/i })).toBeInTheDocument();
-    expect(
-      screen.getByRole("checkbox", { name: /flag records with fields the schema hasn't seen/i }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("checkbox", { name: /treat whole-number-only fields as integers/i }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("checkbox", { name: /detect literal unions/i })).toBeInTheDocument();
+    expect(screen.getByRole("checkbox", { name: /string formats/i })).toBeInTheDocument();
+    expect(screen.getByRole("checkbox", { name: /reject unknown fields/i })).toBeInTheDocument();
+    expect(screen.getByRole("checkbox", { name: /integer detection/i })).toBeInTheDocument();
 
     expect(screen.queryByRole("spinbutton")).toBeNull();
   });
@@ -74,11 +68,11 @@ describe("InferenceOptionsForm", () => {
     const user = userEvent.setup();
     const spy = vi.fn();
     render(<Harness spy={spy} />);
-    await user.click(screen.getByRole("checkbox", { name: /recognise repeating values/i }));
+    await user.click(screen.getByRole("checkbox", { name: /detect literal unions/i }));
     expect(spy.mock.lastCall?.[0]?.literals?.enable).toBe(false);
 
     await user.click(screen.getByText(/advanced/i));
-    const input = screen.getByLabelText(/most distinct values to list/i);
+    const input = screen.getByLabelText(/max cardinality/i);
     await user.clear(input);
     await user.type(input, "30");
     expect(spy.mock.lastCall?.[0]?.literals?.maxCardinality).toBe(30);
@@ -88,11 +82,11 @@ describe("InferenceOptionsForm", () => {
   it("Z-F4: controls are interactive for any value", async () => {
     const user = userEvent.setup();
     render(<Harness initial={{ literals: { maxCardinality: 30 } }} defaultAdvancedOpen />);
-    expect(screen.getByRole("checkbox", { name: /recognise repeating values/i })).toBeEnabled();
-    expect(screen.getByLabelText(/most distinct values to list/i)).toBeEnabled();
+    expect(screen.getByRole("checkbox", { name: /detect literal unions/i })).toBeEnabled();
+    expect(screen.getByLabelText(/max cardinality/i)).toBeEnabled();
     // Toggling actually works (not a static render).
-    await user.click(screen.getByRole("checkbox", { name: /flag records with fields/i }));
-    expect(screen.getByRole("checkbox", { name: /flag records with fields/i })).not.toBeChecked();
+    await user.click(screen.getByRole("checkbox", { name: /reject unknown fields/i }));
+    expect(screen.getByRole("checkbox", { name: /reject unknown fields/i })).not.toBeChecked();
   });
 
   // Plan § — percent inputs surface 0..1 ratios as 0..100 and round-trip back.
@@ -100,9 +94,9 @@ describe("InferenceOptionsForm", () => {
     const user = userEvent.setup();
     const spy = vi.fn();
     render(<Harness spy={spy} defaultAdvancedOpen />);
-    expect(screen.getByLabelText(/skip when too varied/i)).toHaveValue(30); // 0.3 → 30
-    expect(screen.getByLabelText(/a field counts as required when present in/i)).toHaveValue(100);
-    const varied = screen.getByLabelText(/skip when too varied/i);
+    expect(screen.getByLabelText(/max unique ratio/i)).toHaveValue(30); // 0.3 → 30
+    expect(screen.getByLabelText(/required-field threshold/i)).toHaveValue(100);
+    const varied = screen.getByLabelText(/max unique ratio/i);
     await user.clear(varied);
     await user.type(varied, "75");
     expect(spy.mock.lastCall?.[0]?.literals?.maxUniqueRatio).toBeCloseTo(0.75);

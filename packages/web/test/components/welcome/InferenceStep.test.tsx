@@ -22,9 +22,7 @@ describe("InferenceStep", () => {
     expect(screen.getByRole("group", { name: /types/i })).toBeInTheDocument();
     expect(screen.getByRole("group", { name: /structure/i })).toBeInTheDocument();
     expect(screen.getByRole("group", { name: /numbers/i })).toBeInTheDocument();
-    expect(
-      screen.getByRole("checkbox", { name: /recognise repeating values/i }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("checkbox", { name: /detect literal unions/i })).toBeInTheDocument();
     // Advanced collapsed by default → no numeric inputs; no Dialog chrome.
     expect(screen.queryByRole("spinbutton")).toBeNull();
     expect(screen.queryByRole("dialog")).toBeNull();

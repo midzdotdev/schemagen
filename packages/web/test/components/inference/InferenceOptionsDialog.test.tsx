@@ -24,7 +24,7 @@ describe("InferenceOptionsDialog", () => {
       useStore.getState().setInferenceOptions({ literals: { maxCardinality: 25 } });
     });
     render(<InferenceOptionsDialog open onOpenChange={() => {}} />);
-    expect(screen.getByLabelText(/most distinct values to list/i)).toHaveValue(25);
+    expect(screen.getByLabelText(/max cardinality/i)).toHaveValue(25);
   });
 
   // Autosave — editing a control writes through to the store immediately.
@@ -32,7 +32,7 @@ describe("InferenceOptionsDialog", () => {
     const user = userEvent.setup();
     render(<InferenceOptionsDialog open onOpenChange={() => {}} />);
     await user.click(screen.getByText(/advanced/i));
-    const input = screen.getByLabelText(/most distinct values to list/i);
+    const input = screen.getByLabelText(/max cardinality/i);
     await user.clear(input);
     await user.type(input, "30");
     expect(useStore.getState().inferenceOptions?.literals?.maxCardinality).toBe(30);
@@ -47,7 +47,7 @@ describe("InferenceOptionsDialog", () => {
     render(<InferenceOptionsDialog open onOpenChange={() => {}} />);
     await user.click(screen.getByRole("button", { name: /reset to defaults/i }));
     expect(useStore.getState().inferenceOptions).toBeNull();
-    expect(screen.getByLabelText(/most distinct values to list/i)).toHaveValue(20);
+    expect(screen.getByLabelText(/max cardinality/i)).toHaveValue(20);
   });
 
   // Persistent (PR FF) — options stay editable after a schema exists.
@@ -57,7 +57,7 @@ describe("InferenceOptionsDialog", () => {
       useStore.getState().setInferenceOptions({ literals: { maxCardinality: 30 } });
     });
     render(<InferenceOptionsDialog open onOpenChange={() => {}} />);
-    expect(screen.getByLabelText(/most distinct values to list/i)).toBeEnabled();
+    expect(screen.getByLabelText(/max cardinality/i)).toBeEnabled();
     expect(screen.getByRole("button", { name: /reset to defaults/i })).toBeEnabled();
     expect(screen.queryByText(/only at first import|once a schema exists/i)).toBeNull();
     expect(screen.queryByRole("button", { name: /^apply$/i })).toBeNull();
@@ -69,7 +69,7 @@ describe("InferenceOptionsDialog", () => {
     render(<InferenceOptionsDialog open onOpenChange={() => {}} />);
     expect(screen.getByText(/infers types from your records/i)).toBeInTheDocument();
     expect(screen.queryByText(/only at first import|once a schema exists/i)).toBeNull();
-    expect(screen.getByRole("checkbox", { name: /recognise repeating values/i })).toBeEnabled();
+    expect(screen.getByRole("checkbox", { name: /detect literal unions/i })).toBeEnabled();
   });
 
   // Default labels live on the advanced rows, behind the disclosure.
@@ -88,9 +88,7 @@ describe("InferenceOptionsDialog", () => {
     render(<InferenceOptionsDialog open onOpenChange={() => {}} />);
     expect(screen.queryByRole("group", { name: /discriminators/i })).toBeNull();
     await user.click(screen.getByText(/advanced/i));
-    expect(
-      screen.getByRole("checkbox", { name: /type tag.*splits records into variants/i }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("checkbox", { name: /detect discriminators/i })).toBeInTheDocument();
     expect(screen.queryByRole("textbox")).toBeNull();
   });
 
@@ -99,7 +97,7 @@ describe("InferenceOptionsDialog", () => {
     const user = userEvent.setup();
     render(<InferenceOptionsDialog open onOpenChange={() => {}} />);
     await user.click(screen.getByText(/advanced/i));
-    const input = screen.getByLabelText(/skip when too varied/i);
+    const input = screen.getByLabelText(/max unique ratio/i);
     expect(input).toHaveValue(30);
     await user.clear(input);
     await user.type(input, "75");
