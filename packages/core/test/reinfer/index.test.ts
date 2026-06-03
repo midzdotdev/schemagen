@@ -2,7 +2,7 @@
 
 import { describe, expect, it } from "vitest";
 import type { IR, Node, ObjectNode } from "../../src/ir/types";
-import { changeTargetPaths, computeReinferDiff } from "../../src/reinfer";
+import { changeTargetPaths, computeReinferDiff, mergeNodes } from "../../src/reinfer";
 
 const str: Node = { kind: "string" };
 const num: Node = { kind: "number" };
@@ -91,6 +91,40 @@ describe("computeReinferDiff", () => {
       name: "nickname",
       value: false,
     });
+  });
+});
+
+describe("mergeNodes", () => {
+  // FF-D8 — both sides added literals → merge keeps the union.
+  it("FF-D8: unions the literal sets of two literal unions", () => {
+    const mine: Node = { kind: "string", literals: ["active", "trialing", "cancelled"] };
+    const inferred: Node = { kind: "string", literals: ["active", "trialing", "pending"] };
+    expect(mergeNodes(mine, inferred)).toEqual({
+      kind: "string",
+      literals: ["active", "trialing", "cancelled", "pending"],
+    });
+  });
+
+  it("FF-D9: unions the variant lists of two type unions", () => {
+    const mine: Node = { kind: "union", variants: [str, num] };
+    const inferred: Node = { kind: "union", variants: [str, { kind: "boolean" }] };
+    const merged = mergeNodes(mine, inferred);
+    expect(merged?.kind).toBe("union");
+    expect((merged as { variants: Node[] }).variants).toHaveLength(3);
+  });
+
+  it("returns null when there's nothing new, kinds differ, or it's not unionable", () => {
+    // Fresh adds nothing → Keep already covers it.
+    expect(
+      mergeNodes(
+        { kind: "string", literals: ["a", "b", "c"] },
+        { kind: "string", literals: ["a", "b"] },
+      ),
+    ).toBeNull();
+    // Different kinds.
+    expect(mergeNodes({ kind: "string", literals: ["a"] }, num)).toBeNull();
+    // Plain string (no literals) — genuine either/or, not a merge.
+    expect(mergeNodes({ kind: "string" }, { kind: "string", format: "email" })).toBeNull();
   });
 });
 

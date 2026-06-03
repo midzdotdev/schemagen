@@ -97,4 +97,39 @@ describe("ReinferModal", () => {
     expect(onCancel).toHaveBeenCalledWith(false);
     expect(spy).not.toHaveBeenCalled();
   });
+
+  // FF-M6 — when the user and the fresh inference each broadened a literal union
+  // with different values, a Merge option unions both.
+  it("FF-M6: a both-broadened literal conflict offers Merge and applies the union", async () => {
+    const user = userEvent.setup();
+    useStore.getState().resetForTests();
+    const mine: IR = {
+      kind: "object",
+      additional: false,
+      fields: { status: { type: { kind: "string", literals: ["active", "trialing", "cancelled"] } } },
+    };
+    // Records cycle active/trialing/pending → fresh infers a union with `pending`.
+    const recs = Array.from({ length: 15 }, (_, i) => ({
+      status: ["active", "trialing", "pending"][i % 3],
+    }));
+    act(() => {
+      useStore.getState().setIR(structuredClone(mine));
+      useStore.getState().setRecords(recs);
+      useStore.getState().applyChange(
+        { op: "set-node", path: ["status"], node: { kind: "string", literals: ["active", "trialing", "cancelled"] } },
+        { source: "manual" },
+      );
+    });
+    const spy = vi.spyOn(useStore.getState(), "applyChange");
+    render(<ReinferModal open onOpenChange={() => {}} />);
+
+    await user.click(screen.getByRole("button", { name: /merge both/i }));
+    await user.click(screen.getByRole("button", { name: /^apply$/i }));
+
+    const applied = spy.mock.calls.find(([c]) => c.op === "set-node");
+    expect(applied?.[0]).toMatchObject({ op: "set-node", path: ["status"] });
+    const node = (applied?.[0] as { node: { literals: string[] } }).node;
+    expect([...node.literals].sort()).toEqual(["active", "cancelled", "pending", "trialing"]);
+    expect(applied?.[1]?.source).toBe("manual");
+  });
 });

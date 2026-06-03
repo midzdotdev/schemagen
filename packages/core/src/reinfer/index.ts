@@ -104,6 +104,72 @@ export function computeReinferDiff(current: IR, fresh: IR, touched: Set<string>)
   return { autoChanges, conflictChanges };
 }
 
+// A conflict can sometimes be reconciled by keeping *both* sides rather than
+// picking one — when the user broadened a type and the fresh inference broadened
+// it differently. `mergeNodes` returns the join (the least type that satisfies
+// both) when that's a meaningful "lose nothing" merge, or null when it isn't —
+// either the kinds don't line up, or the fresh side adds nothing new (Keep
+// already covers it), or the difference is a genuine either/or (format, pattern,
+// bounds, flags) that can't be unioned. The reconcile modal offers a third
+// "Merge" choice exactly when this returns non-null.
+//
+// Covered today: literal unions (union the value sets) and type unions (union
+// the variant lists). Bounds-widening and object-field merges are deliberately
+// out — see docs/plans/pr-ff-reinfer-reconcile.md.
+export function mergeNodes(current: Node, fresh: Node): Node | null {
+  if (current.kind !== fresh.kind) return null;
+
+  // Literal unions — union the observed value sets (per kind so the literal
+  // element types line up).
+  if (current.kind === "string" && fresh.kind === "string") {
+    return mergedLiterals(current, current.literals, fresh.literals);
+  }
+  if (current.kind === "number" && fresh.kind === "number") {
+    return mergedLiterals(current, current.literals, fresh.literals);
+  }
+  if (current.kind === "boolean" && fresh.kind === "boolean") {
+    return mergedLiterals(current, current.literals, fresh.literals);
+  }
+
+  // Type unions — union the variant lists (deduped structurally).
+  if (current.kind === "union" && fresh.kind === "union") {
+    const seen = new Set(current.variants.map((v) => JSON.stringify(canon(v))));
+    const variants = [...current.variants];
+    for (const v of fresh.variants) {
+      const key = JSON.stringify(canon(v));
+      if (!seen.has(key)) {
+        seen.add(key);
+        variants.push(v);
+      }
+    }
+    if (variants.length === current.variants.length) return null;
+    return { ...current, variants };
+  }
+
+  return null;
+}
+
+// Returns the node with its literals widened to the union, or null when the
+// fresh side contributes nothing new (or either side isn't a literal union).
+function mergedLiterals<N extends Node, T extends string | number | boolean>(
+  node: N,
+  cur: T[] | undefined,
+  frsh: T[] | undefined,
+): Node | null {
+  if (!cur || !frsh) return null;
+  const seen = new Set(cur.map(String));
+  const out = [...cur];
+  for (const v of frsh) {
+    if (!seen.has(String(v))) {
+      seen.add(String(v));
+      out.push(v);
+    }
+  }
+  if (out.length === cur.length) return null; // fresh added nothing new
+  // Safe: the caller guarantees `node` is the literal-bearing kind for `T`.
+  return { ...node, literals: out } as Node;
+}
+
 type ObjectAdditional = false | true | Node;
 
 function additionalEqual(a: ObjectAdditional, b: ObjectAdditional): boolean {

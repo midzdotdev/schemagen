@@ -7,7 +7,7 @@
 //
 // See docs/plans/pr-ff-reinfer-reconcile.md.
 
-import type { Change, Node, Path } from "@schemagen/core";
+import { type Change, mergeNodes, type Node, type Path } from "@schemagen/core";
 import { useEffect, useMemo, useState } from "react";
 import { buildReinferDiff } from "@/lib/reinfer";
 import { useStore } from "@/state/store";
@@ -18,6 +18,8 @@ export interface ReinferModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
+
+type Decision = "keep" | "accept" | "merge";
 
 export function ReinferModal({ open, onOpenChange }: ReinferModalProps) {
   const ir = useStore((s) => s.ir);
@@ -35,24 +37,30 @@ export function ReinferModal({ open, onOpenChange }: ReinferModalProps) {
   const autoCount = diff?.autoChanges.length ?? 0;
   const conflictCount = diff?.conflictChanges.length ?? 0;
 
-  // Staged selections — reset on each open so a prior session doesn't leak.
+  // Per-conflict reconcile choice. Default "keep" (don't override the user).
+  // "merge" is only offered when both sides are unionable (mergeNodes !== null).
   const [applyAuto, setApplyAuto] = useState(true);
-  const [accepted, setAccepted] = useState<Set<number>>(new Set());
+  const [decisions, setDecisions] = useState<Record<number, Decision>>({});
   useEffect(() => {
     if (open) {
       setApplyAuto(true);
-      setAccepted(new Set());
+      setDecisions({});
     }
   }, [open]);
 
-  function toggleAccept(i: number): void {
-    setAccepted((prev) => {
-      const next = new Set(prev);
-      if (next.has(i)) next.delete(i);
-      else next.add(i);
-      return next;
-    });
+  const decisionOf = (i: number): Decision => decisions[i] ?? "keep";
+  function setDecision(i: number, d: Decision): void {
+    setDecisions((prev) => ({ ...prev, [i]: d }));
   }
+
+  // The merged node for each conflict, when its two sides can be unioned.
+  const mergeable = useMemo(
+    () =>
+      (diff?.conflictChanges ?? []).map((c) =>
+        c.change.op === "set-node" && c.existing ? mergeNodes(c.existing, c.change.node) : null,
+      ),
+    [diff],
+  );
 
   function handleApply(): void {
     if (diff) {
@@ -63,7 +71,15 @@ export function ReinferModal({ open, onOpenChange }: ReinferModalProps) {
         );
       }
       diff.conflictChanges.forEach((c, i) => {
-        if (accepted.has(i)) applyChange(c.change, { source: "manual" });
+        const d = decisionOf(i);
+        if (d === "accept") {
+          applyChange(c.change, { source: "manual" });
+        } else if (d === "merge" && c.change.op === "set-node" && mergeable[i]) {
+          applyChange(
+            { op: "set-node", path: c.change.path, node: mergeable[i] as Node },
+            { source: "manual" },
+          );
+        }
       });
     }
     onOpenChange(false);
@@ -111,7 +127,8 @@ export function ReinferModal({ open, onOpenChange }: ReinferModalProps) {
                 Conflicts with your edits
               </p>
               {diff?.conflictChanges.map((c, i) => {
-                const isAccepted = accepted.has(i);
+                const choice = decisionOf(i);
+                const merged = mergeable[i];
                 return (
                   <div
                     key={JSON.stringify(c.change)}
@@ -124,21 +141,37 @@ export function ReinferModal({ open, onOpenChange }: ReinferModalProps) {
                           You have it as <code className="font-mono">{nodeLabel(c.existing)}</code>
                         </span>
                       )}
+                      {merged && (
+                        <span className="text-muted-foreground">
+                          Merge keeps both →{" "}
+                          <code className="font-mono">{nodeLabel(merged)}</code>
+                        </span>
+                      )}
                     </div>
                     <div className="flex gap-1.5">
                       <Button
-                        variant={isAccepted ? "ghost" : "outline"}
+                        variant={choice === "keep" ? "outline" : "ghost"}
                         size="xs"
-                        aria-pressed={!isAccepted}
-                        onClick={() => isAccepted && toggleAccept(i)}
+                        aria-pressed={choice === "keep"}
+                        onClick={() => setDecision(i, "keep")}
                       >
                         Keep yours
                       </Button>
+                      {merged && (
+                        <Button
+                          variant={choice === "merge" ? "outline" : "ghost"}
+                          size="xs"
+                          aria-pressed={choice === "merge"}
+                          onClick={() => setDecision(i, "merge")}
+                        >
+                          Merge both
+                        </Button>
+                      )}
                       <Button
-                        variant={isAccepted ? "outline" : "ghost"}
+                        variant={choice === "accept" ? "outline" : "ghost"}
                         size="xs"
-                        aria-pressed={isAccepted}
-                        onClick={() => !isAccepted && toggleAccept(i)}
+                        aria-pressed={choice === "accept"}
+                        onClick={() => setDecision(i, "accept")}
                       >
                         Accept new
                       </Button>
@@ -170,6 +203,8 @@ function pathLabel(path: Path): string {
 function nodeLabel(node: Node): string {
   if (node.kind === "string" && node.literals) return `union of ${node.literals.length} values`;
   if (node.kind === "number" && node.literals) return `union of ${node.literals.length} values`;
+  if (node.kind === "boolean" && node.literals) return `union of ${node.literals.length} values`;
+  if (node.kind === "union") return `union of ${node.variants.length} types`;
   return node.kind;
 }
 
