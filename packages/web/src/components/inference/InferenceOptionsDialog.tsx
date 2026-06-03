@@ -37,11 +37,14 @@ export function InferenceOptionsDialog({ open, onOpenChange }: InferenceOptionsD
           </DialogDescription>
         </DialogHeader>
 
-        <InferenceOptionsForm
-          value={stored}
-          onChange={setInferenceOptions}
-          defaultAdvancedOpen={hasNonDefaultOptions(stored)}
-        />
+        {/* The dialog is height-bounded, so the form scrolls within it here. */}
+        <div className="max-h-[60vh] overflow-y-auto pr-1">
+          <InferenceOptionsForm
+            value={stored}
+            onChange={setInferenceOptions}
+            defaultAdvancedOpen={hasNonDefaultOptions(stored)}
+          />
+        </div>
 
         <div className="flex justify-start">
           <Button

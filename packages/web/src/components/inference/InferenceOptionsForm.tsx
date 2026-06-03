@@ -81,8 +81,11 @@ export function InferenceOptionsForm({
     onChange(commit({ ...form, [key]: next }));
   }
 
+  // Natural height — no inner scroll. The header modal wraps this in its own
+  // bounded scroll container; the wizard step lets the page body scroll, so
+  // step 3 doesn't end up with a scroll inside a scroll.
   return (
-    <div className="flex max-h-[60vh] flex-col gap-6 overflow-y-auto pr-1">
+    <div className="flex flex-col gap-6">
       <Section title="Types">
         <Row
           label="Detect literal unions"

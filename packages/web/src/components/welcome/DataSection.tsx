@@ -120,7 +120,9 @@ export function DataSection() {
           <span className="font-medium text-[10px] text-muted-foreground uppercase tracking-wider">
             Sample record
           </span>
-          <div className="mt-1 overflow-x-auto">
+          {/* Clip rather than scroll — the tree truncates long values, so it
+              fits the width; the wizard body owns the single (vertical) scroll. */}
+          <div className="mt-1 overflow-hidden">
             <JsonTree value={firstRecord} ariaLabel="Sample record" />
           </div>
         </div>
