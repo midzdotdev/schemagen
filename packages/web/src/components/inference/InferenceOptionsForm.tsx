@@ -84,7 +84,10 @@ export function InferenceOptionsForm({
   return (
     <div className="flex max-h-[60vh] flex-col gap-6 overflow-y-auto pr-1">
       <Section title="Types">
-        <Row label="Recognise repeating values as a fixed list of choices">
+        <Row
+          label="Detect literal unions"
+          help="Capture low-cardinality string fields as an enum of their observed values."
+        >
           {(id) => (
             <Checkbox
               id={id}
@@ -93,7 +96,10 @@ export function InferenceOptionsForm({
             />
           )}
         </Row>
-        <Row label="Recognise emails, dates, UUIDs, URLs, and IPs">
+        <Row
+          label="Detect string formats"
+          help="Tag strings matching known formats — email, date-time, UUID, URI, IP."
+        >
           {(id) => (
             <Checkbox
               id={id}
@@ -105,7 +111,10 @@ export function InferenceOptionsForm({
       </Section>
 
       <Section title="Structure">
-        <Row label="Flag records with fields the schema hasn't seen">
+        <Row
+          label="Reject unknown fields"
+          help="Closed objects — records with fields not in the schema become mismatches."
+        >
           {(id) => (
             <Checkbox
               id={id}
@@ -117,7 +126,10 @@ export function InferenceOptionsForm({
       </Section>
 
       <Section title="Numbers">
-        <Row label="Treat whole-number-only fields as integers">
+        <Row
+          label="Integer detection"
+          help="Fields whose values are all whole numbers become integer rather than number."
+        >
           {(id) => (
             <Checkbox
               id={id}
@@ -139,11 +151,11 @@ export function InferenceOptionsForm({
 
         {advancedOpen && (
           <div className="mt-4 flex flex-col gap-6">
-            <SubGroup title="Choice lists">
+            <SubGroup title="Literal unions">
               <Row
-                label="Most distinct values to list"
+                label="Max cardinality"
                 defaultLabel={String(D.literals.maxCardinality)}
-                help="Skip the list if a field has more distinct values than this — too many to enumerate cleanly."
+                help="Skip the union past this many distinct values."
               >
                 {(id) => (
                   <NumberInput
@@ -155,9 +167,9 @@ export function InferenceOptionsForm({
                 )}
               </Row>
               <Row
-                label="Skip when too varied"
+                label="Max unique ratio"
                 defaultLabel={pct(D.literals.maxUniqueRatio)}
-                help="Skip the list when more than this share of records have a one-off value."
+                help="Skip when more than this share of values are one-offs."
               >
                 {(id) => (
                   <PercentInput
@@ -168,9 +180,9 @@ export function InferenceOptionsForm({
                 )}
               </Row>
               <Row
-                label="Fewest records before guessing"
+                label="Min samples"
                 defaultLabel={String(D.literals.minSamples)}
-                help="With fewer records than this, schemagen falls back to plain string."
+                help="Below this record count, fall back to plain string."
               >
                 {(id) => (
                   <NumberInput
@@ -183,11 +195,11 @@ export function InferenceOptionsForm({
               </Row>
             </SubGroup>
 
-            <SubGroup title="Required fields">
+            <SubGroup title="Objects">
               <Row
-                label="A field counts as required when present in"
+                label="Required-field threshold"
                 defaultLabel={`${pct(D.objects.optionalThreshold)} of records`}
-                help="Below this share, the field is marked optional."
+                help="A field present in fewer records than this is marked optional."
               >
                 {(id) => (
                   <PercentInput
@@ -201,9 +213,9 @@ export function InferenceOptionsForm({
 
             <SubGroup title="Number ranges">
               <Row
-                label="Smallest / largest values seen"
+                label="Numeric range mode"
                 defaultLabel={rangeModeLabel(D.numbers.rangeMode)}
-                help="What schemagen does with the min and max values it observes."
+                help="What to do with the smallest and largest values observed."
               >
                 {(id) => (
                   <Select
@@ -225,11 +237,11 @@ export function InferenceOptionsForm({
               </Row>
             </SubGroup>
 
-            <SubGroup title="Variants">
+            <SubGroup title="Discriminators">
               <Row
-                label='Detect a "type tag" that splits records into variants'
+                label="Detect discriminators"
                 defaultLabel={onOff(D.discriminators.enable)}
-                help="When off, variant records become a plain union with no tag field called out."
+                help="Emit a tagged union when a type-tag field distinguishes record variants."
               >
                 {(id) => (
                   <Checkbox
@@ -241,10 +253,11 @@ export function InferenceOptionsForm({
               </Row>
             </SubGroup>
 
-            <SubGroup title="Mixed types">
+            <SubGroup title="Conflicts">
               <Row
-                label="When a field is sometimes a number, sometimes text"
+                label="Type-conflict strategy"
                 defaultLabel={typeConflictLabel(D.onTypeConflict)}
+                help="When a field is a number in some records and a string in others."
               >
                 {(id) => (
                   <Select
