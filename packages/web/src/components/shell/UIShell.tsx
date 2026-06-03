@@ -13,6 +13,7 @@ import { RecordsModal } from "../data-panel/RecordsModal";
 import { ExportModal } from "../export/ExportModal";
 import { IdentityConfigDialog } from "../identity/IdentityConfigDialog";
 import { InferenceOptionsDialog } from "../inference/InferenceOptionsDialog";
+import { ReinferModal } from "../schema-tree/ReinferModal";
 import { ShortcutsDialog } from "./ShortcutsDialog";
 
 export type ModalName =
@@ -21,7 +22,8 @@ export type ModalName =
   | "identity"
   | "inference-options"
   | "add-data"
-  | "records";
+  | "records"
+  | "reinfer";
 
 interface UIShellContextValue {
   openModal: (name: ModalName) => void;
@@ -80,6 +82,7 @@ export function UIShellProvider({ children }: { children: ReactNode }) {
         onOpenChange={(o) => !o && closeModal()}
       />
       <AddDataModal open={current === "add-data"} onOpenChange={(o) => !o && closeModal()} />
+      <ReinferModal open={current === "reinfer"} onOpenChange={(o) => !o && closeModal()} />
       <RecordsModal open={current === "records"} onOpenChange={(o) => !o && closeModal()} />
     </UIShellContext.Provider>
   );
