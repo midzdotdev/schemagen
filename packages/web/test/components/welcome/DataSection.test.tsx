@@ -59,14 +59,15 @@ describe("DataSection", () => {
 
   // Plan § "Page layout" — the sample record is wrapped so long values scroll
   // within the section rather than widening the page.
-  it("II-D4: sample record tree is wrapped in an overflow-x-auto container", () => {
+  it("II-D4: sample record tree clips rather than introducing a nested scroll", () => {
     act(() => {
       useStore.getState().setRecords([{ id: 1, title: "a very long string ".repeat(20) }]);
     });
     render(<DataSection />);
     const tree = screen.getByRole("list", { name: /sample record/i });
     const wrapper = tree.closest("div");
-    expect(wrapper?.className).toContain("overflow-x-auto");
+    expect(wrapper?.className).toContain("overflow-hidden");
+    expect(wrapper?.className).not.toContain("overflow-x-auto");
   });
 
   // Records-root summary card — surfaces the selected path + count, shown only
